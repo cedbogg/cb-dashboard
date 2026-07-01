@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CB Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E1217; --panel:#161C24; --panel-2:#1C2530; --line:#263241;
+    --text:#E6ECF2; --muted:#8A98A8; --faint:#5A6776;
+    --accent:#C8A86B; --ok:#3FB68B; --warn:#E0A23C; --bad:#E5634D;
+    --display:'Space Grotesk',sans-serif; --mono:'IBM Plex Mono',monospace; --body:'Inter',sans-serif; --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:var(--body);min-height:100vh;line-height:1.5;
+    background-image:radial-gradient(1200px 600px at 85% -10%, rgba(200,168,107,.06), transparent 60%);
+    padding:26px clamp(16px,4vw,48px) 90px}
+  .wrap{max-width:1180px;margin:0 auto}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .mono-mark{width:42px;height:42px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;font-family:var(--mono);font-weight:600;color:var(--accent);background:var(--panel)}
+  .hello{font-family:var(--display);font-weight:500;font-size:1.16rem}
+  .hello span{color:var(--muted);font-weight:400}
+  .date{font-family:var(--mono);font-size:.72rem;color:var(--faint);margin-top:2px;letter-spacing:.4px;text-transform:uppercase}
+  .lock{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:.7rem;color:var(--faint);border:1px solid var(--line);border-radius:999px;padding:7px 12px;text-transform:uppercase;letter-spacing:.5px}
+  .lock .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+  .nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
+  .nav button{font-family:var(--mono);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;background:none;padding:8px 14px;border:1px solid var(--line);border-radius:999px;transition:.15s}
+  .nav button:hover{color:var(--text);border-color:#33414f}
+  .nav button.on{color:var(--ink);background:var(--accent);border-color:var(--accent);font-weight:600}
+
+  .screen{display:none} .screen.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .sub{font-family:var(--display);font-weight:500;font-size:1.05rem;margin-bottom:2px}
+  .subd{font-family:var(--mono);font-size:.7rem;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:18px}
+  .sec-ey{font-family:var(--mono);font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin:6px 0 12px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:18px}
+
+  /* home */
+  .ribbon{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;margin-bottom:22px}
+  .ribbon .ey{font-family:var(--mono);font-size:.66rem;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase}
+  .ribbon .items{display:flex;gap:22px;flex-wrap:wrap;flex:1}
+  .ri{display:flex;align-items:baseline;gap:9px;font-size:.86rem}
+  .ri b{font-family:var(--mono);font-weight:500;font-size:.78rem}
+  .ri .when{font-family:var(--mono);font-size:.7rem;color:var(--faint)}
+  .ri.flag b{color:var(--warn)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:880px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 16px 22px;overflow:hidden;cursor:pointer;transition:.18s;text-align:left;width:100%;color:inherit;font-family:inherit}
+  .card:hover{transform:translateY(-3px);border-color:#33414f;background:var(--panel-2)}
+  .card .spine{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ok)}
+  .card.warn .spine{background:var(--warn)} .card.bad .spine{background:var(--bad)}
+  .chead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+  .sdot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(63,182,139,.14)}
+  .warn .sdot{background:var(--warn);box-shadow:0 0 0 3px rgba(224,162,60,.14)}
+  .hero{font-family:var(--display);font-weight:500;font-size:1.5rem;line-height:1.15;margin-bottom:3px}
+  .herosub{font-family:var(--mono);font-size:.7rem;color:var(--faint);text-transform:uppercase;margin-bottom:14px}
+  .lines{display:flex;flex-direction:column;gap:9px;border-top:1px solid var(--line);padding-top:13px}
+  .ln{display:flex;align-items:flex-start;gap:9px;font-size:.83rem}
+  .ln .tk{width:5px;height:5px;border-radius:50%;background:var(--faint);margin-top:8px;flex:none}
+  .ln.alert .tk{background:var(--warn)}
+  .ln .t{flex:1;color:#C9D3DD}.ln .v{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+  .mfun{display:flex;gap:4px;margin:2px 0 14px}
+  .mfun .s{flex:1;text-align:center;font-family:var(--mono);font-size:.6rem;color:var(--faint);text-transform:uppercase}
+  .mfun .bar{height:30px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:flex-end;justify-content:center;padding-bottom:3px;margin-bottom:5px}
+  .mfun .bar b{font-family:var(--mono);font-size:.78rem}
+  .mfun .fill{background:linear-gradient(180deg,rgba(63,182,139,.30),rgba(63,182,139,.08));border-color:#2f5d4e}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .cols.p{grid-template-columns:1.15fr .85fr}
+  @media(max-width:900px){.cols,.cols.p{grid-template-columns:1fr}}
+
+  table{width:100%;border-collapse:collapse}
+  th{font-family:var(--mono);font-size:.62rem;letter-spacing:.8px;text-transform:uppercase;color:var(--faint);text-align:right;padding:0 0 9px;font-weight:500}
+  th:first-child{text-align:left}
+  td{font-size:.83rem;padding:8px 0;border-top:1px solid var(--line);text-align:right;font-family:var(--mono);color:var(--muted)}
+  td:first-child{text-align:left;font-family:var(--body);color:var(--text)}
+  .wbar{display:inline-block;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent),#9c7d44);vertical-align:middle}
+  .up{color:var(--ok)}.down{color:var(--bad)}.flat{color:var(--muted)}
+
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+  @media(max-width:760px){.tiles{grid-template-columns:repeat(2,1fr)}}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:15px 17px}
+  .tile .lab{font-family:var(--mono);font-size:.62rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .tile .big{font-family:var(--display);font-weight:500;font-size:1.5rem}
+  .tile .chg{font-family:var(--mono);font-size:.72rem;margin-top:3px}
+
+  .row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:none}
+  .co{flex:1;font-size:.86rem}.co .s{font-family:var(--mono);font-size:.64rem;color:var(--faint);text-transform:uppercase}
+  .stg{font-family:var(--mono);font-size:.64rem;text-transform:uppercase;border:1px solid var(--line);border-radius:5px;padding:3px 8px;color:var(--muted)}
+  .age{font-family:var(--mono);font-size:.72rem;width:52px;text-align:right;color:var(--muted)} .age.old{color:var(--warn)}
+  .score{font-family:var(--mono);font-size:.74rem;color:var(--accent);width:34px;text-align:right}
+
+  /* funnel hero */
+  .funnel{display:flex;gap:8px;align-items:flex-end}
+  .fcol{flex:1;text-align:center}
+  .fcol .bar{border:1px solid var(--line);border-radius:8px;background:var(--panel-2);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:10px 0 8px}
+  .fcol .bar b{font-family:var(--display);font-size:1.4rem;font-weight:500}
+  .fcol.fill .bar{background:linear-gradient(180deg,rgba(63,182,139,.28),rgba(63,182,139,.05));border-color:#2f5d4e}
+  .fcol .l{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;color:var(--faint);margin-top:7px}
+  .pace{margin-top:14px;font-size:.85rem;color:#C9D3DD}.pace b{font-family:var(--mono);color:var(--warn)}
+
+  .news{display:flex;gap:11px;padding:11px 0;border-top:1px solid var(--line)}.news:first-of-type{border-top:none}
+  .news .src{font-family:var(--mono);font-size:.6rem;color:var(--faint);text-transform:uppercase;width:64px;flex:none;padding-top:2px}
+  .news .h{font-size:.84rem;color:#C9D3DD}
+  .task{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--line)}.task:first-of-type{border-top:none}
+  .task .tt{flex:1;font-size:.85rem}.task .ty{font-family:var(--mono);font-size:.6rem;text-transform:uppercase;color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:2px 7px}
+  .task .due{font-family:var(--mono);font-size:.72rem;color:var(--muted)}.task .due.soon{color:var(--bad)}
+
+  /* perso */
+  .day{display:flex;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}.day:last-child{border-bottom:none}
+  .day .d{font-family:var(--mono);font-size:.72rem;color:var(--faint);width:58px;flex:none;text-transform:uppercase}
+  .day .d b{display:block;color:var(--text);font-size:1.02rem;font-family:var(--display)}
+  .evr{display:flex;align-items:baseline;gap:10px;font-size:.88rem;margin-bottom:5px}
+  .evr .tm{font-family:var(--mono);font-size:.7rem;color:var(--muted);width:46px;flex:none}
+  .evr.b .t{color:var(--accent)}
+  .nudge{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.nudge:last-child{border-bottom:none}
+  .nudge .ic{width:30px;height:30px;border-radius:8px;flex:none;display:grid;place-items:center;background:var(--panel-2);border:1px solid var(--line)}
+  .nudge .h{font-size:.9rem;font-weight:500}.nudge .s{font-size:.8rem;color:var(--muted)}
+  .nudge .act{font-family:var(--mono);font-size:.64rem;color:var(--accent);text-transform:uppercase;border:1px solid rgba(200,168,107,.35);border-radius:6px;padding:5px 9px;align-self:center;white-space:nowrap}
+  .habit{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.habit:last-child{border-bottom:none}
+  .chk{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line);flex:none;display:grid;place-items:center;font-size:.7rem;color:var(--ink)}.chk.on{background:var(--ok);border-color:var(--ok)}
+  .habit .hn{flex:1;font-size:.87rem}.habit .cad{font-family:var(--mono);font-size:.62rem;color:var(--faint);text-transform:uppercase}.habit .stk{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+
+  /* health */
+  .mk{display:flex;align-items:center;gap:14px;padding:11px 0;border-top:1px solid var(--line)}.mk:first-of-type{border-top:none}
+  .mk .nm{flex:1;font-size:.86rem}.mk .nm .u{font-family:var(--mono);font-size:.6rem;color:var(--faint);text-transform:uppercase}
+  svg.spark{width:80px;height:24px;flex:none}
+  .mk .val{font-family:var(--mono);font-size:.8rem;width:56px;text-align:right}
+  .mk .fl{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;width:62px;text-align:right}
+  .fl.ok{color:var(--ok)}.fl.b{color:var(--warn)}
+  .mb{padding:10px 0;border-top:1px solid var(--line)}.mb:first-of-type{border-top:none}
+  .mb .lbl{display:flex;justify-content:space-between;font-size:.84rem;margin-bottom:6px}.mb .lbl .v{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+  .mb .track{height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden}.mb .fill{height:100%;background:linear-gradient(90deg,var(--accent),#9c7d44)}
+
+  /* fitness */
+  .week{display:flex;align-items:flex-end;gap:10px;height:110px;padding-top:8px}
+  .wd{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .wd .b{width:100%;border-radius:5px 5px 0 0;background:linear-gradient(180deg,rgba(63,182,139,.5),rgba(63,182,139,.12));border:1px solid #2f5d4e;border-bottom:none}
+  .wd .l{font-family:var(--mono);font-size:.6rem;color:var(--faint);text-transform:uppercase}.wd .k{font-family:var(--mono);font-size:.58rem;color:var(--muted)}
+  .lift{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.lift:first-of-type{border-top:none}
+  .lift .ln2{flex:1;font-size:.85rem}.lift .pr{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+  .prog{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}.prog:first-of-type{border-top:none}
+  .prog .nm{flex:1;font-size:.86rem}.prog .nm .d{font-family:var(--mono);font-size:.6rem;color:var(--faint);text-transform:uppercase}
+  .prog .st{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;border-radius:5px;padding:2px 8px}
+  .st.active{color:var(--ok);border:1px solid rgba(63,182,139,.4)}.st.plan{color:var(--warn);border:1px solid rgba(224,162,60,.4)}
+
+  .bnote{font-size:.84rem;color:#C9D3DD}
+
+  /* agent dock */
+  .ask{position:fixed;right:clamp(12px,3vw,28px);bottom:20px;width:min(380px,92vw);z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55);transition:.2s}
+  .ask.min{width:auto}
+  .ask.min .ask-body,.ask.min .memchips,.ask.min .ask-in{display:none}
+  .ask-h{display:flex;align-items:center;gap:11px;padding:13px 15px;border-bottom:1px solid var(--line);background:var(--panel-2);cursor:pointer}
+  .ask.min .ask-h{border-bottom:none}
+  .ask-h .av{width:30px;height:30px;border-radius:9px;flex:none;background:linear-gradient(135deg,var(--accent),#9c7d44);display:grid;place-items:center;font-family:var(--mono);font-weight:600;color:var(--ink);font-size:.72rem}
+  .ask-h .nm{font-family:var(--display);font-weight:500;font-size:.92rem}
+  .ask-h .mem{font-family:var(--mono);font-size:.56rem;color:var(--ok);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;margin-top:1px}
+  .ask-h .mem .d{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+  .ask-h .tg{margin-left:auto;color:var(--faint);font-family:var(--mono);font-size:1.1rem;background:none;border:none;cursor:pointer}
+  .ask-body{padding:14px 15px;display:flex;flex-direction:column;gap:11px;max-height:44vh;overflow:auto}
+  .msg{font-size:.84rem;line-height:1.5}
+  .msg.u{align-self:flex-end;background:var(--panel-2);border:1px solid var(--line);border-radius:12px 12px 4px 12px;padding:9px 12px;max-width:86%}
+  .msg.a{align-self:flex-start;color:#C9D3DD;max-width:94%;white-space:pre-wrap}
+  .msg.a b{color:var(--text)}
+  .msg.think{color:var(--faint);font-family:var(--mono);font-size:.72rem}
+  .memchips{display:flex;flex-wrap:wrap;gap:6px;padding:0 15px 12px}
+  .memchips .lbl{font-family:var(--mono);font-size:.54rem;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;width:100%}
+  .chip{font-family:var(--mono);font-size:.6rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+  .ask-in{display:flex;gap:9px;align-items:center;padding:11px 13px;border-top:1px solid var(--line)}
+  .ask-in input{flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-family:var(--body);font-size:.84rem;outline:none}
+  .ask-in input:focus{border-color:var(--accent)}
+  .ask-in .send{background:var(--accent);border:none;border-radius:10px;width:38px;height:38px;color:var(--ink);font-size:1rem;cursor:pointer;flex:none}
+  .foot{margin-top:22px;font-family:var(--mono);font-size:.64rem;color:var(--faint)}
+  .foot .tag{border:1px dashed var(--line);border-radius:6px;padding:4px 9px}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><div class="mono-mark">CB</div>
+      <div><div class="hello" id="hello">Good morning, Cedric <span>— here's where things stand</span></div>
+      <div class="date">Thursday 18 June 2026 · 08:17</div></div></div>
+    <button class="lock" id="signout" style="cursor:pointer;background:none" title="Sign out"><span class="dot"></span> <span id="locklabel">Private · Locked</span></button>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-s="home" class="on">Home</button><button data-s="perso">Perso</button>
+    <button data-s="fortior">Fortior</button><button data-s="finance">Finance</button>
+    <button data-s="health">Health</button><button data-s="fitness">Fitness</button>
+  </nav>
+
+  <!-- HOME -->
+  <section class="screen on" id="home">
+    <div class="ribbon"><div class="ey">This week</div>
+      <div class="items">
+        <div class="ri flag"><b>Emma's birthday</b><span class="when">Sat · gift not bought</span></div>
+        <div class="ri flag"><b>Term ends</b><span class="when">18 Jul · holiday not booked</span></div>
+        <div class="ri"><b>Mgmt call — ABC Fire</b><span class="when">Fri 14:00</span></div>
+        <div class="ri"><b>Dentist</b><span class="when">Thu 09:30</span></div>
+      </div></div>
+    <div class="grid">
+      <button class="card warn" onclick="go('perso')"><span class="spine"></span>
+        <div class="chead"><span class="eyebrow">Perso</span><span class="sdot"></span></div>
+        <div class="hero">3 events</div><div class="herosub">+ 1 birthday this week</div>
+        <div class="lines"><div class="ln alert"><span class="tk"></span><span class="t">Buy Emma's gift</span><span class="v">2d</span></div>
+        <div class="ln alert"><span class="tk"></span><span class="t">Book summer holiday</span><span class="v">~4wk</span></div>
+        <div class="ln"><span class="tk"></span><span class="t">2 habits unchecked</span><span class="v">→</span></div></div></button>
+      <button class="card" onclick="go('fortior')"><span class="spine"></span>
+        <div class="chead"><span class="eyebrow">Fortior</span><span class="sdot"></span></div>
+        <div class="hero">Month 4 / 6</div><div class="herosub">to first acquisition</div>
+        <div class="mfun"><div class="s"><div class="bar fill"><b>9</b></div>Teaser</div><div class="s"><div class="bar fill"><b>3</b></div>NDA</div><div class="s"><div class="bar"><b>1</b></div>HoT</div><div class="s"><div class="bar"><b>0</b></div>Offer</div></div>
+        <div class="lines"><div class="ln alert"><span class="tk"></span><span class="t">2 teasers awaiting reply &gt;2wks</span><span class="v">chase</span></div>
+        <div class="ln"><span class="tk"></span><span class="t">5 new targets this week</span><span class="v">+5</span></div></div></button>
+      <button class="card" onclick="go('finance')"><span class="spine"></span>
+        <div class="chead"><span class="eyebrow">Finance</span><span class="sdot"></span></div>
+        <div class="hero">+1.8%</div><div class="herosub">portfolio · QTD</div>
+        <div class="lines"><div class="ln"><span class="tk"></span><span class="t">Pension</span><span class="v">+2.1% QTD</span></div>
+        <div class="ln"><span class="tk"></span><span class="t">Fortior Holdings</span><span class="v">+1.4% MTD</span></div>
+        <div class="ln alert"><span class="tk"></span><span class="t">Budget — Leisure over</span><span class="v">−£380</span></div></div></button>
+      <button class="card warn" onclick="go('health')"><span class="spine"></span>
+        <div class="chead"><span class="eyebrow">Health</span><span class="sdot"></span></div>
+        <div class="hero">Bloods due</div><div class="herosub">last panel 121 days ago</div>
+        <div class="lines"><div class="ln"><span class="tk"></span><span class="t">Microbiome diversity</span><span class="v">↑</span></div>
+        <div class="ln alert"><span class="tk"></span><span class="t">Vitamin D borderline</span><span class="v">re-test</span></div>
+        <div class="ln"><span class="tk"></span><span class="t">No consult booked</span><span class="v">—</span></div></div></button>
+      <button class="card" onclick="go('fitness')"><span class="spine"></span>
+        <div class="chead"><span class="eyebrow">Fitness</span><span class="sdot"></span></div>
+        <div class="hero">32 km</div><div class="herosub">running · this week</div>
+        <div class="lines"><div class="ln"><span class="tk"></span><span class="t">Long run 18 km Sun</span><span class="v">done</span></div>
+        <div class="ln"><span class="tk"></span><span class="t">Squat 3×5 @ 100kg</span><span class="v">+2.5</span></div>
+        <div class="ln"><span class="tk"></span><span class="t">NYC Marathon</span><span class="v">18wk</span></div></div></button>
+      <div class="card" style="cursor:default">
+        <div class="chead"><span class="eyebrow">Status key</span></div>
+        <div class="lines" style="border-top:none;padding-top:0">
+          <div class="ln"><span class="tk" style="background:var(--ok)"></span><span class="t">On track</span></div>
+          <div class="ln"><span class="tk" style="background:var(--warn)"></span><span class="t">Needs attention</span></div>
+          <div class="ln"><span class="tk" style="background:var(--bad)"></span><span class="t">Off track / overdue</span></div></div></div>
+    </div>
+  </section>
+
+  <!-- PERSO -->
+  <section class="screen" id="perso">
+    <div class="sub">Perso</div><div class="subd">Your week and the people in it</div>
+    <div class="cols p">
+      <div>
+        <div class="sec-ey">This week · calendar</div>
+        <div class="panel">
+          <div class="day"><div class="d">Thu<b>18</b></div><div><div class="evr"><span class="tm">09:30</span><span class="t">Dentist</span></div><div class="evr"><span class="tm">14:00</span><span class="t">Sparta IC call</span></div></div></div>
+          <div class="day"><div class="d">Fri<b>19</b></div><div><div class="evr"><span class="tm">14:00</span><span class="t">Mgmt call — ABC Fire</span></div></div></div>
+          <div class="day"><div class="d">Sat<b>20</b></div><div><div class="evr b"><span class="tm">—</span><span class="t">Emma's birthday · gift due</span></div></div></div>
+          <div class="day"><div class="d">Sun<b>21</b></div><div><div class="evr"><span class="tm">08:00</span><span class="t">Long run — 18 km</span></div></div></div>
+        </div>
+        <div class="sec-ey">Looking ahead</div>
+        <div class="panel">
+          <div class="nudge"><div class="ic">✈︎</div><div style="flex:1"><div class="h">Summer holiday not booked</div><div class="s">Term ends 18 Jul — ~4 weeks out.</div></div><div class="act">Plan</div></div>
+          <div class="nudge"><div class="ic">🎁</div><div style="flex:1"><div class="h">Emma's gift</div><div class="s">Saturday. Nothing logged yet.</div></div><div class="act">Sort</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-ey">Habits</div>
+        <div class="panel">
+          <div class="habit"><span class="chk on">✓</span><span class="hn">Morning mobility</span><span class="cad">daily</span><span class="stk">12d</span></div>
+          <div class="habit"><span class="chk on">✓</span><span class="hn">No screens after 22:30</span><span class="cad">daily</span><span class="stk">4d</span></div>
+          <div class="habit"><span class="chk"></span><span class="hn">Tuesday gym</span><span class="cad">weekly</span><span class="stk" style="color:var(--warn)">missed ×2</span></div>
+          <div class="habit"><span class="chk on">✓</span><span class="hn">Read 20 min</span><span class="cad">daily</span><span class="stk">8d</span></div>
+        </div>
+        <div class="sec-ey">Goals</div>
+        <div class="panel">
+          <div class="row"><span class="sdot" style="background:var(--ok)"></span><div class="co">Sub-3:30 NYC Marathon<div class="s">Nov 2026</div></div><span class="age">on trk</span></div>
+          <div class="row"><span class="sdot warn" style="background:var(--warn)"></span><div class="co">Estate planning<div class="s">Q3</div></div><span class="age">risk</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FORTIOR -->
+  <section class="screen" id="fortior">
+    <div class="sub">Fortior</div><div class="subd">First acquisition in 6 months · month 4 of 6</div>
+    <div class="sec-ey">Acquisition funnel · vs goal</div>
+    <div class="panel">
+      <div class="funnel" id="fnl">
+        <div class="fcol fill"><div class="bar" style="height:90px"><b>9</b></div><div class="l">Teaser req</div></div>
+        <div class="fcol fill"><div class="bar" style="height:74px"><b>6</b></div><div class="l">Rec'd</div></div>
+        <div class="fcol fill"><div class="bar" style="height:56px"><b>3</b></div><div class="l">NDA</div></div>
+        <div class="fcol"><div class="bar" style="height:44px"><b>2</b></div><div class="l">Info/mgmt</div></div>
+        <div class="fcol"><div class="bar" style="height:34px"><b>1</b></div><div class="l">Heads</div></div>
+        <div class="fcol"><div class="bar" style="height:26px"><b>0</b></div><div class="l">Offer</div></div>
+        <div class="fcol"><div class="bar" style="height:26px"><b>0</b></div><div class="l">Closed</div></div>
+      </div>
+      <div class="pace" id="pace">On pace at the top; <b>NDA stage ~1 behind</b> to close by month 6. Teaser→NDA conversion is the bottleneck.</div>
+    </div>
+    <div class="cols">
+      <div>
+        <div class="sec-ey">In dialogue</div>
+        <div class="panel" id="dlg">
+          <div class="row"><div class="co">ABC Fire &amp; Safety<div class="s">Manchester · £1.8m EBITDA</div></div><span class="stg">Mgmt Fri</span><span class="age">3d</span></div>
+          <div class="row"><div class="co">Pennine Legionella<div class="s">Leeds · £0.9m EBITDA</div></div><span class="stg">NDA</span><span class="age">8d</span></div>
+          <div class="row"><div class="co">Sentinel Asbestos<div class="s">Bristol · £1.2m EBITDA</div></div><span class="stg">Heads</span><span class="age">14d</span></div>
+        </div>
+        <div class="sec-ey">Stalled · chase</div>
+        <div class="panel" id="stall">
+          <div class="row"><div class="co">Vanguard Compliance<div class="s">teaser requested</div></div><span class="stg">No reply</span><span class="age old">17d</span></div>
+          <div class="row"><div class="co">Aegis Water Hygiene<div class="s">teaser requested</div></div><span class="stg">No reply</span><span class="age old">22d</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-ey">New targets · agent</div>
+        <div class="panel" id="newt">
+          <div class="row"><div class="co">Northgate Fire Protection<div class="s">fire</div></div><span class="score">87</span><span class="age">1d</span></div>
+          <div class="row"><div class="co">ClearAir Asbestos<div class="s">asbestos</div></div><span class="score">81</span><span class="age">1d</span></div>
+          <div class="row"><div class="co">Hydroguard Ltd<div class="s">legionella</div></div><span class="score">76</span><span class="age">2d</span></div>
+        </div>
+        <div class="sec-ey">Sector news</div>
+        <div class="panel">
+          <div class="news"><div class="src">BSJ</div><div class="h">Remediation Acceleration Plan lifts compliance demand</div></div>
+          <div class="news"><div class="src">Insider</div><div class="h">PE-backed fire-safety consolidator buys two NW firms</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="sec-ey">Things to do · Companies House, tax, invoices</div>
+    <div class="panel" id="todo">
+      <div class="task"><span class="ty">Cos House</span><div class="tt">Confirmation statement — Fortior Group Ltd</div><span class="due soon">due 26 Jun</span></div>
+      <div class="task"><span class="ty">Tax</span><div class="tt">VAT threshold review</div><span class="due">14 Jul</span></div>
+      <div class="task"><span class="ty">Invoice</span><div class="tt">Advisory invoice — Pennine NDA legal</div><span class="due">unpaid 11d</span></div>
+    </div>
+  </section>
+
+  <!-- FINANCE -->
+  <section class="screen" id="finance">
+    <div class="sub">Finance</div><div class="subd">Investments and cash flow · GBP</div>
+    <div class="tiles">
+      <div class="tile"><div class="lab">Pension (Aegon)</div><div class="big">£486.2k</div><div class="chg up">+2.1% QTD</div></div>
+      <div class="tile"><div class="lab">Fortior Holdings</div><div class="big">£312.8k</div><div class="chg up">+1.4% MTD</div></div>
+      <div class="tile"><div class="lab">Budget — June</div><div class="big">−£420</div><div class="chg down">vs plan</div></div>
+      <div class="tile"><div class="lab">Blended OCF</div><div class="big">0.85%</div><div class="chg flat">≤ 0.90% tgt</div></div>
+    </div>
+    <div class="cols">
+      <div>
+        <div class="sec-ey">Pension · allocation</div>
+        <div class="panel">
+          <table><thead><tr><th>Fund</th><th>Wt</th><th></th><th>QTD</th></tr></thead><tbody>
+            <tr><td>Artemis SmartGARP UK</td><td>22.3%</td><td><span class="wbar" style="width:42px"></span></td><td class="up">+3.1%</td></tr>
+            <tr><td>Jupiter Merian Gbl AR</td><td>18.0%</td><td><span class="wbar" style="width:34px"></span></td><td>+0.8%</td></tr>
+            <tr><td>Thornbridge Gbl Opps</td><td>20.0%</td><td><span class="wbar" style="width:38px"></span></td><td class="up">+2.6%</td></tr>
+            <tr><td>Guinness Innovators</td><td>16.0%</td><td><span class="wbar" style="width:30px"></span></td><td class="up">+4.2%</td></tr>
+            <tr><td>Lazard Infrastructure</td><td>18.7%</td><td><span class="wbar" style="width:36px"></span></td><td>+1.1%</td></tr>
+            <tr><td>M&amp;G Emerging Mkts</td><td>5.0%</td><td><span class="wbar" style="width:10px"></span></td><td class="down">−0.9%</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <div>
+        <div class="sec-ey">Fortior Holdings · IBKR</div>
+        <div class="panel">
+          <table><thead><tr><th>Ticker</th><th>Wt</th><th>MTD</th><th>Value</th></tr></thead><tbody>
+            <tr><td>VTI</td><td>22%</td><td class="up">+1.9%</td><td>£68.8k</td></tr>
+            <tr><td>QQQM</td><td>16%</td><td class="up">+2.8%</td><td>£50.0k</td></tr>
+            <tr><td>VGK</td><td>12%</td><td>+0.4%</td><td>£37.5k</td></tr>
+            <tr><td>SMH</td><td>8%</td><td class="down">−1.2%</td><td>£25.0k</td></tr>
+            <tr><td>URNM</td><td>6%</td><td class="down">−3.1%</td><td>£18.8k</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="sec-ey">Personal budget · June · planned vs actual</div>
+    <div class="panel">
+      <table><thead><tr><th>Category</th><th>Actual</th><th>Plan</th><th>Var</th></tr></thead><tbody>
+        <tr><td>Housing</td><td>£4,200</td><td>£4,300</td><td class="up">−£100</td></tr>
+        <tr><td>Childcare / Education</td><td>£3,100</td><td>£3,100</td><td class="flat">£0</td></tr>
+        <tr><td>Food</td><td>£1,060</td><td>£1,200</td><td class="up">−£140</td></tr>
+        <tr><td>Leisure</td><td>£1,180</td><td>£800</td><td class="down">+£380</td></tr>
+        <tr><td>Savings / Investment</td><td>£4,000</td><td>£5,000</td><td class="down">−£1,000</td></tr>
+      </tbody></table>
+    </div>
+  </section>
+
+  <!-- HEALTH -->
+  <section class="screen" id="health">
+    <div class="sub">Health</div><div class="subd">Biomarkers over time · last panel 121 days ago</div>
+    <div class="cols">
+      <div>
+        <div class="sec-ey">Blood panel · trend</div>
+        <div class="panel">
+          <div class="mk"><div class="nm">Vitamin D<div class="u">nmol/L</div></div><svg class="spark" viewBox="0 0 80 24"><polyline points="0,8 26,12 52,17 80,19" fill="none" stroke="#E0A23C" stroke-width="2"/></svg><div class="val">48</div><div class="fl b">borderline</div></div>
+          <div class="mk"><div class="nm">ApoB<div class="u">g/L</div></div><svg class="spark" viewBox="0 0 80 24"><polyline points="0,17 26,13 52,10 80,8" fill="none" stroke="#3FB68B" stroke-width="2"/></svg><div class="val">0.78</div><div class="fl ok">in range</div></div>
+          <div class="mk"><div class="nm">HbA1c<div class="u">mmol/mol</div></div><svg class="spark" viewBox="0 0 80 24"><polyline points="0,12 26,12 52,13 80,12" fill="none" stroke="#3FB68B" stroke-width="2"/></svg><div class="val">34</div><div class="fl ok">in range</div></div>
+          <div class="mk"><div class="nm">hs-CRP<div class="u">mg/L</div></div><svg class="spark" viewBox="0 0 80 24"><polyline points="0,10 26,14 52,9 80,7" fill="none" stroke="#3FB68B" stroke-width="2"/></svg><div class="val">0.6</div><div class="fl ok">in range</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-ey">Microbiome · latest vs prior</div>
+        <div class="panel">
+          <div class="mb"><div class="lbl"><span>Diversity (Shannon)</span><span class="v">3.8 ▲</span></div><div class="track"><div class="fill" style="width:76%"></div></div></div>
+          <div class="mb"><div class="lbl"><span>Bifidobacterium</span><span class="v">good ▲</span></div><div class="track"><div class="fill" style="width:68%"></div></div></div>
+          <div class="mb"><div class="lbl"><span>Akkermansia</span><span class="v">low ▼</span></div><div class="track"><div class="fill" style="width:28%"></div></div></div>
+          <div class="mb"><div class="lbl"><span>Butyrate producers</span><span class="v">moderate</span></div><div class="track"><div class="fill" style="width:54%"></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="sec-ey">Tests &amp; consults</div>
+    <div class="panel">
+      <div class="task"><span class="ty">Overdue</span><div class="tt">Quarterly blood panel — 121d ago</div><span class="due soon">book</span></div>
+      <div class="task"><span class="ty">No date</span><div class="tt">GP follow-up — Vit D re-test</div><span class="due">book</span></div>
+    </div>
+  </section>
+
+  <!-- FITNESS -->
+  <section class="screen" id="fitness">
+    <div class="sub">Fitness</div><div class="subd">Running &amp; strength · NYC Marathon 18 weeks out</div>
+    <div class="tiles">
+      <div class="tile"><div class="lab">This week</div><div class="big">32 km</div><div class="chg flat">4 sessions</div></div>
+      <div class="tile"><div class="lab">4-wk avg</div><div class="big">29 km</div><div class="chg flat">base</div></div>
+      <div class="tile"><div class="lab">Resting HR</div><div class="big">52</div><div class="chg up">▼ trend</div></div>
+      <div class="tile"><div class="lab">Strength</div><div class="big">2×</div><div class="chg flat">this week</div></div>
+    </div>
+    <div class="cols">
+      <div>
+        <div class="sec-ey">Running · Strava</div>
+        <div class="panel">
+          <div class="week">
+            <div class="wd"><div class="b" style="height:30%"></div><div class="k">6</div><div class="l">M</div></div>
+            <div class="wd"><div class="b" style="height:2%"></div><div class="k">—</div><div class="l">T</div></div>
+            <div class="wd"><div class="b" style="height:42%"></div><div class="k">8</div><div class="l">W</div></div>
+            <div class="wd"><div class="b" style="height:2%"></div><div class="k">—</div><div class="l">T</div></div>
+            <div class="wd"><div class="b" style="height:26%"></div><div class="k">5</div><div class="l">F</div></div>
+            <div class="wd"><div class="b" style="height:2%"></div><div class="k">—</div><div class="l">S</div></div>
+            <div class="wd"><div class="b" style="height:95%"></div><div class="k">18</div><div class="l">S</div></div>
+          </div>
+        </div>
+        <div class="sec-ey">Strength · key lifts</div>
+        <div class="panel">
+          <div class="lift"><div class="ln2">Back squat 3×5</div><div class="pr">100 kg <span class="up">+2.5</span></div></div>
+          <div class="lift"><div class="ln2">Deadlift 1×5</div><div class="pr">140 kg <span class="up">+5</span></div></div>
+          <div class="lift"><div class="ln2">Bench 3×5</div><div class="pr">80 kg</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-ey">Programmes</div>
+        <div class="panel">
+          <div class="prog"><div class="nm">NYC Marathon — base<div class="d">running · wk 4/18</div></div><span class="st active">active</span></div>
+          <div class="prog"><div class="nm">5×5 strength<div class="d">gym · ongoing</div></div><span class="st active">active</span></div>
+          <div class="prog"><div class="nm">Peak + taper<div class="d">from wk 13</div></div><span class="st plan">planned</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot"><span class="tag">FORTIOR LIVE · memory-aware agent · Phase B</span></div>
+</div>
+
+<!-- AGENT DOCK -->
+<div class="ask" id="ask">
+  <div class="ask-h" onclick="toggleDock()">
+    <span class="av" id="ax">FD</span>
+    <div><div class="nm" id="an">Deal Desk</div><div class="mem"><span class="d"></span> <span id="am">learning · 14 notes</span></div></div>
+    <button class="tg" id="tg" aria-label="Toggle">–</button>
+  </div>
+  <div class="ask-body" id="stream"></div>
+  <div class="memchips" id="chips"></div>
+  <div class="ask-in">
+    <input id="q" placeholder="Ask…" onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="send" onclick="sendMsg()" aria-label="Send">↑</button>
+  </div>
+</div>
+
+<script type="module">
+import { getClient, renderLogin, signOut } from './lib/supabase.js';
+
+// Client-side display metadata only. The domain SYSTEM PROMPTS live server-side
+// in /lib/domains.js (used by /api/agent) so the browser can't tamper with them.
+const DOMAINS = {
+  home:   {av:'CB', name:'Command',   mem:'across all domains',
+    chips:['weighs domains by what is time-bound','surfaces what is owed to you']},
+  perso:  {av:'CO', name:'Coach',     mem:'learning your habits',
+    chips:['book holidays ~2 months ahead','gym habit slips on Tuesdays']},
+  fortior:{av:'FD', name:'Deal Desk', mem:'learning',
+    chips:['passes on owner-dependent firms','£0.7–2m EBITDA','prefers recurring-revenue compliance']},
+  finance:{av:'FN', name:'Finance',   mem:'learning · portfolio + budget',
+    chips:['fee-conscious (OCF ≤0.9%)','watches satellite concentration']},
+  health: {av:'HX', name:'Health',    mem:'learning your biomarkers',
+    chips:['quarterly bloods cadence','Vit D historically low']},
+  fitness:{av:'FT', name:'Coach',     mem:'learning · running + strength',
+    chips:['NYC marathon Nov 2026','Z2 base focus']}
+};
+let current='home';
+const convo={};
+const memCache={};                       // domain -> array of learned facts (live)
+Object.keys(DOMAINS).forEach(k=>convo[k]=[]);
+
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const daysAgo = d => d ? Math.max(0, Math.round((Date.now()-new Date(d))/86400000)) : null;
+
+// ---- navigation / dock ------------------------------------------------------
+function go(s){document.querySelector('.nav button[data-s="'+s+'"]').click();}
+document.getElementById('nav').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  const s=b.dataset.s;
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===s));
+  window.scrollTo({top:0,behavior:'smooth'});
+  setDomain(s);
+});
+function setDomain(s){
+  current=s; const d=DOMAINS[s];
+  document.getElementById('ax').textContent=d.av;
+  document.getElementById('an').textContent=d.name;
+  renderChips(s); updateMemCount(s);
+  renderStream();
+  if(memCache[s]===undefined) loadMemory(s);   // lazy-load learned facts per domain
+}
+function renderChips(s){
+  const live=memCache[s];
+  const chips=(live&&live.length)?live:DOMAINS[s].chips;
+  document.getElementById('chips').innerHTML='<span class="lbl">What I\'ve learned</span>'+
+    chips.map(c=>'<span class="chip">'+esc(c)+'</span>').join('');
+}
+function updateMemCount(s){
+  const live=memCache[s];
+  document.getElementById('am').textContent=(live&&live.length)
+    ? ('learning · '+live.length+' note'+(live.length===1?'':'s'))
+    : DOMAINS[s].mem;
+}
+async function loadMemory(s){
+  memCache[s]=null;
+  try{
+    const sb=await getClient();
+    const {data}=await sb.from('agent_memory').select('content')
+      .eq('domain',s).order('last_seen',{ascending:false}).limit(12);
+    memCache[s]=(data||[]).map(r=>r.content);
+  }catch(e){ memCache[s]=null; }
+  if(current===s){ renderChips(s); updateMemCount(s); }
+}
+function renderStream(){
+  const st=document.getElementById('stream'); st.innerHTML='';
+  const msgs=convo[current];
+  if(msgs.length===0){
+    const hint=document.createElement('div'); hint.className='msg a';
+    hint.innerHTML='<b>'+esc(DOMAINS[current].name)+'.</b> Ask me anything about this screen — I can see the data on it, and I remember what I learn across sessions.';
+    st.appendChild(hint);
+  }
+  msgs.forEach(m=>{const el=document.createElement('div');el.className='msg '+m.role;el.textContent=m.text;st.appendChild(el);});
+  st.scrollTop=st.scrollHeight;
+}
+function toggleDock(){const a=document.getElementById('ask');a.classList.toggle('min');document.getElementById('tg').textContent=a.classList.contains('min')?'+':'–';}
+
+// ---- memory-aware agent (server endpoint) -----------------------------------
+async function sendMsg(){
+  const inp=document.getElementById('q'); const text=inp.value.trim(); if(!text)return;
+  inp.value=''; convo[current].push({role:'u',text}); renderStream();
+  const st=document.getElementById('stream');
+  const think=document.createElement('div'); think.className='msg think'; think.textContent='…'; st.appendChild(think); st.scrollTop=st.scrollHeight;
+  const domain=current;
+  try{
+    const res=await fetch('/api/agent',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({domain, message:text})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'agent error');
+    think.remove(); convo[domain].push({role:'a',text:data.text||'(no response)'}); if(current===domain) renderStream();
+    loadMemory(domain);   // a new MEMORY: fact may have landed — refresh chips
+  }catch(err){
+    think.remove();
+    convo[domain].push({role:'a',text:'(Agent unreachable — '+esc(err.message)+'. Check that /api/agent is deployed and ANTHROPIC_API_KEY is set in Vercel.)'});
+    if(current===domain) renderStream();
+  }
+}
+
+// ---- Fortior live data (Step 3b) -------------------------------------------
+const ebitdaStr = v => { if(v==null) return ''; const m=v>=1000?v/1e6:v; return '£'+(Math.round(m*10)/10)+'m EBITDA'; };
+const funnelBar = (n,max,fill) =>
+  `<div class="fcol${fill?' fill':''}"><div class="bar" style="height:${Math.max(26,Math.round(26+64*(n/(max||1))))}px"><b>${n}</b></div>`;
+
+async function loadFortior(){
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+
+  // funnel — all Pursuing rows, counted client-side across teaser_status + stage
+  try{
+    const {data:rows}=await sb.from('rocket_targets').select('stage,teaser_status').eq('status','Pursuing');
+    const r=rows||[];
+    const c=(f)=>r.filter(f).length;
+    const bars=[
+      ['Teaser req', c(x=>['Requested','Received'].includes(x.teaser_status)), true],
+      ["Rec'd",      c(x=>x.teaser_status==='Received'), true],
+      ['NDA',        c(x=>x.stage==='NDA'), true],
+      ['Info/mgmt',  c(x=>x.stage==='Info & mgmt call'), false],
+      ['Heads',      c(x=>x.stage==='Heads of terms'), false],
+      ['Offer',      c(x=>x.stage==='Final offer'), false],
+      ['Closed',     c(x=>x.stage==='Closed'), false]
+    ];
+    const max=Math.max(1,...bars.map(b=>b[1]));
+    document.getElementById('fnl').innerHTML=bars.map(([l,n,f])=>funnelBar(n,max,f)+`<div class="l">${l}</div></div>`).join('');
+    // pace line — name the biggest drop-off as the bottleneck, from live numbers
+    let worst='', drop=-1;
+    for(let i=0;i<bars.length-1;i++){
+      if(bars[i][1]>0){ const d=bars[i][1]-bars[i+1][1]; if(d>drop){drop=d; worst=bars[i][0]+'→'+bars[i+1][0];} }
+    }
+    const nda=bars[2][1];
+    document.getElementById('pace').innerHTML=
+      `Month 4 / 6 to first close. <b>NDA pipeline: ${nda}</b>. `+
+      (worst?`Biggest drop-off: ${esc(worst)} — the current bottleneck.`:'');
+  }catch(e){}
+
+  // in dialogue
+  try{
+    const {data}=await sb.from('rocket_targets')
+      .select('business,location,ebitda_gbp,stage,last_contact')
+      .in('stage',['NDA','Info & mgmt call','Heads of terms','Final offer'])
+      .order('last_contact',{ascending:false});
+    if(data) document.getElementById('dlg').innerHTML = data.length? data.map(t=>{
+      const age=daysAgo(t.last_contact); const sub=[t.location,ebitdaStr(t.ebitda_gbp)].filter(Boolean).join(' · ');
+      return `<div class="row"><div class="co">${esc(t.business||'')}<div class="s">${esc(sub)}</div></div>`+
+        `<span class="stg">${esc(t.stage||'')}</span><span class="age">${age!=null?age+'d':'—'}</span></div>`;
+    }).join('') : '<div class="row"><div class="co">Nothing in dialogue yet</div></div>';
+  }catch(e){}
+
+  // stalled / chase — teaser requested, no contact in 14+ days
+  try{
+    const cutoff=new Date(Date.now()-14*86400000).toISOString().slice(0,10);
+    const {data}=await sb.from('rocket_targets').select('business,last_contact')
+      .eq('teaser_status','Requested').lt('last_contact',cutoff)
+      .order('last_contact',{ascending:true});
+    if(data) document.getElementById('stall').innerHTML = data.length? data.map(t=>{
+      const age=daysAgo(t.last_contact);
+      return `<div class="row"><div class="co">${esc(t.business||'')}<div class="s">teaser requested</div></div>`+
+        `<span class="stg">No reply</span><span class="age old">${age!=null?age+'d':'—'}</span></div>`;
+    }).join('') : '<div class="row"><div class="co">No stalled teasers — all chased</div></div>';
+  }catch(e){}
+
+  // new targets
+  try{
+    const {data}=await sb.from('rocket_targets').select('business,lane,score,date_first_seen')
+      .order('date_first_seen',{ascending:false}).limit(5);
+    if(data) document.getElementById('newt').innerHTML = data.length? data.map(t=>{
+      const age=daysAgo(t.date_first_seen);
+      return `<div class="row"><div class="co">${esc(t.business||'')}<div class="s">${esc(t.lane||'')}</div></div>`+
+        `<span class="score">${t.score!=null?t.score:'—'}</span><span class="age">${age!=null?age+'d':'—'}</span></div>`;
+    }).join('') : '<div class="row"><div class="co">No targets logged yet</div></div>';
+  }catch(e){}
+
+  // things to do
+  try{
+    const {data}=await sb.from('fortior_tasks').select('task,type,due_date,status')
+      .neq('status','Done').order('due_date',{ascending:true,nullsFirst:false});
+    if(data) document.getElementById('todo').innerHTML = data.length? data.map(t=>{
+      const due=t.due_date; const soon = due && daysAgo(due)!=null && (new Date(due)-Date.now())<7*86400000;
+      const dueLabel = due? new Date(due).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : 'no date';
+      return `<div class="task"><span class="ty">${esc(t.type||'—')}</span><div class="tt">${esc(t.task||'')}</div>`+
+        `<span class="due${soon?' soon':''}">${esc(dueLabel)}</span></div>`;
+    }).join('') : '<div class="task"><div class="tt">Nothing outstanding</div></div>';
+  }catch(e){}
+}
+
+// ---- expose handlers used by inline onclick / onkeydown ---------------------
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg;
+
+// ---- boot: auth gate, then live wiring -------------------------------------
+(async function boot(){
+  let sb;
+  try{ sb=await getClient(); }
+  catch(e){
+    // config endpoint missing (e.g. opened as a bare file) — run in demo mode
+    document.getElementById('locklabel').textContent='Demo · no backend';
+    setDomain('home');
+    return;
+  }
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ renderLogin(sb); return; }
+
+  document.getElementById('locklabel').textContent='Sign out';
+  document.getElementById('signout').addEventListener('click',signOut);
+  setDomain('home');
+  loadFortior();
+})();
+</script>
+</body>
+</html>

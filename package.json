@@ -1,0 +1,14 @@
+{
+  "name": "cb-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CB Dashboard — Fortior live slice, auth gate, Notion→Supabase sync, memory-aware Deal Desk",
+  "type": "module",
+  "scripts": {
+    "sync": "node -e \"import('./api/sync-notion.js')\""
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

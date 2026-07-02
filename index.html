@@ -243,6 +243,8 @@
           <div class="ln"><span class="tk" style="background:var(--warn)"></span><span class="t">Needs attention</span></div>
           <div class="ln"><span class="tk" style="background:var(--bad)"></span><span class="t">Off track / overdue</span></div></div></div>
     </div>
+    <div class="sec-ey">Priorities · live</div>
+    <div class="panel" id="pri"><div class="row"><div class="co">Loading…</div></div></div>
   </section>
 
   <!-- PERSO -->
@@ -265,17 +267,9 @@
       </div>
       <div>
         <div class="sec-ey">Habits</div>
-        <div class="panel">
-          <div class="habit"><span class="chk on">✓</span><span class="hn">Morning mobility</span><span class="cad">daily</span><span class="stk">12d</span></div>
-          <div class="habit"><span class="chk on">✓</span><span class="hn">No screens after 22:30</span><span class="cad">daily</span><span class="stk">4d</span></div>
-          <div class="habit"><span class="chk"></span><span class="hn">Tuesday gym</span><span class="cad">weekly</span><span class="stk" style="color:var(--warn)">missed ×2</span></div>
-          <div class="habit"><span class="chk on">✓</span><span class="hn">Read 20 min</span><span class="cad">daily</span><span class="stk">8d</span></div>
-        </div>
+        <div class="panel" id="habits"><div class="habit"><span class="hn">Loading…</span></div></div>
         <div class="sec-ey">Goals</div>
-        <div class="panel">
-          <div class="row"><span class="sdot" style="background:var(--ok)"></span><div class="co">Sub-3:30 NYC Marathon<div class="s">Nov 2026</div></div><span class="age">on trk</span></div>
-          <div class="row"><span class="sdot warn" style="background:var(--warn)"></span><div class="co">Estate planning<div class="s">Q3</div></div><span class="age">risk</span></div>
-        </div>
+        <div class="panel" id="goals"><div class="row"><div class="co">Loading…</div></div></div>
       </div>
     </div>
   </section>
@@ -442,11 +436,7 @@
       </div>
       <div>
         <div class="sec-ey">Programmes</div>
-        <div class="panel">
-          <div class="prog"><div class="nm">NYC Marathon — base<div class="d">running · wk 4/18</div></div><span class="st active">active</span></div>
-          <div class="prog"><div class="nm">5×5 strength<div class="d">gym · ongoing</div></div><span class="st active">active</span></div>
-          <div class="prog"><div class="nm">Peak + taper<div class="d">from wk 13</div></div><span class="st plan">planned</span></div>
-        </div>
+        <div class="panel" id="progs"><div class="prog"><div class="nm">Loading…</div></div></div>
       </div>
     </div>
   </section>
@@ -513,7 +503,11 @@ function setDomain(s){
   renderChips(s); updateMemCount(s);
   renderStream();
   if(memCache[s]===undefined) loadMemory(s);   // lazy-load learned facts per domain
-  if(s==='fortior') loadFortior();             // refresh live data on every visit
+  // refresh each screen's live data on every visit
+  if(s==='fortior') loadFortior();
+  if(s==='home') loadHome();
+  if(s==='perso') loadPerso();
+  if(s==='fitness') loadFitness();
 }
 function renderChips(s){
   const live=memCache[s];
@@ -665,6 +659,59 @@ async function loadFortior(){
   }catch(e){}
 }
 
+// ---- Perso live data ---------------------------------------------------------
+async function loadPerso(){
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+  try{
+    const {data}=await sb.from('goals_habits')
+      .select('name,type,area,cadence,status,last_checkin,target')
+      .neq('status','Done').order('type');
+    const rows=data||[];
+    const habits=rows.filter(r=>r.type==='Habit');
+    const goals=rows.filter(r=>r.type==='Goal');
+    document.getElementById('habits').innerHTML = habits.length? habits.map(h=>{
+      const on=h.status==='On track';
+      return `<div class="habit"><span class="chk${on?' on':''}">${on?'✓':''}</span><span class="hn">${esc(h.name||'')}</span>`+
+        `<span class="cad">${esc(h.cadence||'')}</span><span class="stk"${on?'':' style="color:var(--warn)"'}>${esc(h.status||'')}</span></div>`;
+    }).join('') : '<div class="habit"><span class="hn">No habits logged yet</span></div>';
+    document.getElementById('goals').innerHTML = goals.length? goals.map(g=>{
+      const color = g.status==='On track'?'var(--ok)':(g.status==='At risk'||g.status==='Off track')?'var(--warn)':'var(--muted)';
+      return `<div class="row"><span class="sdot" style="background:${color}"></span><div class="co">${esc(g.name||'')}<div class="s">${esc(g.target||'')}</div></div><span class="age">${esc(g.status||'')}</span></div>`;
+    }).join('') : '<div class="row"><div class="co">No goals logged yet</div></div>';
+  }catch(e){}
+}
+
+// ---- Fitness live data ---------------------------------------------------------
+async function loadFitness(){
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+  try{
+    const {data}=await sb.from('training_programs')
+      .select('program,discipline,status,start_date')
+      .neq('status','Archived').order('status');
+    document.getElementById('progs').innerHTML = (data&&data.length)? data.map(p=>{
+      const wk = p.start_date? Math.max(1,Math.floor((Date.now()-new Date(p.start_date))/604800000)+1) : null;
+      const sub=[p.discipline, wk?('wk '+wk):null].filter(Boolean).join(' · ');
+      const st = p.status==='Active'?'active':p.status==='Planned'?'plan':'';
+      return `<div class="prog"><div class="nm">${esc(p.program||'')}<div class="d">${esc(sub)}</div></div><span class="st ${st}">${esc((p.status||'').toLowerCase())}</span></div>`;
+    }).join('') : '<div class="prog"><div class="nm">No programmes logged yet</div></div>';
+  }catch(e){}
+}
+
+// ---- Home live data (Priorities rollup) --------------------------------------
+async function loadHome(){
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+  try{
+    const {data}=await sb.from('priorities')
+      .select('project,category,status,next_action,next_action_date')
+      .neq('status','Done').order('next_action_date',{ascending:true,nullsFirst:false}).limit(8);
+    document.getElementById('pri').innerHTML = (data&&data.length)? data.map(p=>{
+      const flag = p.status==='At risk'||p.status==='Needs attention';
+      const due = p.next_action_date? new Date(p.next_action_date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : null;
+      return `<div class="row"><span class="sdot" style="background:${flag?'var(--warn)':'var(--ok)'}"></span><div class="co">${esc(p.project||'')}<div class="s">${esc(p.next_action||p.category||'')}</div></div><span class="age${flag?' old':''}">${due||esc(p.status||'')}</span></div>`;
+    }).join('') : '<div class="row"><div class="co">No open priorities logged yet</div></div>';
+  }catch(e){}
+}
+
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
 window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg;
 
@@ -684,7 +731,6 @@ window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg;
   document.getElementById('locklabel').textContent='Sign out';
   document.getElementById('signout').addEventListener('click',signOut);
   setDomain('home');
-  loadFortior();
 })();
 </script>
 </body>

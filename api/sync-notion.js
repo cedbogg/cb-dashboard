@@ -1,13 +1,20 @@
-// Notion → Supabase sync (cron). Pulls the two Fortior databases and upserts
-// into rocket_targets + fortior_tasks. Runs on the schedule in vercel.json
-// (twice daily), and can be triggered manually by hitting /api/sync-notion.
+// Notion → Supabase sync (cron). Pulls each configured Notion database and
+// upserts into its matching table (rocket_targets, fortior_tasks, goals_habits,
+// priorities, training_programs). Runs on the schedule in vercel.json, and can
+// be triggered manually by hitting /api/sync-notion.
 //
 // Env required (server only):
 //   NOTION_TOKEN            internal integration token (share the DBs with it)
 //   NOTION_ROCKET_DB_ID     Notion database id for "Rocket Sourcing Log"
 //   NOTION_TASKS_DB_ID      Notion database id for "Fortior Tasks"
+//   NOTION_GOALS_DB_ID      Notion database id for "Goals & Habits" (optional)
+//   NOTION_PRIORITIES_DB_ID Notion database id for "Priorities" (optional)
+//   NOTION_TRAINING_DB_ID   Notion database id for "Training Programs" (optional)
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 //   OWNER_USER_ID           Cedric's auth.users id, stamped on every row
+//
+// The three "optional" tables no-op (skipped) until their env var is set, so
+// adding them is safe at any time — see syncTable's `!dbId` guard below.
 
 import { Client } from '@notionhq/client';
 import { createClient } from '@supabase/supabase-js';
@@ -95,6 +102,50 @@ function mapTask(page) {
   };
 }
 
+function mapGoal(page) {
+  const p = page.properties;
+  return {
+    owner_id: OWNER,
+    notion_id: page.id,
+    name: readProp(p, 'Name'),
+    type: readProp(p, 'Type'),
+    area: readProp(p, 'Area'),
+    cadence: readProp(p, 'Cadence'),
+    status: readProp(p, 'Status'),
+    last_checkin: toDate(readProp(p, 'Last check-in')),
+    target: readProp(p, 'Target'),
+    notes: readProp(p, 'Notes')
+  };
+}
+
+function mapPriority(page) {
+  const p = page.properties;
+  return {
+    owner_id: OWNER,
+    notion_id: page.id,
+    project: readProp(p, 'Project'),
+    category: readProp(p, 'Category'),
+    status: readProp(p, 'Status'),
+    next_action: readProp(p, 'Next action'),
+    next_action_date: toDate(readProp(p, 'Next action date')),
+    source_link: readProp(p, 'Source link') || readProp(p, 'Link')
+  };
+}
+
+function mapTraining(page) {
+  const p = page.properties;
+  return {
+    owner_id: OWNER,
+    notion_id: page.id,
+    program: readProp(p, 'Program'),
+    discipline: readProp(p, 'Discipline'),
+    status: readProp(p, 'Status'),
+    start_date: toDate(readProp(p, 'Start date')),
+    progression_notes: readProp(p, 'Progression notes'),
+    program_link: readProp(p, 'Program link') || readProp(p, 'Link')
+  };
+}
+
 async function syncTable(dbId, table, mapper, onMissing) {
   if (!dbId) return { table, skipped: 'no database id configured' };
   const pages = await fetchAllPages(dbId);
@@ -136,6 +187,16 @@ export default async function handler(req, res) {
       // tasks removed from Notion -> delete outright
       syncTable(process.env.NOTION_TASKS_DB_ID, 'fortior_tasks', mapTask,
         (ids) => sb.from('fortior_tasks').delete()
+          .eq('owner_id', OWNER).in('notion_id', ids)),
+      // goals/habits, priorities, training programs removed from Notion -> delete outright
+      syncTable(process.env.NOTION_GOALS_DB_ID, 'goals_habits', mapGoal,
+        (ids) => sb.from('goals_habits').delete()
+          .eq('owner_id', OWNER).in('notion_id', ids)),
+      syncTable(process.env.NOTION_PRIORITIES_DB_ID, 'priorities', mapPriority,
+        (ids) => sb.from('priorities').delete()
+          .eq('owner_id', OWNER).in('notion_id', ids)),
+      syncTable(process.env.NOTION_TRAINING_DB_ID, 'training_programs', mapTraining,
+        (ids) => sb.from('training_programs').delete()
           .eq('owner_id', OWNER).in('notion_id', ids))
     ]);
     res.status(200).json({ ok: true, results });

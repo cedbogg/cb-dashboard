@@ -120,6 +120,7 @@ create table if not exists training_programs (
   progression_notes text,
   program_link      text,
   program_html      text,   -- the Claude-built programme, rendered on the Fitness screen
+  notion_id         text unique,
   updated_at        timestamptz not null default now()
 );
 
@@ -205,3 +206,9 @@ end $$;
 
 -- NOTE: the sync job (service role) bypasses RLS; it must set
 -- owner_id to Cedric's auth.users id on every upserted row.
+
+-- ============================================================
+-- v1.1 migration — run this if schema v1 is already applied.
+-- training_programs was missing its Notion sync key.
+-- ============================================================
+alter table training_programs add column if not exists notion_id text unique;

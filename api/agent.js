@@ -19,13 +19,40 @@ const days = (d) => (d ? Math.max(0, Math.round((Date.now() - new Date(d)) / 864
 // Live data snapshot injected into the system prompt at request time, so the
 // agent sees what the dashboard sees (personas in lib/domains.js stay stable).
 async function liveContext(domain) {
+  if (domain === 'perso') {
+    const { data } = await sb.from('goals_habits').select('name,type,area,cadence,status,last_checkin,target')
+      .eq('owner_id', OWNER).neq('status', 'Done');
+    const rows = data || [];
+    const habits = rows.filter(x => x.type === 'Habit')
+      .map(x => `${x.name} (${x.cadence || '?'}, ${x.status || '?'})`);
+    const goals = rows.filter(x => x.type === 'Goal')
+      .map(x => `${x.name} (${x.target || 'no target set'}, ${x.status || '?'})`);
+    return `LIVE PERSO DATA (synced from Notion — trust this over anything else, including memory):
+- Habits: ${habits.join('; ') || 'none tracked'}.
+- Goals: ${goals.join('; ') || 'none tracked'}.
+Note: calendar/holiday/gift items on the dashboard are not synced yet — don't invent specifics for those.`;
+  }
+  if (domain === 'fitness') {
+    const { data } = await sb.from('training_programs').select('program,discipline,status,start_date,progression_notes')
+      .eq('owner_id', OWNER).neq('status', 'Archived');
+    const rows = data || [];
+    const list = rows.map(x => `${x.program} (${x.discipline || '?'}, ${x.status || '?'}${x.start_date ? ', started ' + x.start_date : ''}${x.progression_notes ? ' — ' + x.progression_notes : ''})`);
+    return `LIVE FITNESS DATA (synced from Notion — trust this over anything else, including memory):
+- Programmes: ${list.join('; ') || 'none logged'}.
+Note: running/strength session logs (Strava, lift PRs) are not synced yet — don't invent specifics for those.`;
+  }
   if (domain === 'fortior' || domain === 'home') {
-    const [{ data: targets }, { data: tasks }] = await Promise.all([
+    const [{ data: targets }, { data: tasks }, { data: pri }] = await Promise.all([
       sb.from('rocket_targets')
         .select('business,location,ebitda_gbp,lane,score,stage,teaser_status,status,last_contact,date_first_seen')
         .eq('owner_id', OWNER),
       sb.from('fortior_tasks')
-        .select('task,type,due_date,status').eq('owner_id', OWNER).neq('status', 'Done')
+        .select('task,type,due_date,status').eq('owner_id', OWNER).neq('status', 'Done'),
+      domain === 'home'
+        ? sb.from('priorities').select('project,category,status,next_action,next_action_date')
+            .eq('owner_id', OWNER).neq('status', 'Done')
+            .order('next_action_date', { ascending: true, nullsFirst: false })
+        : Promise.resolve({ data: null })
     ]);
     const t = targets || [];
     const pursuing = t.filter(x => x.status === 'Pursuing');
@@ -48,12 +75,16 @@ async function liveContext(domain) {
       .slice().sort((a, b) => (b.date_first_seen || '').localeCompare(a.date_first_seen || '')).slice(0, 5)
       .map(x => `${x.business} (${x.lane || '?'}, score ${x.score ?? '—'})`);
     const todo = (tasks || []).map(x => `${x.task} (${x.type || '—'}, due ${x.due_date || 'no date'}, ${x.status})`);
+    const priorityLines = (pri || []).map(x => `${x.project} (${x.category || '?'}, ${x.status || '?'}${x.next_action ? ', next: ' + x.next_action : ''}${x.next_action_date ? ' by ' + x.next_action_date : ''})`);
+    const priorityBlock = domain === 'home' ? `
+- Open priorities across Sparta/Fortior/Personal: ${priorityLines.join('; ') || 'none open'}.` : '';
     return `LIVE PIPELINE DATA (synced from Notion — trust this over anything else, including memory):
 - Targets: ${t.length} total, ${pursuing.length} pursuing. Funnel: ${funnel}.
 - In dialogue: ${dialogue.join('; ') || 'none'}.
 - Stalled (teaser requested, 14d+ no contact): ${stalled.join('; ') || 'none'}.
 - Newest targets: ${fresh.join('; ') || 'none'}.
-- Open tasks: ${todo.join('; ') || 'none'}.`;
+- Open tasks: ${todo.join('; ') || 'none'}.${priorityBlock}
+${domain === 'home' ? 'Note: Finance and Health live feeds are not connected yet — say so rather than inventing numbers for those screens.' : ''}`;
   }
   return 'NOTE: no live data is wired for this domain yet. If asked for current numbers, say the live feed is not connected rather than inventing figures.';
 }

@@ -513,6 +513,7 @@ function setDomain(s){
   renderChips(s); updateMemCount(s);
   renderStream();
   if(memCache[s]===undefined) loadMemory(s);   // lazy-load learned facts per domain
+  if(s==='fortior') loadFortior();             // refresh live data on every visit
 }
 function renderChips(s){
   const live=memCache[s];
@@ -557,8 +558,13 @@ async function sendMsg(){
   const think=document.createElement('div'); think.className='msg think'; think.textContent='…'; st.appendChild(think); st.scrollTop=st.scrollHeight;
   const domain=current;
   try{
+    // /api/agent requires the session token — it only answers to the owner
+    const sb=await getClient();
+    const {data:{session}}=await sb.auth.getSession();
     const res=await fetch('/api/agent',{
-      method:'POST',headers:{'Content-Type':'application/json'},
+      method:'POST',
+      headers:{'Content-Type':'application/json',
+               'Authorization':'Bearer '+(session?.access_token||'')},
       body:JSON.stringify({domain, message:text})
     });
     const data=await res.json();
@@ -623,9 +629,11 @@ async function loadFortior(){
   // stalled / chase — teaser requested, no contact in 14+ days
   try{
     const cutoff=new Date(Date.now()-14*86400000).toISOString().slice(0,10);
+    // include rows with NO contact ever logged (NULL) — those need chasing most
     const {data}=await sb.from('rocket_targets').select('business,last_contact')
-      .eq('teaser_status','Requested').lt('last_contact',cutoff)
-      .order('last_contact',{ascending:true});
+      .eq('teaser_status','Requested')
+      .or('last_contact.is.null,last_contact.lt.'+cutoff)
+      .order('last_contact',{ascending:true,nullsFirst:true});
     if(data) document.getElementById('stall').innerHTML = data.length? data.map(t=>{
       const age=daysAgo(t.last_contact);
       return `<div class="row"><div class="co">${esc(t.business||'')}<div class="s">teaser requested</div></div>`+

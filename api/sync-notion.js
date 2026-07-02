@@ -95,7 +95,7 @@ function mapTask(page) {
   };
 }
 
-async function syncTable(dbId, table, mapper) {
+async function syncTable(dbId, table, mapper, onMissing) {
   if (!dbId) return { table, skipped: 'no database id configured' };
   const pages = await fetchAllPages(dbId);
   const rows = pages.map(mapper).filter(r => r.notion_id);
@@ -103,15 +103,40 @@ async function syncTable(dbId, table, mapper) {
     const { error } = await sb.from(table).upsert(rows, { onConflict: 'notion_id' });
     if (error) throw new Error(`${table}: ${error.message}`);
   }
-  return { table, upserted: rows.length };
+  // Reconcile: rows that vanished from Notion (deleted/archived) shouldn't
+  // haunt the dashboard. `onMissing` decides what to do with them.
+  let reconciled = 0;
+  const seen = new Set(rows.map(r => r.notion_id));
+  const { data: existing, error: exErr } = await sb.from(table)
+    .select('notion_id').eq('owner_id', OWNER).not('notion_id', 'is', null);
+  if (exErr) throw new Error(`${table} reconcile: ${exErr.message}`);
+  const missing = (existing || []).map(r => r.notion_id).filter(id => !seen.has(id));
+  if (missing.length) {
+    const { error } = await onMissing(missing);
+    if (error) throw new Error(`${table} reconcile: ${error.message}`);
+    reconciled = missing.length;
+  }
+  return { table, upserted: rows.length, reconciled };
 }
 
 export default async function handler(req, res) {
+  // Vercel cron sends `Authorization: Bearer ${CRON_SECRET}` automatically when
+  // the env var is set; manual triggers must supply the same header.
+  const secret = process.env.CRON_SECRET;
+  if (secret && req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).json({ ok: false, error: 'unauthorized' });
+  }
   try {
     if (!OWNER) throw new Error('OWNER_USER_ID not set');
     const results = await Promise.all([
-      syncTable(process.env.NOTION_ROCKET_DB_ID, 'rocket_targets', mapRocket),
-      syncTable(process.env.NOTION_TASKS_DB_ID, 'fortior_tasks', mapTask)
+      // targets removed from Notion -> soft-kill (keep the record, mark Dead)
+      syncTable(process.env.NOTION_ROCKET_DB_ID, 'rocket_targets', mapRocket,
+        (ids) => sb.from('rocket_targets').update({ status: 'Dead' })
+          .eq('owner_id', OWNER).in('notion_id', ids).neq('status', 'Dead')),
+      // tasks removed from Notion -> delete outright
+      syncTable(process.env.NOTION_TASKS_DB_ID, 'fortior_tasks', mapTask,
+        (ids) => sb.from('fortior_tasks').delete()
+          .eq('owner_id', OWNER).in('notion_id', ids))
     ]);
     res.status(200).json({ ok: true, results });
   } catch (err) {

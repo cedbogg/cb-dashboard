@@ -253,12 +253,7 @@
     <div class="cols p">
       <div>
         <div class="sec-ey">This week · calendar</div>
-        <div class="panel">
-          <div class="day"><div class="d">Thu<b>18</b></div><div><div class="evr"><span class="tm">09:30</span><span class="t">Dentist</span></div><div class="evr"><span class="tm">14:00</span><span class="t">Sparta IC call</span></div></div></div>
-          <div class="day"><div class="d">Fri<b>19</b></div><div><div class="evr"><span class="tm">14:00</span><span class="t">Mgmt call — ABC Fire</span></div></div></div>
-          <div class="day"><div class="d">Sat<b>20</b></div><div><div class="evr b"><span class="tm">—</span><span class="t">Emma's birthday · gift due</span></div></div></div>
-          <div class="day"><div class="d">Sun<b>21</b></div><div><div class="evr"><span class="tm">08:00</span><span class="t">Long run — 18 km</span></div></div></div>
-        </div>
+        <div class="panel" id="weekcal"><div class="day"><div class="d">·</div><div><div class="evr"><span class="t">Loading…</span></div></div></div></div>
         <div class="sec-ey">Looking ahead</div>
         <div class="panel">
           <div class="nudge"><div class="ic">✈︎</div><div style="flex:1"><div class="h">Summer holiday not booked</div><div class="s">Term ends 18 Jul — ~4 weeks out.</div></div><div class="act">Plan</div></div>
@@ -659,8 +654,44 @@ async function loadFortior(){
   }catch(e){}
 }
 
+// ---- Perso · This week calendar (live from Google Calendar .ics feed) --------
+async function loadCalendar(){
+  const box=document.getElementById('weekcal'); if(!box) return;
+  const fail=(msg)=>{ box.innerHTML='<div class="day"><div class="d">·</div><div><div class="evr"><span class="t">'+esc(msg)+'</span></div></div></div>'; };
+  let sb; try{ sb=await getClient(); }catch(e){ fail('Calendar unavailable in demo mode'); return; }
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    const res=await fetch('/api/calendar',{headers:{'Authorization':'Bearer '+(session?.access_token||'')}});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'calendar error');
+    const events=data.events||[];
+
+    // Build 7 day buckets from today (user's local time) and drop events into them.
+    const startOfDay=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x;};
+    const today=startOfDay(new Date());
+    const buckets=[];
+    for(let i=0;i<7;i++){ const d=new Date(today); d.setDate(d.getDate()+i); buckets.push({date:d,items:[]}); }
+    const dayIndex=iso=>Math.round((startOfDay(iso)-today)/86400000);
+    events.forEach(ev=>{ const i=dayIndex(ev.start); if(i>=0&&i<7) buckets[i].items.push(ev); });
+    buckets.forEach(b=>b.items.sort((a,c)=>(a.allDay===c.allDay)?a.start.localeCompare(c.start):(a.allDay?-1:1)));
+
+    const wd=d=>d.toLocaleDateString('en-GB',{weekday:'short'});
+    const hm=iso=>new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});
+    const shown=buckets.filter(b=>b.items.length);
+    if(!shown.length){ box.innerHTML='<div class="day"><div class="d">·</div><div><div class="evr"><span class="t">Nothing scheduled this week</span></div></div></div>'; return; }
+    box.innerHTML=shown.map(b=>{
+      const rows=b.items.map(ev=>{
+        const tm=ev.allDay?'—':hm(ev.start);
+        return `<div class="evr${ev.allDay?' b':''}"><span class="tm">${esc(tm)}</span><span class="t">${esc(ev.title)}</span></div>`;
+      }).join('');
+      return `<div class="day"><div class="d">${wd(b.date)}<b>${b.date.getDate()}</b></div><div>${rows}</div></div>`;
+    }).join('');
+  }catch(e){ fail('Calendar unreachable — check GCAL_ICS_URL in Vercel'); }
+}
+
 // ---- Perso live data ---------------------------------------------------------
 async function loadPerso(){
+  loadCalendar();
   let sb; try{ sb=await getClient(); }catch(e){ return; }
   try{
     const {data}=await sb.from('goals_habits')

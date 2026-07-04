@@ -665,6 +665,14 @@ async function loadCalendar(){
     const data=await res.json();
     if(!res.ok) throw new Error(data.error||'calendar error');
     const events=data.events||[];
+    // TEMP diagnostic — shows why birthdays may be missing; remove once working.
+    if(data.debug||((data.warnings||[]).length)){
+      const d=data.debug||{}; const w=(data.warnings||[]).join(' · ');
+      console.log('[calendar] debug',d,'warnings',data.warnings);
+      const note=document.createElement('div'); note.className='sec-ey'; note.style.color='var(--muted)';
+      note.textContent='cal: '+(d.birthdaysConfigured?`birthdays on · scanned ${d.scanned} contacts · ${d.withBirthday} with a birthday · ${d.inWindow??0} this week`:'birthdays OFF (Google env vars not set)')+(w?(' · '+w):'');
+      const box=document.getElementById('weekcal'); box.parentNode.insertBefore(note,box);
+    }
 
     // Build 7 day buckets from today (user's local time) and drop events into them.
     const startOfDay=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x;};

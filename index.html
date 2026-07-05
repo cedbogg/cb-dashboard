@@ -202,6 +202,8 @@
       <div class="items" id="wkitems">
         <div class="ri"><b>Loading…</b><span class="when"></span></div>
       </div></div>
+    <div class="sec-ey">Coach · your week</div>
+    <div class="panel" id="coachread" style="cursor:pointer" onclick="go('perso')"><div class="s">Reading your week…</div></div>
     <div class="grid">
       <button class="card warn" onclick="go('perso')"><span class="spine"></span>
         <div class="chead"><span class="eyebrow">Perso</span><span class="sdot"></span></div>
@@ -896,6 +898,42 @@ async function toggleHabit(id,done,el){
     loadHabitsGoals();
   }catch(e){ if(el){ el.style.opacity=''; el.style.pointerEvents=''; } }
 }
+// Proactive weekly read on the Home screen — computed live from adherence, no
+// LLM call. Coach-voiced: one steady win, one thing slipping, plus goals open.
+async function loadCoachRead(){
+  const box=document.getElementById('coachread'); if(!box) return;
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+  try{
+    const since=new Date(Date.now()-90*86400000).toISOString().slice(0,10);
+    const [{data:gh},{data:chk}]=await Promise.all([
+      sb.from('goals_habits').select('id,name,type,cadence,status,last_checkin').neq('status','Done'),
+      sb.from('habit_checkins').select('habit_id,date').gte('date',since)
+    ]);
+    const habits=(gh||[]).filter(r=>r.type==='Habit');
+    const goalsOpen=(gh||[]).filter(r=>r.type==='Goal' && !['Achieved','Missed','Done'].includes(r.status));
+    const checks=chk||[];
+    if(!habits.length && !goalsOpen.length){ box.innerHTML='<div class="s">No habits or big goals tracked yet — add some on Perso.</div>'; return; }
+    const now=Date.now(), ago=d=>Math.floor((now-new Date(d).getTime())/86400000);
+    const stat=habits.map(h=>{
+      const per=_habitPeriod(h.cadence);
+      const dates=checks.filter(c=>c.habit_id===h.id).map(c=>c.date).sort();
+      const last=dates.length?dates[dates.length-1]:null;
+      return {h, per, last, d30:dates.filter(d=>ago(d)<30).length, e30:Math.max(1,Math.round(30/per)), due:habitDue(h)};
+    });
+    const onTrack=stat.filter(s=>!s.due).length;
+    const bits=[];
+    bits.push(`<b>${onTrack}/${habits.length}</b> habits on track${goalsOpen.length?` · <b>${goalsOpen.length}</b> big goal${goalsOpen.length===1?'':'s'} open`:''}.`);
+    const logged=stat.filter(s=>s.d30>0);
+    if(logged.length){
+      const best=[...logged].sort((a,b)=>(b.d30/b.e30)-(a.d30/a.e30))[0];
+      bits.push(`Steadiest: <b>${esc(best.h.name)}</b> — ${best.d30}/${best.e30} in 30d.`);
+    }
+    const slip=stat.filter(s=>s.due).sort((a,b)=>((b.last?ago(b.last):999)-(a.last?ago(a.last):999)))[0];
+    if(slip) bits.push(`Watch <b>${esc(slip.h.name)}</b> — ${slip.last?('last done '+ago(slip.last)+'d ago'):'not logged yet'}.`);
+    else if(habits.length) bits.push(`Nothing slipping — nice week.`);
+    box.innerHTML=`<div class="s" style="line-height:1.7">${bits.join(' ')} <span style="color:var(--accent)">Talk to Coach →</span></div>`;
+  }catch(e){ box.innerHTML='<div class="s">Coach read unavailable.</div>'; }
+}
 async function resolveGoal(id,outcome,el){
   const row=el&&el.closest('.row'); if(row) row.style.opacity='.4';
   try{
@@ -925,6 +963,7 @@ async function loadFitness(){
 // ---- Home live data (Priorities rollup + shared week ribbon) -----------------
 async function loadHome(){
   loadHomeWeek();   // "This week" ribbon + Perso card — same source as the Perso screen
+  loadCoachRead();  // proactive weekly read on habits/goals
   let sb; try{ sb=await getClient(); }catch(e){ return; }
   try{
     const {data}=await sb.from('priorities')

@@ -207,6 +207,24 @@ end $$;
 -- NOTE: the sync job (service role) bypasses RLS; it must set
 -- owner_id to Cedric's auth.users id on every upserted row.
 
+-- ------------------------------------------------------------
+-- 10. REMINDER ACKS  ("Looking ahead" tick state)
+--     The reminder catalogue (school holidays etc.) lives in the
+--     frontend; this table only records which reminder instances
+--     the owner has ticked, so a nudge stays until ticked.
+-- ------------------------------------------------------------
+create table if not exists reminder_acks (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    uuid not null default auth.uid(),
+  key         text not null,          -- per-instance id, e.g. 'naima-oct-half-term-2026'
+  created_at  timestamptz not null default now(),
+  unique (owner_id, key)
+);
+alter table reminder_acks enable row level security;
+drop policy if exists owner_all on reminder_acks;
+create policy owner_all on reminder_acks
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
 -- ============================================================
 -- v1.1 migration — run this if schema v1 is already applied.
 -- training_programs was missing its Notion sync key.

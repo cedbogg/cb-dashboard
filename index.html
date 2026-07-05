@@ -249,11 +249,8 @@
       <div>
         <div class="sec-ey">This week · calendar</div>
         <div class="panel" id="weekcal"><div class="day"><div class="d">·</div><div><div class="evr"><span class="t">Loading…</span></div></div></div></div>
-        <div class="sec-ey">Looking ahead</div>
-        <div class="panel">
-          <div class="nudge"><div class="ic">✈︎</div><div style="flex:1"><div class="h">Summer holiday not booked</div><div class="s">Term ends 18 Jul — ~4 weeks out.</div></div><div class="act">Plan</div></div>
-          <div class="nudge"><div class="ic">🎁</div><div style="flex:1"><div class="h">Emma's gift</div><div class="s">Saturday. Nothing logged yet.</div></div><div class="act">Sort</div></div>
-        </div>
+        <div class="sec-ey">Looking ahead · next 4 months</div>
+        <div class="panel" id="lookahead"><div class="nudge"><div style="flex:1"><div class="s">Loading…</div></div></div></div>
       </div>
       <div>
         <div class="sec-ey">Habits</div>
@@ -730,9 +727,66 @@ async function loadHomeWeek(){
   }
 }
 
+// ---- Perso · Looking ahead (school holidays, 4 months out, tick-to-dismiss) --
+// Catalogue = Naima JPS term dates (source: naimajps.org.uk/Term-Dates). Each
+// break warns from ~4 months out and stays until ticked (persisted in Supabase
+// reminder_acks). Refresh yearly when the school publishes new dates.
+const HOLIDAYS=[
+  {key:'naima-summer-2026',      title:'Summer holiday',     start:'2026-07-11', end:'2026-09-02'},
+  {key:'naima-oct-half-2026',    title:'October half term',  start:'2026-10-24', end:'2026-11-01'},
+  {key:'naima-christmas-2026',   title:'Christmas holiday',  start:'2026-12-17', end:'2027-01-03'},
+  {key:'naima-feb-half-2027',    title:'February half term', start:'2027-02-13', end:'2027-02-21'},
+  {key:'naima-easter-2027',      title:'Easter holiday',     start:'2027-04-15', end:'2027-05-03'},
+  {key:'naima-may-half-2027',    title:'May half term',      start:'2027-05-29', end:'2027-06-06'},
+  {key:'naima-summer-2027',      title:'Summer holiday',     start:'2027-07-15', end:'2027-09-01'}
+];
+const _ymd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const _dm=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+function _breakRange(a,b){ // "26–30 Oct" if same month, else "17 Dec – 3 Jan"
+  const sm=a.toLocaleDateString('en-GB',{month:'short'}), em=b.toLocaleDateString('en-GB',{month:'short'});
+  return sm===em ? `${a.getDate()}–${b.getDate()} ${em}` : `${_dm(a)} – ${_dm(b)}`;
+}
+async function loadLookingAhead(){
+  const box=document.getElementById('lookahead'); if(!box) return;
+  let acked=new Set();
+  try{ const sb=await getClient(); const {data}=await sb.from('reminder_acks').select('key'); acked=new Set((data||[]).map(r=>r.key)); }
+  catch(e){ box.innerHTML='<div class="nudge"><div style="flex:1"><div class="s">Reminders unavailable — sign in required.</div></div></div>'; return; }
+
+  const today=_startOfDay(new Date());
+  const HORIZON=124*86400000;                       // ~4 months
+  const due=HOLIDAYS.filter(h=>{
+    if(acked.has(h.key)) return false;              // ticked → gone for good
+    const start=_ymd(h.start), end=_ymd(h.end);
+    if(end<today) return false;                     // break already over
+    return (start-today)<=HORIZON;                  // within the 4-month window
+  }).sort((a,b)=>_ymd(a.start)-_ymd(b.start));
+
+  if(!due.length){ box.innerHTML='<div class="nudge"><div style="flex:1"><div class="h">All booked</div><div class="s">Nothing needs booking in the next 4 months.</div></div></div>'; return; }
+  box.innerHTML=due.map(h=>{
+    const start=_ymd(h.start), end=_ymd(h.end);
+    const days=Math.round((start-today)/86400000);
+    const when = days>0 ? (days<14?`in ${days} day${days===1?'':'s'}`:`in ${Math.round(days/7)} weeks`) : 'on now';
+    const soon = days<=28;
+    return `<div class="nudge"><div class="ic">✈︎</div><div style="flex:1">`+
+      `<div class="h">${esc(h.title)}${soon?' · soon':''}</div>`+
+      `<div class="s">${esc(_breakRange(start,end))} · ${esc(when)} · have you booked your holiday?</div></div>`+
+      `<button class="act" onclick="ackReminder('${h.key}',this)">Booked ✓</button></div>`;
+  }).join('');
+}
+async function ackReminder(key,btn){
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  try{
+    const sb=await getClient();
+    const {error}=await sb.from('reminder_acks').upsert({key},{onConflict:'owner_id,key'});
+    if(error) throw error;
+    loadLookingAhead();                             // re-render without the ticked item
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='Booked ✓'; } }
+}
+
 // ---- Perso live data ---------------------------------------------------------
 async function loadPerso(){
   loadCalendar();
+  loadLookingAhead();
   let sb; try{ sb=await getClient(); }catch(e){ return; }
   try{
     const {data}=await sb.from('goals_habits')
@@ -786,7 +840,7 @@ async function loadHome(){
 }
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg;
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder;
 
 // ---- boot: auth gate, then live wiring -------------------------------------
 (async function boot(){

@@ -20,17 +20,44 @@ const days = (d) => (d ? Math.max(0, Math.round((Date.now() - new Date(d)) / 864
 // agent sees what the dashboard sees (personas in lib/domains.js stay stable).
 async function liveContext(domain) {
   if (domain === 'perso') {
-    const { data } = await sb.from('goals_habits').select('name,type,area,cadence,status,last_checkin,target')
-      .eq('owner_id', OWNER).neq('status', 'Done');
-    const rows = data || [];
-    const habits = rows.filter(x => x.type === 'Habit')
-      .map(x => `${x.name} (${x.cadence || '?'}, ${x.status || '?'})`);
-    const goals = rows.filter(x => x.type === 'Goal')
-      .map(x => `${x.name} (${x.target || 'no target set'}, ${x.status || '?'})`);
-    return `LIVE PERSO DATA (synced from Notion — trust this over anything else, including memory):
-- Habits: ${habits.join('; ') || 'none tracked'}.
-- Goals: ${goals.join('; ') || 'none tracked'}.
-Note: calendar/holiday/gift items on the dashboard are not synced yet — don't invent specifics for those.`;
+    const since90 = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+    const [{ data: gh }, { data: chk }] = await Promise.all([
+      sb.from('goals_habits').select('id,name,type,area,cadence,status,last_checkin,target').eq('owner_id', OWNER),
+      sb.from('habit_checkins').select('habit_id,date').eq('owner_id', OWNER).gte('date', since90)
+    ]);
+    const rows = gh || [];
+    const checks = chk || [];
+    const PERIOD = { daily: 1, weekly: 7, 'bi-weekly': 14, fortnightly: 14, monthly: 30, quarterly: 90 };
+    const per = c => PERIOD[String(c || '').toLowerCase()] || 7;
+    const now = Date.now();
+    const daysAgo = d => Math.floor((now - new Date(d).getTime()) / 86400000);
+
+    // Habit adherence — the coach's window into what actually gets done.
+    const habits = rows.filter(x => x.type === 'Habit' && x.status !== 'Done').map(x => {
+      const mine = checks.filter(c => c.habit_id === x.id).map(c => c.date).sort();
+      const last = mine.length ? mine[mine.length - 1] : null;
+      const d30 = mine.filter(dt => daysAgo(dt) < 30).length;
+      const d90 = mine.length;
+      const e30 = Math.max(1, Math.round(30 / per(x.cadence)));
+      const e90 = Math.max(1, Math.round(90 / per(x.cadence)));
+      const lastTxt = last ? `last done ${daysAgo(last)}d ago` : 'never logged';
+      return `${x.name} (${x.cadence || '?'}): ${lastTxt}, ${d30}/${e30} in 30d, ${d90}/${e90} in 90d`;
+    });
+
+    // Goals — open ones plus the resolved track record (achieved vs not).
+    const goalRows = rows.filter(x => x.type === 'Goal');
+    const open = goalRows.filter(g => !['Achieved', 'Missed', 'Done'].includes(g.status))
+      .map(g => `${g.name}${g.area ? ` [${g.area}]` : ''} (${g.status || 'open'})`);
+    const achieved = goalRows.filter(g => ['Achieved', 'Done'].includes(g.status)).map(g => g.name);
+    const missed = goalRows.filter(g => g.status === 'Missed').map(g => g.name);
+    const resolved = achieved.length + missed.length;
+    const hit = resolved ? Math.round((achieved.length / resolved) * 100) : null;
+
+    return `LIVE PERSO DATA (trust this over memory — habit ticks and goal outcomes are logged over time):
+- Habit adherence (last 90d): ${habits.join(' | ') || 'none tracked'}.
+- Open big goals: ${open.join('; ') || 'none'}.
+- Goal track record: achieved [${achieved.join(', ') || 'none'}]; not this time [${missed.join(', ') || 'none'}]${hit != null ? ` — hit-rate ${hit}%` : ''}.
+Use adherence + hit-rate to spot patterns (which habits/goal-areas he sustains vs drops), but ask before assuming why. Calendar events, birthdays and holiday reminders are live on the dashboard but not in this snapshot.`;
   }
   if (domain === 'fitness') {
     const { data } = await sb.from('training_programs').select('program,discipline,status,start_date,progression_notes')

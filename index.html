@@ -837,17 +837,20 @@ async function loadPerso(){
   loadHabitsGoals();
 }
 
-// Habits (tick to complete, resets per cadence) + Big Goals. Ticking a habit
-// stamps last_checkin=today; it reads "done · resets in Nd" until the cadence
-// period elapses, then falls due again. Ticking a done habit undoes it.
+const _todayISO=()=>{const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;};
+const GOAL_RESOLVED=['Achieved','Missed','Done'];
+
+// Habits (tick to complete, resets per cadence) + Big Goals (resolve with
+// Achieved / Not this time). Every habit tick is logged to habit_checkins and
+// every goal outcome is recorded, so the coach can learn adherence and hit-rate
+// over time. goals_habits.last_checkin is kept as the denormalised latest tick.
 async function loadHabitsGoals(){
   let sb; try{ sb=await getClient(); }catch(e){ return; }
   try{
     const {data}=await sb.from('goals_habits')
-      .select('id,name,type,area,cadence,status,last_checkin,target')
-      .neq('status','Done').order('type');
+      .select('id,name,type,area,cadence,status,last_checkin,target').order('type');
     const rows=data||[];
-    const habits=rows.filter(r=>r.type==='Habit');
+    const habits=rows.filter(r=>r.type==='Habit' && r.status!=='Done'); // hide archived habits
     const goals=rows.filter(r=>r.type==='Goal');
     document.getElementById('habits').innerHTML = habits.length? habits.map(h=>{
       const due=habitDue(h), done=!due;
@@ -861,8 +864,16 @@ async function loadHabitsGoals(){
         `<span class="stk"${done?'':' style="color:var(--warn)"'}>${esc(meta)}</span></div>`;
     }).join('') : '<div class="habit"><span class="hn">No habits logged yet</span></div>';
     document.getElementById('goals').innerHTML = goals.length? goals.map(g=>{
-      const color = g.status==='On track'?'var(--ok)':(g.status==='At risk'||g.status==='Off track')?'var(--warn)':'var(--muted)';
-      return `<div class="row"><span class="sdot" style="background:${color}"></span><div class="co">${esc(g.name||'')}${g.target?`<div class="s">${esc(g.target)}</div>`:''}</div><span class="age">${esc(g.status||'')}</span></div>`;
+      if(GOAL_RESOLVED.includes(g.status)){                       // resolved → muted record, no buttons
+        const win=g.status==='Achieved'||g.status==='Done';
+        return `<div class="row" style="opacity:.6"><span class="sdot" style="background:${win?'var(--ok)':'var(--muted)'}"></span>`+
+          `<div class="co">${esc(g.name||'')}</div><span class="age">${win?'✓ Achieved':'— not this time'}</span></div>`;
+      }
+      const color = g.status==='At risk'||g.status==='Off track'?'var(--warn)':'var(--ok)';
+      return `<div class="row"><span class="sdot" style="background:${color}"></span>`+
+        `<div class="co">${esc(g.name||'')}${g.target?`<div class="s">${esc(g.target)}</div>`:''}</div>`+
+        `<button class="act" onclick="resolveGoal('${g.id}','Achieved',this)">Achieved</button>`+
+        `<button class="act" style="margin-left:6px;color:var(--muted);border-color:var(--line)" onclick="resolveGoal('${g.id}','Missed',this)">Not this time</button></div>`;
     }).join('') : '<div class="row"><div class="co">No goals logged yet</div></div>';
   }catch(e){}
 }
@@ -870,12 +881,29 @@ async function toggleHabit(id,done,el){
   if(el){ el.style.opacity='.4'; el.style.pointerEvents='none'; }
   try{
     const sb=await getClient();
-    const t=new Date();
-    const iso=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
-    const {error}=await sb.from('goals_habits').update({last_checkin: done? null : iso}).eq('id',id);
-    if(error) throw error;
-    loadHabitsGoals();       // re-render with new state
+    if(!done){                                                    // tick → log today's completion
+      const iso=_todayISO();
+      let {error}=await sb.from('habit_checkins').upsert({habit_id:id,date:iso},{onConflict:'owner_id,habit_id,date'});
+      if(error) throw error;
+      ({error}=await sb.from('goals_habits').update({last_checkin:iso}).eq('id',id));
+      if(error) throw error;
+    } else {                                                      // undo → remove the latest completion
+      const {data:latest}=await sb.from('habit_checkins').select('id').eq('habit_id',id).order('date',{ascending:false}).limit(1);
+      if(latest&&latest[0]) await sb.from('habit_checkins').delete().eq('id',latest[0].id);
+      const {data:nm}=await sb.from('habit_checkins').select('date').eq('habit_id',id).order('date',{ascending:false}).limit(1);
+      await sb.from('goals_habits').update({last_checkin: (nm&&nm[0])? nm[0].date : null}).eq('id',id);
+    }
+    loadHabitsGoals();
   }catch(e){ if(el){ el.style.opacity=''; el.style.pointerEvents=''; } }
+}
+async function resolveGoal(id,outcome,el){
+  const row=el&&el.closest('.row'); if(row) row.style.opacity='.4';
+  try{
+    const sb=await getClient();
+    const {error}=await sb.from('goals_habits').update({status:outcome, last_checkin:_todayISO()}).eq('id',id);
+    if(error) throw error;
+    loadHabitsGoals();
+  }catch(e){ if(row) row.style.opacity=''; }
 }
 
 // ---- Fitness live data ---------------------------------------------------------
@@ -911,7 +939,7 @@ async function loadHome(){
 }
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit;
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal;
 
 // ---- boot: auth gate, then live wiring -------------------------------------
 (async function boot(){

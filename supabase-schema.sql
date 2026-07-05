@@ -225,6 +225,25 @@ drop policy if exists owner_all on reminder_acks;
 create policy owner_all on reminder_acks
   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
+-- ------------------------------------------------------------
+-- 11. HABIT CHECK-INS  (completion history — the coach's memory
+--     of adherence over time; goals_habits.last_checkin is only
+--     the latest tick, this is every tick).
+-- ------------------------------------------------------------
+create table if not exists habit_checkins (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    uuid not null default auth.uid(),
+  habit_id    uuid not null references goals_habits(id) on delete cascade,
+  date        date not null,
+  created_at  timestamptz not null default now(),
+  unique (owner_id, habit_id, date)
+);
+create index if not exists habit_checkins_idx on habit_checkins(owner_id, habit_id, date);
+alter table habit_checkins enable row level security;
+drop policy if exists owner_all on habit_checkins;
+create policy owner_all on habit_checkins
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
 -- ============================================================
 -- v1.1 migration — run this if schema v1 is already applied.
 -- training_programs was missing its Notion sync key.

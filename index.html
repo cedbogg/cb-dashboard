@@ -199,16 +199,13 @@
   <!-- HOME -->
   <section class="screen on" id="home">
     <div class="ribbon"><div class="ey">This week</div>
-      <div class="items">
-        <div class="ri flag"><b>Emma's birthday</b><span class="when">Sat · gift not bought</span></div>
-        <div class="ri flag"><b>Term ends</b><span class="when">18 Jul · holiday not booked</span></div>
-        <div class="ri"><b>Mgmt call — ABC Fire</b><span class="when">Fri 14:00</span></div>
-        <div class="ri"><b>Dentist</b><span class="when">Thu 09:30</span></div>
+      <div class="items" id="wkitems">
+        <div class="ri"><b>Loading…</b><span class="when"></span></div>
       </div></div>
     <div class="grid">
       <button class="card warn" onclick="go('perso')"><span class="spine"></span>
         <div class="chead"><span class="eyebrow">Perso</span><span class="sdot"></span></div>
-        <div class="hero">3 events</div><div class="herosub">+ 1 birthday this week</div>
+        <div class="hero" id="persoHero">…</div><div class="herosub" id="persoSub">this week</div>
         <div class="lines"><div class="ln alert"><span class="tk"></span><span class="t">Buy Emma's gift</span><span class="v">2d</span></div>
         <div class="ln alert"><span class="tk"></span><span class="t">Book summer holiday</span><span class="v">~4wk</span></div>
         <div class="ln"><span class="tk"></span><span class="t">2 habits unchecked</span><span class="v">→</span></div></div></button>
@@ -654,47 +651,62 @@ async function loadFortior(){
   }catch(e){}
 }
 
-// ---- Perso · This week calendar (live from Google Calendar .ics feed) --------
+// ---- This week (shared source) — Perso panel AND Home ribbon read from here --
+// One fetch, cached briefly, so Home and Perso can never drift out of sync.
+const _startOfDay=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x;};
+const _wd=d=>d.toLocaleDateString('en-GB',{weekday:'short'});
+const _hm=iso=>new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});
+let _week=null,_weekAt=0;
+async function fetchWeek(){
+  if(_week && Date.now()-_weekAt<60000) return _week;               // 60s in-memory cache
+  const sb=await getClient();
+  const {data:{session}}=await sb.auth.getSession();
+  const res=await fetch('/api/calendar',{headers:{'Authorization':'Bearer '+(session?.access_token||'')}});
+  const data=await res.json();
+  if(!res.ok) throw new Error(data.error||'calendar error');
+  const events=data.events||[];
+  const today=_startOfDay(new Date());
+  const buckets=[];
+  for(let i=0;i<7;i++){ const d=new Date(today); d.setDate(d.getDate()+i); buckets.push({date:d,items:[]}); }
+  const dayIndex=iso=>Math.round((_startOfDay(iso)-today)/86400000);
+  events.forEach(ev=>{ const i=dayIndex(ev.start); if(i>=0&&i<7) buckets[i].items.push({...ev,day:buckets[i]?buckets[i].date:today}); });
+  buckets.forEach(b=>b.items.sort((a,c)=>(a.allDay===c.allDay)?a.start.localeCompare(c.start):(a.allDay?-1:1)));
+  _week={events,buckets}; _weekAt=Date.now();
+  return _week;
+}
+
+// Perso · This week panel
 async function loadCalendar(){
   const box=document.getElementById('weekcal'); if(!box) return;
   const fail=(msg)=>{ box.innerHTML='<div class="day"><div class="d">·</div><div><div class="evr"><span class="t">'+esc(msg)+'</span></div></div></div>'; };
-  let sb; try{ sb=await getClient(); }catch(e){ fail('Calendar unavailable in demo mode'); return; }
-  try{
-    const {data:{session}}=await sb.auth.getSession();
-    const res=await fetch('/api/calendar',{headers:{'Authorization':'Bearer '+(session?.access_token||'')}});
-    const data=await res.json();
-    if(!res.ok) throw new Error(data.error||'calendar error');
-    const events=data.events||[];
-    // TEMP diagnostic — shows why birthdays may be missing; remove once working.
-    if(data.debug||((data.warnings||[]).length)){
-      const d=data.debug||{}; const w=(data.warnings||[]).join(' · ');
-      console.log('[calendar] debug',d,'warnings',data.warnings);
-      const note=document.createElement('div'); note.className='sec-ey'; note.style.color='var(--muted)';
-      note.textContent='cal: '+(d.birthdaysConfigured?`birthdays on · scanned ${d.scanned} contacts · ${d.withBirthday} with a birthday · ${d.inWindow??0} this week`:'birthdays OFF (Google env vars not set)')+(w?(' · '+w):'');
-      const box=document.getElementById('weekcal'); box.parentNode.insertBefore(note,box);
-    }
-
-    // Build 7 day buckets from today (user's local time) and drop events into them.
-    const startOfDay=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x;};
-    const today=startOfDay(new Date());
-    const buckets=[];
-    for(let i=0;i<7;i++){ const d=new Date(today); d.setDate(d.getDate()+i); buckets.push({date:d,items:[]}); }
-    const dayIndex=iso=>Math.round((startOfDay(iso)-today)/86400000);
-    events.forEach(ev=>{ const i=dayIndex(ev.start); if(i>=0&&i<7) buckets[i].items.push(ev); });
-    buckets.forEach(b=>b.items.sort((a,c)=>(a.allDay===c.allDay)?a.start.localeCompare(c.start):(a.allDay?-1:1)));
-
-    const wd=d=>d.toLocaleDateString('en-GB',{weekday:'short'});
-    const hm=iso=>new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});
-    const shown=buckets.filter(b=>b.items.length);
-    if(!shown.length){ box.innerHTML='<div class="day"><div class="d">·</div><div><div class="evr"><span class="t">Nothing scheduled this week</span></div></div></div>'; return; }
-    box.innerHTML=shown.map(b=>{
-      const rows=b.items.map(ev=>{
-        const tm=ev.allDay?'—':hm(ev.start);
-        return `<div class="evr${ev.allDay?' b':''}"><span class="tm">${esc(tm)}</span><span class="t">${esc(ev.title)}</span></div>`;
-      }).join('');
-      return `<div class="day"><div class="d">${wd(b.date)}<b>${b.date.getDate()}</b></div><div>${rows}</div></div>`;
+  let wk; try{ wk=await fetchWeek(); }catch(e){ fail('Calendar unreachable — check config in Vercel'); return; }
+  const shown=wk.buckets.filter(b=>b.items.length);
+  if(!shown.length){ fail('Nothing scheduled this week'); return; }
+  box.innerHTML=shown.map(b=>{
+    const rows=b.items.map(ev=>{
+      const tm=ev.allDay?'—':_hm(ev.start);
+      return `<div class="evr${ev.allDay?' b':''}"><span class="tm">${esc(tm)}</span><span class="t">${esc(ev.title)}</span></div>`;
     }).join('');
-  }catch(e){ fail('Calendar unreachable — check GCAL_ICS_URL in Vercel'); }
+    return `<div class="day"><div class="d">${_wd(b.date)}<b>${b.date.getDate()}</b></div><div>${rows}</div></div>`;
+  }).join('');
+}
+
+// Home · "This week" ribbon + Perso summary card — same data as the Perso panel
+async function loadHomeWeek(){
+  let wk; try{ wk=await fetchWeek(); }catch(e){ return; }
+  const flat=wk.buckets.flatMap(b=>b.items);
+  const items=document.getElementById('wkitems');
+  if(items){
+    items.innerHTML = flat.length ? flat.slice(0,6).map(ev=>{
+      const when=ev.allDay?(_wd(ev.day)+(ev.kind==='birthday'?' · birthday':' · all day')):(_wd(ev.day)+' '+_hm(ev.start));
+      return `<div class="ri${ev.kind==='birthday'?' flag':''}"><b>${esc(ev.title)}</b><span class="when">${esc(when)}</span></div>`;
+    }).join('') : '<div class="ri"><b>Nothing scheduled</b><span class="when">this week</span></div>';
+  }
+  const bd=flat.filter(e=>e.kind==='birthday').length;
+  const ev=flat.length-bd;
+  const hero=document.getElementById('persoHero'), sub=document.getElementById('persoSub');
+  if(hero) hero.textContent = ev+' event'+(ev===1?'':'s');
+  if(sub)  sub.textContent  = bd ? ('+ '+bd+' birthday'+(bd===1?'':'s')+' this week') : 'this week';
 }
 
 // ---- Perso live data ---------------------------------------------------------
@@ -736,8 +748,9 @@ async function loadFitness(){
   }catch(e){}
 }
 
-// ---- Home live data (Priorities rollup) --------------------------------------
+// ---- Home live data (Priorities rollup + shared week ribbon) -----------------
 async function loadHome(){
+  loadHomeWeek();   // "This week" ribbon + Perso card — same source as the Perso screen
   let sb; try{ sb=await getClient(); }catch(e){ return; }
   try{
     const {data}=await sb.from('priorities')

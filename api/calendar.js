@@ -102,7 +102,7 @@ function birthdayOccurrences(name, month, day, rangeStart, rangeEnd, out) {
   }
 }
 
-async function fetchBirthdays(rangeStart, rangeEnd, debug) {
+async function fetchBirthdays(rangeStart, rangeEnd) {
   const token = await googleAccessToken();
   const out = [];
   let pageToken = '';
@@ -117,10 +117,8 @@ async function fetchBirthdays(rangeStart, rangeEnd, debug) {
     if (!r.ok) throw new Error(data.error?.message || `People API returned ${r.status}`);
 
     for (const person of data.connections || []) {
-      debug.scanned++;
       const bday = (person.birthdays || []).find(b => b.date && b.date.month && b.date.day);
       if (!bday) continue;
-      debug.withBirthday++;
       const name = person.names?.[0]?.displayName || 'Someone';
       birthdayOccurrences(name, bday.date.month, bday.date.day, rangeStart, rangeEnd, out);
     }
@@ -146,7 +144,6 @@ export default async function handler(req, res) {
 
   const events = [];
   const warnings = [];
-  const debug = { birthdaysConfigured: !!hasBirthdays, scanned: 0, withBirthday: 0 };
 
   // Events and birthdays are independent — one failing must not sink the other.
   if (urls.length) {
@@ -154,11 +151,7 @@ export default async function handler(req, res) {
     catch (e) { warnings.push(`events: ${e.message}`); }
   }
   if (hasBirthdays) {
-    try {
-      const b = await fetchBirthdays(rangeStart, rangeEnd, debug);
-      events.push(...b);
-      debug.inWindow = b.length;
-    }
+    try { events.push(...await fetchBirthdays(rangeStart, rangeEnd)); }
     catch (e) { warnings.push(`birthdays: ${e.message}`); }
   }
 
@@ -168,6 +161,6 @@ export default async function handler(req, res) {
   }
 
   events.sort((a, b) => a.start.localeCompare(b.start));
-  res.setHeader('Cache-Control', 'no-store'); // no caching while diagnosing
-  res.json({ events, warnings, debug });
+  res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1800');
+  res.json({ events, warnings });
 }

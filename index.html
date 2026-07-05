@@ -666,7 +666,7 @@ async function fetchWeek(){
   const dayIndex=iso=>Math.round((_startOfDay(iso)-today)/86400000);
   events.forEach(ev=>{ const i=dayIndex(ev.start); if(i>=0&&i<7) buckets[i].items.push({...ev,day:buckets[i]?buckets[i].date:today}); });
   buckets.forEach(b=>b.items.sort((a,c)=>(a.allDay===c.allDay)?a.start.localeCompare(c.start):(a.allDay?-1:1)));
-  _week={events,buckets}; _weekAt=Date.now();
+  _week={events,buckets,lookAhead:data.lookAhead||{birthdays:[],mitzvahs:[]}}; _weekAt=Date.now();
   return _week;
 }
 
@@ -742,36 +742,75 @@ const HOLIDAYS=[
 ];
 const _ymd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
 const _dm=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const _norm=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+const _slug=s=>_norm(s).replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
 function _breakRange(a,b){ // "26–30 Oct" if same month, else "17 Dec – 3 Jan"
   const sm=a.toLocaleDateString('en-GB',{month:'short'}), em=b.toLocaleDateString('en-GB',{month:'short'});
   return sm===em ? `${a.getDate()}–${b.getDate()} ${em}` : `${_dm(a)} – ${_dm(b)}`;
 }
+function _when(days){ return days<=0?'today':(days<14?`in ${days} day${days===1?'':'s'}`:`in ${Math.round(days/7)} weeks`); }
+
+// People to prompt gift reminders for (matched against contact names). Family +
+// close friends; first-name entries match any contact whose name contains that
+// token, full-name entries must match in full.
+const GIFT_PEOPLE=['Paz','Talma','Eden','Danielle','Lola','Tiago','Ahron','Jade',
+  'Adrien Rojtman','Lea Rojtman','Jacob Farre','Laurent Benarroch','Ben Amsellem','Julien Farre','Eleonore Lette'];
+function giftMatch(contactName){
+  const n=_norm(contactName), toks=n.split(/\s+/);
+  return GIFT_PEOPLE.find(p=>{ const pn=_norm(p); return pn.includes(' ') ? n.includes(pn) : toks.includes(pn); }) || null;
+}
+
+// "Looking ahead" merges three tick-to-dismiss reminder streams: school
+// holidays (book time off), named-people birthdays (buy a gift) and bar/bat
+// mitzvahs pulled from the calendar (gift + RSVP). All persist via reminder_acks.
 async function loadLookingAhead(){
   const box=document.getElementById('lookahead'); if(!box) return;
   let acked=new Set();
   try{ const sb=await getClient(); const {data}=await sb.from('reminder_acks').select('key'); acked=new Set((data||[]).map(r=>r.key)); }
   catch(e){ box.innerHTML='<div class="nudge"><div style="flex:1"><div class="s">Reminders unavailable — sign in required.</div></div></div>'; return; }
+  let la={birthdays:[],mitzvahs:[]};
+  try{ la=(await fetchWeek()).lookAhead||la; }catch(e){}
 
   const today=_startOfDay(new Date());
-  const HORIZON=124*86400000;                       // ~4 months
-  const due=HOLIDAYS.filter(h=>{
-    if(acked.has(h.key)) return false;              // ticked → gone for good
-    const start=_ymd(h.start), end=_ymd(h.end);
-    if(end<today) return false;                     // break already over
-    return (start-today)<=HORIZON;                  // within the 4-month window
-  }).sort((a,b)=>_ymd(a.start)-_ymd(b.start));
+  const daysTo=iso=>Math.round((_startOfDay(iso)-today)/86400000);
+  const items=[];
 
-  if(!due.length){ box.innerHTML='<div class="nudge"><div style="flex:1"><div class="h">All booked</div><div class="s">Nothing needs booking in the next 4 months.</div></div></div>'; return; }
-  box.innerHTML=due.map(h=>{
+  // 1 — school holidays, 4 months out
+  HOLIDAYS.forEach(h=>{
+    if(acked.has(h.key)) return;
     const start=_ymd(h.start), end=_ymd(h.end);
+    if(end<today || (start-today)>124*86400000) return;
     const days=Math.round((start-today)/86400000);
-    const when = days>0 ? (days<14?`in ${days} day${days===1?'':'s'}`:`in ${Math.round(days/7)} weeks`) : 'on now';
-    const soon = days<=28;
-    return `<div class="nudge"><div class="ic">✈︎</div><div style="flex:1">`+
-      `<div class="h">${esc(h.title)}${soon?' · soon':''}</div>`+
-      `<div class="s">${esc(_breakRange(start,end))} · ${esc(when)} · have you booked your holiday?</div></div>`+
-      `<button class="act" onclick="ackReminder('${h.key}',this)">Booked ✓</button></div>`;
-  }).join('');
+    items.push({key:h.key, sort:+start, icon:'✈︎', act:'Booked ✓',
+      title:h.title+(days<=28?' · soon':''),
+      sub:`${_breakRange(start,end)} · ${days>0?_when(days):'on now'} · have you booked your holiday?`});
+  });
+
+  // 2 — birthday gifts for named people, ~4 weeks out
+  (la.birthdays||[]).forEach(b=>{
+    if(!giftMatch(b.name)) return;
+    const days=daysTo(b.date); if(days<0||days>28) return;
+    const d=_startOfDay(b.date), key=`gift-${_slug(b.name)}-${d.getFullYear()}`;
+    if(acked.has(key)) return;
+    items.push({key, sort:+d, icon:'🎁', act:'Sorted ✓',
+      title:`${b.name}'s birthday${days<=10?' · soon':''}`, sub:`${_dm(d)} · ${_when(days)} · gift sorted?`});
+  });
+
+  // 3 — bar/bat mitzvahs from the calendar, ~6 weeks out
+  (la.mitzvahs||[]).forEach(m=>{
+    const days=daysTo(m.date); if(days<0||days>42) return;
+    const d=_startOfDay(m.date), key=`mitzvah-${_slug(m.title)}-${d.toISOString().slice(0,10)}`;
+    if(acked.has(key)) return;
+    items.push({key, sort:+d, icon:'🎁', act:'Sorted ✓',
+      title:`${m.title}${days<=14?' · soon':''}`, sub:`${_dm(d)} · ${_when(days)} · gift & RSVP sorted?`});
+  });
+
+  items.sort((a,b)=>a.sort-b.sort);
+  if(!items.length){ box.innerHTML='<div class="nudge"><div style="flex:1"><div class="h">All clear</div><div class="s">Nothing needs action in the next few months.</div></div></div>'; return; }
+  box.innerHTML=items.map(it=>
+    `<div class="nudge"><div class="ic">${it.icon}</div><div style="flex:1">`+
+    `<div class="h">${esc(it.title)}</div><div class="s">${esc(it.sub)}</div></div>`+
+    `<button class="act" onclick="ackReminder('${it.key}',this)">${it.act}</button></div>`).join('');
 }
 async function ackReminder(key,btn){
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }

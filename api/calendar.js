@@ -55,18 +55,26 @@ function expandEvent(ev, rangeStart, rangeEnd, out) {
   }
 }
 
-async function fetchIcsEvents(urls, rangeStart, rangeEnd) {
-  const feeds = await Promise.all(urls.map(async (u) => {
+async function fetchFeeds(urls) {
+  return Promise.all(urls.map(async (u) => {
     const r = await fetch(u, { headers: { 'User-Agent': 'cb-dashboard' } });
     if (!r.ok) throw new Error(`a calendar feed returned ${r.status}`);
     return ical.sync.parseICS(await r.text());
   }));
+}
+
+function expandFeeds(feeds, rangeStart, rangeEnd) {
   const out = [];
   for (const parsed of feeds) {
     for (const ev of Object.values(parsed)) expandEvent(ev, rangeStart, rangeEnd, out);
   }
   return out;
 }
+
+// Bar/bat mitzvah events are just calendar entries — match them by title so the
+// dashboard can warn ahead of time (gift + RSVP). Catches "bar mitzvah",
+// "bat mitzvah", "barmitzvah", "bat-mitzvah", etc.
+const MITZVAH_RE = /b(ar|at)[\s-]?mitzva/i;
 
 // ---- Contact birthdays (Google People API) ----------------------------------
 // The auto-generated Google "Birthdays" calendar has no iCal address, so we read
@@ -102,9 +110,11 @@ function birthdayOccurrences(name, month, day, rangeStart, rangeEnd, out) {
   }
 }
 
-async function fetchBirthdays(rangeStart, rangeEnd) {
+// Raw contact birthdays [{name, month, day}] — fetched once, then reused for
+// both the week view and the longer "looking ahead" gift horizon.
+async function fetchContactBirthdays() {
   const token = await googleAccessToken();
-  const out = [];
+  const people = [];
   let pageToken = '';
   // Contacts are paginated; cap the loop so a huge contact list can't run away.
   for (let page = 0; page < 20; page++) {
@@ -119,13 +129,21 @@ async function fetchBirthdays(rangeStart, rangeEnd) {
     for (const person of data.connections || []) {
       const bday = (person.birthdays || []).find(b => b.date && b.date.month && b.date.day);
       if (!bday) continue;
-      const name = person.names?.[0]?.displayName || 'Someone';
-      birthdayOccurrences(name, bday.date.month, bday.date.day, rangeStart, rangeEnd, out);
+      people.push({ name: person.names?.[0]?.displayName || 'Someone', month: bday.date.month, day: bday.date.day });
     }
     pageToken = data.nextPageToken || '';
     if (!pageToken) break;
   }
-  return out;
+  return people;
+}
+
+// Next occurrence of a month/day on or after `from` (this year, else next).
+function nextOccurrence(month, day, from) {
+  for (const yr of [from.getUTCFullYear(), from.getUTCFullYear() + 1]) {
+    const d = new Date(Date.UTC(yr, month - 1, day));
+    if (d >= from) return d;
+  }
+  return null;
 }
 
 export default async function handler(req, res) {
@@ -141,26 +159,44 @@ export default async function handler(req, res) {
   const now = Date.now();
   const rangeStart = new Date(now - WINDOW_BACK_MS);
   const rangeEnd = new Date(now + WINDOW_FWD_MS);
+  const todayUTC = new Date(Date.UTC(rangeEnd.getUTCFullYear(), rangeEnd.getUTCMonth(), rangeEnd.getUTCDate()));
+  // How far "looking ahead" peers: gift lead for birthdays, longer for mitzvahs.
+  const AHEAD_BDAY = new Date(now + 60 * 86400000);
+  const AHEAD_MITZVAH = new Date(now + 130 * 86400000);
 
   const events = [];
   const warnings = [];
+  const lookAhead = { birthdays: [], mitzvahs: [] };
 
-  // Events and birthdays are independent — one failing must not sink the other.
+  // Events, birthdays and look-ahead are independent — one failing must not sink
+  // the others.
   if (urls.length) {
-    try { events.push(...await fetchIcsEvents(urls, rangeStart, rangeEnd)); }
-    catch (e) { warnings.push(`events: ${e.message}`); }
+    try {
+      const feeds = await fetchFeeds(urls);
+      events.push(...expandFeeds(feeds, rangeStart, rangeEnd));               // the week view
+      // Scan a wider horizon for bar/bat mitzvahs to warn ahead of.
+      lookAhead.mitzvahs = expandFeeds(feeds, new Date(now), AHEAD_MITZVAH)
+        .filter(ev => MITZVAH_RE.test(ev.title))
+        .map(ev => ({ title: ev.title, date: ev.start, allDay: ev.allDay }));
+    } catch (e) { warnings.push(`events: ${e.message}`); }
   }
   if (hasBirthdays) {
-    try { events.push(...await fetchBirthdays(rangeStart, rangeEnd)); }
-    catch (e) { warnings.push(`birthdays: ${e.message}`); }
+    try {
+      const contacts = await fetchContactBirthdays();
+      for (const c of contacts) {
+        birthdayOccurrences(c.name, c.month, c.day, rangeStart, rangeEnd, events); // week view
+        const next = nextOccurrence(c.month, c.day, todayUTC);                     // gift horizon
+        if (next && next <= AHEAD_BDAY) lookAhead.birthdays.push({ name: c.name, date: next.toISOString() });
+      }
+    } catch (e) { warnings.push(`birthdays: ${e.message}`); }
   }
 
   // Nothing came back and everything errored → surface it as a failure.
-  if (!events.length && warnings.length) {
+  if (!events.length && !lookAhead.birthdays.length && !lookAhead.mitzvahs.length && warnings.length) {
     return res.status(502).json({ error: `could not read calendar — ${warnings.join('; ')}` });
   }
 
   events.sort((a, b) => a.start.localeCompare(b.start));
   res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1800');
-  res.json({ events, warnings });
+  res.json({ events, warnings, lookAhead });
 }

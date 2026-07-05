@@ -255,7 +255,7 @@
       <div>
         <div class="sec-ey">Habits</div>
         <div class="panel" id="habits"><div class="habit"><span class="hn">Loading…</span></div></div>
-        <div class="sec-ey">Goals</div>
+        <div class="sec-ey">Big Goals</div>
         <div class="panel" id="goals"><div class="row"><div class="co">Loading…</div></div></div>
       </div>
     </div>
@@ -649,6 +649,14 @@ async function loadFortior(){
 // ---- This week (shared source) — Perso panel AND Home ribbon read from here --
 // One fetch, cached briefly, so Home and Perso can never drift out of sync.
 const _startOfDay=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x;};
+// Habit cadence → reset period in days. A ticked habit shows "done" until this
+// many days pass, then falls due again.
+const HABIT_PERIOD={daily:1,weekly:7,'bi-weekly':14,fortnightly:14,monthly:30,quarterly:90};
+const _habitPeriod=c=>HABIT_PERIOD[String(c||'').toLowerCase()]||7;
+function habitDue(h){ // true when it needs doing again (never done, or period elapsed)
+  if(!h.last_checkin) return true;
+  return Math.floor((_startOfDay(new Date())-_startOfDay(h.last_checkin))/86400000) >= _habitPeriod(h.cadence);
+}
 const _wd=d=>d.toLocaleDateString('en-GB',{weekday:'short'});
 const _hm=iso=>new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});
 let _week=null,_weekAt=0;
@@ -709,7 +717,7 @@ async function loadHomeWeek(){
     let habits=[],goals=[];
     try{
       const sb=await getClient();
-      const {data}=await sb.from('goals_habits').select('name,type,status').neq('status','Done');
+      const {data}=await sb.from('goals_habits').select('name,type,status,cadence,last_checkin').neq('status','Done');
       (data||[]).forEach(r=> r.type==='Habit'?habits.push(r):goals.push(r));
     }catch(e){}
     const lines=[];
@@ -718,9 +726,9 @@ async function loadHomeWeek(){
       const days=Math.round((_startOfDay(nextBd.day)-_startOfDay(new Date()))/86400000);
       lines.push(`<div class="ln${days<=3?' alert':''}"><span class="tk"></span><span class="t">${esc(nextBd.title)}</span><span class="v">${days===0?'today':days+'d'}</span></div>`);
     }
-    const off=habits.filter(h=>h.status&&h.status!=='On track');
-    if(off.length) lines.push(`<div class="ln alert"><span class="tk"></span><span class="t">${off.length} habit${off.length===1?'':'s'} need attention</span><span class="v">→</span></div>`);
-    else if(habits.length) lines.push(`<div class="ln"><span class="tk"></span><span class="t">${habits.length} habit${habits.length===1?'':'s'} on track</span><span class="v">✓</span></div>`);
+    const due=habits.filter(habitDue);
+    if(due.length) lines.push(`<div class="ln alert"><span class="tk"></span><span class="t">${due.length} habit${due.length===1?'':'s'} due</span><span class="v">→</span></div>`);
+    else if(habits.length) lines.push(`<div class="ln"><span class="tk"></span><span class="t">habits all done</span><span class="v">✓</span></div>`);
     const risk=goals.filter(g=>g.status==='At risk'||g.status==='Off track');
     if(risk.length) lines.push(`<div class="ln alert"><span class="tk"></span><span class="t">${risk.length} goal${risk.length===1?'':'s'} off track</span><span class="v">→</span></div>`);
     box.innerHTML = lines.length? lines.join('') : '<div class="ln"><span class="tk"></span><span class="t">All clear this week</span><span class="v">✓</span></div>';
@@ -826,24 +834,48 @@ async function ackReminder(key,btn){
 async function loadPerso(){
   loadCalendar();
   loadLookingAhead();
+  loadHabitsGoals();
+}
+
+// Habits (tick to complete, resets per cadence) + Big Goals. Ticking a habit
+// stamps last_checkin=today; it reads "done · resets in Nd" until the cadence
+// period elapses, then falls due again. Ticking a done habit undoes it.
+async function loadHabitsGoals(){
   let sb; try{ sb=await getClient(); }catch(e){ return; }
   try{
     const {data}=await sb.from('goals_habits')
-      .select('name,type,area,cadence,status,last_checkin,target')
+      .select('id,name,type,area,cadence,status,last_checkin,target')
       .neq('status','Done').order('type');
     const rows=data||[];
     const habits=rows.filter(r=>r.type==='Habit');
     const goals=rows.filter(r=>r.type==='Goal');
     document.getElementById('habits').innerHTML = habits.length? habits.map(h=>{
-      const on=h.status==='On track';
-      return `<div class="habit"><span class="chk${on?' on':''}">${on?'✓':''}</span><span class="hn">${esc(h.name||'')}</span>`+
-        `<span class="cad">${esc(h.cadence||'')}</span><span class="stk"${on?'':' style="color:var(--warn)"'}>${esc(h.status||'')}</span></div>`;
+      const due=habitDue(h), done=!due;
+      let meta='due';
+      if(done){ const el=Math.floor((_startOfDay(new Date())-_startOfDay(h.last_checkin))/86400000);
+        meta='done · resets in '+Math.max(0,_habitPeriod(h.cadence)-el)+'d'; }
+      return `<div class="habit"><span class="chk${done?' on':''}" role="button" tabindex="0" style="cursor:pointer" `+
+        `title="${done?'Tick to undo':'Tick when done'}" onclick="toggleHabit('${h.id}',${done},this)">${done?'✓':''}</span>`+
+        `<span class="hn">${esc(h.name||'')}</span>`+
+        `<span class="cad">${esc(h.cadence||'')}</span>`+
+        `<span class="stk"${done?'':' style="color:var(--warn)"'}>${esc(meta)}</span></div>`;
     }).join('') : '<div class="habit"><span class="hn">No habits logged yet</span></div>';
     document.getElementById('goals').innerHTML = goals.length? goals.map(g=>{
       const color = g.status==='On track'?'var(--ok)':(g.status==='At risk'||g.status==='Off track')?'var(--warn)':'var(--muted)';
-      return `<div class="row"><span class="sdot" style="background:${color}"></span><div class="co">${esc(g.name||'')}<div class="s">${esc(g.target||'')}</div></div><span class="age">${esc(g.status||'')}</span></div>`;
+      return `<div class="row"><span class="sdot" style="background:${color}"></span><div class="co">${esc(g.name||'')}${g.target?`<div class="s">${esc(g.target)}</div>`:''}</div><span class="age">${esc(g.status||'')}</span></div>`;
     }).join('') : '<div class="row"><div class="co">No goals logged yet</div></div>';
   }catch(e){}
+}
+async function toggleHabit(id,done,el){
+  if(el){ el.style.opacity='.4'; el.style.pointerEvents='none'; }
+  try{
+    const sb=await getClient();
+    const t=new Date();
+    const iso=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+    const {error}=await sb.from('goals_habits').update({last_checkin: done? null : iso}).eq('id',id);
+    if(error) throw error;
+    loadHabitsGoals();       // re-render with new state
+  }catch(e){ if(el){ el.style.opacity=''; el.style.pointerEvents=''; } }
 }
 
 // ---- Fitness live data ---------------------------------------------------------
@@ -879,7 +911,7 @@ async function loadHome(){
 }
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder;
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit;
 
 // ---- boot: auth gate, then live wiring -------------------------------------
 (async function boot(){

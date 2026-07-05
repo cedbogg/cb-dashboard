@@ -206,9 +206,7 @@
       <button class="card warn" onclick="go('perso')"><span class="spine"></span>
         <div class="chead"><span class="eyebrow">Perso</span><span class="sdot"></span></div>
         <div class="hero" id="persoHero">…</div><div class="herosub" id="persoSub">this week</div>
-        <div class="lines"><div class="ln alert"><span class="tk"></span><span class="t">Buy Emma's gift</span><span class="v">2d</span></div>
-        <div class="ln alert"><span class="tk"></span><span class="t">Book summer holiday</span><span class="v">~4wk</span></div>
-        <div class="ln"><span class="tk"></span><span class="t">2 habits unchecked</span><span class="v">→</span></div></div></button>
+        <div class="lines" id="persoLines"><div class="ln"><span class="tk"></span><span class="t">Loading…</span></div></div></button>
       <button class="card" onclick="go('fortior')"><span class="spine"></span>
         <div class="chead"><span class="eyebrow">Fortior</span><span class="sdot"></span></div>
         <div class="hero">Month 4 / 6</div><div class="herosub">to first acquisition</div>
@@ -707,6 +705,29 @@ async function loadHomeWeek(){
   const hero=document.getElementById('persoHero'), sub=document.getElementById('persoSub');
   if(hero) hero.textContent = ev+' event'+(ev===1?'':'s');
   if(sub)  sub.textContent  = bd ? ('+ '+bd+' birthday'+(bd===1?'':'s')+' this week') : 'this week';
+
+  // Perso card lines — live signals: next birthday + habits/goals needing attention
+  const box=document.getElementById('persoLines');
+  if(box){
+    let habits=[],goals=[];
+    try{
+      const sb=await getClient();
+      const {data}=await sb.from('goals_habits').select('name,type,status').neq('status','Done');
+      (data||[]).forEach(r=> r.type==='Habit'?habits.push(r):goals.push(r));
+    }catch(e){}
+    const lines=[];
+    const nextBd=flat.find(e=>e.kind==='birthday');
+    if(nextBd){
+      const days=Math.round((_startOfDay(nextBd.day)-_startOfDay(new Date()))/86400000);
+      lines.push(`<div class="ln${days<=3?' alert':''}"><span class="tk"></span><span class="t">${esc(nextBd.title)}</span><span class="v">${days===0?'today':days+'d'}</span></div>`);
+    }
+    const off=habits.filter(h=>h.status&&h.status!=='On track');
+    if(off.length) lines.push(`<div class="ln alert"><span class="tk"></span><span class="t">${off.length} habit${off.length===1?'':'s'} need attention</span><span class="v">→</span></div>`);
+    else if(habits.length) lines.push(`<div class="ln"><span class="tk"></span><span class="t">${habits.length} habit${habits.length===1?'':'s'} on track</span><span class="v">✓</span></div>`);
+    const risk=goals.filter(g=>g.status==='At risk'||g.status==='Off track');
+    if(risk.length) lines.push(`<div class="ln alert"><span class="tk"></span><span class="t">${risk.length} goal${risk.length===1?'':'s'} off track</span><span class="v">→</span></div>`);
+    box.innerHTML = lines.length? lines.join('') : '<div class="ln"><span class="tk"></span><span class="t">All clear this week</span><span class="v">✓</span></div>';
+  }
 }
 
 // ---- Perso live data ---------------------------------------------------------

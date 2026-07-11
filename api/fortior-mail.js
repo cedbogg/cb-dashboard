@@ -18,19 +18,22 @@ const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_R
 const OWNER = process.env.OWNER_USER_ID;
 const MAX_NEW = 15;         // emails to process per run (bounds cost)
 
-async function authorized(req) {
+async function authInfo(req) {
   const auth = req.headers.authorization || '';
   const secret = process.env.CRON_SECRET;
   // Cron path: if CRON_SECRET is set, Vercel sends it as a Bearer token; if it's
   // not set, accept Vercel's own cron user-agent (deployment protection already
   // blocks arbitrary external callers).
-  if (secret) { if (auth === `Bearer ${secret}`) return true; }
-  else if ((req.headers['user-agent'] || '').includes('vercel-cron')) return true;
+  if (secret) { if (auth === `Bearer ${secret}`) return { ok: true }; }
+  else if ((req.headers['user-agent'] || '').includes('vercel-cron')) return { ok: true };
   // Owner path: manual "Scan Gmail" button sends the Supabase session token.
   const token = auth.replace(/^Bearer\s+/i, '');
-  if (!token) return false;
+  if (!token) return { ok: false, why: 'no session token sent (are you logged into the dashboard?)' };
+  if (!OWNER) return { ok: false, why: 'OWNER_USER_ID not set on server' };
   const { data, error } = await sb.auth.getUser(token);
-  return !error && data?.user?.id === OWNER;
+  if (error) return { ok: false, why: 'token rejected: ' + error.message };
+  if (data?.user?.id !== OWNER) return { ok: false, why: 'user-id mismatch (token ok, but not the owner)' };
+  return { ok: true };
 }
 
 async function googleAccessToken() {
@@ -111,7 +114,8 @@ function propPayload(schema, name, value) {
 }
 
 export default async function handler(req, res) {
-  if (!(await authorized(req))) return res.status(401).json({ error: 'unauthorized' });
+  const auth = await authInfo(req);
+  if (!auth.ok) return res.status(401).json({ error: 'auth failed — ' + auth.why });
   const dbId = process.env.NOTION_TASKS_DB_ID;
   if (!dbId) return res.status(500).json({ error: 'NOTION_TASKS_DB_ID not set' });
 

@@ -19,10 +19,17 @@ const OWNER = process.env.OWNER_USER_ID;
 const MAX_NEW = 15;         // emails to process per run (bounds cost)
 
 async function authorized(req) {
-  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  const auth = req.headers.authorization || '';
+  const secret = process.env.CRON_SECRET;
+  // Cron path: if CRON_SECRET is set, Vercel sends it as a Bearer token; if it's
+  // not set, accept Vercel's own cron user-agent (deployment protection already
+  // blocks arbitrary external callers).
+  if (secret) { if (auth === `Bearer ${secret}`) return true; }
+  else if ((req.headers['user-agent'] || '').includes('vercel-cron')) return true;
+  // Owner path: manual "Scan Gmail" button sends the Supabase session token.
+  const token = auth.replace(/^Bearer\s+/i, '');
   if (!token) return false;
-  if (process.env.CRON_SECRET && token === process.env.CRON_SECRET) return true; // cron path
-  const { data, error } = await sb.auth.getUser(token);                          // owner path
+  const { data, error } = await sb.auth.getUser(token);
   return !error && data?.user?.id === OWNER;
 }
 

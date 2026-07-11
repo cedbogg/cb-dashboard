@@ -307,9 +307,10 @@
         </div>
       </div>
     </div>
-    <div class="sec-ey" style="display:flex;align-items:center;justify-content:space-between">
+    <div class="sec-ey" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
       <span>Things to do · Companies House, tax, invoices, Gmail</span>
-      <button class="act" id="scanmail" onclick="scanFortiorMail(this)">Scan Gmail</button></div>
+      <span style="display:flex;align-items:center;gap:8px"><span class="s" id="scanstatus" style="font-size:.72rem"></span>
+      <button class="act" id="scanmail" onclick="scanFortiorMail(this)">Scan Gmail</button></span></div>
     <div class="panel" id="todo">
       <div class="task"><span class="ty">Cos House</span><div class="tt">Confirmation statement — Fortior Group Ltd</div><span class="due soon">due 26 Jun</span></div>
       <div class="task"><span class="ty">Tax</span><div class="tt">VAT threshold review</div><span class="due">14 Jul</span></div>
@@ -670,17 +671,18 @@ async function loadFortior(){
 
 // Manual trigger for the Gmail→Notion Fortior-task scan (also runs on cron).
 async function scanFortiorMail(btn){
-  const orig=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='Scanning…'; }
+  const orig=btn?btn.textContent:''; const st=document.getElementById('scanstatus');
+  if(btn){ btn.disabled=true; btn.textContent='Scanning…'; } if(st){ st.textContent=''; st.style.color='var(--muted)'; }
   try{
     const sb=await getClient();
     const {data:{session}}=await sb.auth.getSession();
     const res=await fetch('/api/fortior-mail',{method:'POST',headers:{'Authorization':'Bearer '+(session?.access_token||'')}});
     const data=await res.json();
-    if(!res.ok) throw new Error(data.error||'scan failed');
-    if(btn) btn.textContent = data.created? `+${data.created} to Notion` : 'No new to-dos';
-    if(data.created) setTimeout(loadFortior, 1500);   // refresh after write (needs next sync to appear)
-  }catch(e){ if(btn) btn.textContent='Scan failed'; console.warn('fortior-mail',e); }
-  finally{ if(btn) setTimeout(()=>{ btn.disabled=false; btn.textContent=orig; }, 4000); }
+    if(!res.ok) throw new Error(data.error||('HTTP '+res.status));
+    if(st){ st.style.color='var(--muted)'; st.textContent = data.created? `scanned ${data.scanned}, +${data.created} to-dos` : `scanned ${data.scanned??0}, none actionable`; }
+    if(data.created) setTimeout(loadFortior, 1500);   // refresh after write
+  }catch(e){ if(st){ st.style.color='var(--bad)'; st.textContent=String(e.message||e).slice(0,140); } console.warn('fortior-mail',e); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=orig; } }
 }
 
 // ---- This week (shared source) — Perso panel AND Home ribbon read from here --

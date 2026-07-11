@@ -134,6 +134,12 @@ export default async function handler(req, res) {
       set('Notes', notes);
       if (a.due) set('Due date', a.due);
       const page = await notion.pages.create({ parent: { database_id: dbId }, properties: props });
+      // Mirror into fortior_tasks now (keyed on the Notion page id) so it shows
+      // on the dashboard immediately; the next Notion→Supabase sync upserts the
+      // same notion_id, so this never duplicates.
+      await sb.from('fortior_tasks').upsert(
+        { owner_id: OWNER, notion_id: page.id, task: a.task, type: a.type || 'Email', status: 'To do', due_date: a.due || null, source: 'Gmail', link },
+        { onConflict: 'notion_id' });
       await sb.from('mail_tasks_seen').insert({ owner_id: OWNER, gmail_id: a.id, notion_page_id: page.id });
       actedIds.add(a.id); created++;
     }

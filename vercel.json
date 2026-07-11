@@ -1,5 +1,6 @@
 {
   "crons": [
+    { "path": "/api/fortior-mail", "schedule": "0 6 * * *" },
     { "path": "/api/sync-notion", "schedule": "0 7 * * *" }
   ]
 }

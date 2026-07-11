@@ -265,7 +265,7 @@
 
   <!-- FORTIOR -->
   <section class="screen" id="fortior">
-    <div class="sub">Fortior</div><div class="subd">First acquisition in 6 months · month 4 of 6</div>
+    <div class="sub">Fortior</div><div class="subd" id="fortsub">First acquisition · 6-month sprint</div>
     <div class="sec-ey">Acquisition funnel · vs goal</div>
     <div class="panel">
       <div class="funnel" id="fnl">
@@ -307,7 +307,9 @@
         </div>
       </div>
     </div>
-    <div class="sec-ey">Things to do · Companies House, tax, invoices</div>
+    <div class="sec-ey" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Things to do · Companies House, tax, invoices, Gmail</span>
+      <button class="act" id="scanmail" onclick="scanFortiorMail(this)">Scan Gmail</button></div>
     <div class="panel" id="todo">
       <div class="task"><span class="ty">Cos House</span><div class="tt">Confirmation statement — Fortior Group Ltd</div><span class="due soon">due 26 Jun</span></div>
       <div class="task"><span class="ty">Tax</span><div class="tt">VAT threshold review</div><span class="due">14 Jul</span></div>
@@ -569,6 +571,18 @@ const funnelBar = (n,max,fill) =>
 async function loadFortior(){
   let sb; try{ sb=await getClient(); }catch(e){ return; }
 
+  // 6-month acquisition sprint: started 1 Jul 2026, close by 31 Dec 2026.
+  (function(){
+    const sub=document.getElementById('fortsub'); if(!sub) return;
+    const start=new Date(2026,6,1), now=new Date();
+    const idx=(now.getFullYear()-start.getFullYear())*12+(now.getMonth()-start.getMonth());
+    const monthNum=Math.min(6,Math.max(1,idx+1));
+    const over=idx>=6;
+    sub.textContent = over
+      ? 'First acquisition · target date passed (was 31 Dec 2026)'
+      : `First acquisition by 31 Dec 2026 · month ${monthNum} of 6`;
+  })();
+
   // funnel — driven by the teaser column of the Rocket Sourcing Log, over the
   // ACTIVE universe (Surfaced + Pursuing; Dead/Dismissed excluded). Accepts both
   // the old and renamed teaser values so it works before/after the Notion rename.
@@ -652,6 +666,21 @@ async function loadFortior(){
         `<span class="due${soon?' soon':''}">${esc(dueLabel)}</span></div>`;
     }).join('') : '<div class="task"><div class="tt">Nothing outstanding</div></div>';
   }catch(e){}
+}
+
+// Manual trigger for the Gmail→Notion Fortior-task scan (also runs on cron).
+async function scanFortiorMail(btn){
+  const orig=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='Scanning…'; }
+  try{
+    const sb=await getClient();
+    const {data:{session}}=await sb.auth.getSession();
+    const res=await fetch('/api/fortior-mail',{method:'POST',headers:{'Authorization':'Bearer '+(session?.access_token||'')}});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'scan failed');
+    if(btn) btn.textContent = data.created? `+${data.created} to Notion` : 'No new to-dos';
+    if(data.created) setTimeout(loadFortior, 1500);   // refresh after write (needs next sync to appear)
+  }catch(e){ if(btn) btn.textContent='Scan failed'; console.warn('fortior-mail',e); }
+  finally{ if(btn) setTimeout(()=>{ btn.disabled=false; btn.textContent=orig; }, 4000); }
 }
 
 // ---- This week (shared source) — Perso panel AND Home ribbon read from here --
@@ -984,7 +1013,7 @@ async function loadHome(){
 }
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal;
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

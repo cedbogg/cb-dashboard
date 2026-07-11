@@ -244,6 +244,22 @@ drop policy if exists owner_all on habit_checkins;
 create policy owner_all on habit_checkins
   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
+-- ------------------------------------------------------------
+-- 12. MAIL TASKS SEEN  (idempotency for the Gmail→Notion Fortior
+--     task extractor — which Gmail messages were already triaged,
+--     so a re-run never duplicates a task). Service-role only.
+-- ------------------------------------------------------------
+create table if not exists mail_tasks_seen (
+  id             uuid primary key default gen_random_uuid(),
+  owner_id       uuid not null,
+  gmail_id       text not null,
+  notion_page_id text,
+  created_at     timestamptz not null default now(),
+  unique (owner_id, gmail_id)
+);
+create index if not exists mail_tasks_seen_idx on mail_tasks_seen(owner_id, gmail_id);
+alter table mail_tasks_seen enable row level security;  -- no policy: anon denied, service-role bypasses
+
 -- ============================================================
 -- v1.1 migration — run this if schema v1 is already applied.
 -- training_programs was missing its Notion sync key.

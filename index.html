@@ -569,30 +569,30 @@ const funnelBar = (n,max,fill) =>
 async function loadFortior(){
   let sb; try{ sb=await getClient(); }catch(e){ return; }
 
-  // funnel — all Pursuing rows, counted client-side across teaser_status + stage
+  // funnel — driven by the teaser column of the Rocket Sourcing Log, over the
+  // ACTIVE universe (Surfaced + Pursuing; Dead/Dismissed excluded). Accepts both
+  // the old and renamed teaser values so it works before/after the Notion rename.
   try{
-    const {data:rows}=await sb.from('rocket_targets').select('stage,teaser_status').eq('status','Pursuing');
+    const {data:rows}=await sb.from('rocket_targets').select('teaser_status,status')
+      .in('status',['Surfaced','Pursuing']);
     const r=rows||[];
     const c=(f)=>r.filter(f).length;
+    const reqOrBeyond = t => ['Requested','Teaser requested','Teaser received','Received'].includes(t);
+    const received    = t => ['Teaser received','Received'].includes(t);
     const bars=[
-      ['Teaser req', c(x=>['Requested','Received'].includes(x.teaser_status)), true],
-      ["Rec'd",      c(x=>x.teaser_status==='Received'), true],
-      ['NDA',        c(x=>x.stage==='NDA'), true],
-      ['Info/mgmt',  c(x=>x.stage==='Info & mgmt call'), false],
-      ['Heads',      c(x=>x.stage==='Heads of terms'), false],
-      ['Offer',      c(x=>x.stage==='Final offer'), false],
-      ['Closed',     c(x=>x.stage==='Closed'), false]
+      ['Sourced',       r.length, true],
+      ['Teaser req’d', c(x=>reqOrBeyond(x.teaser_status)), true],
+      ['Received',      c(x=>received(x.teaser_status)), true]
     ];
     const max=Math.max(1,...bars.map(b=>b[1]));
     document.getElementById('fnl').innerHTML=bars.map(([l,n,f])=>funnelBar(n,max,f)+`<div class="l">${l}</div></div>`).join('');
-    // pace line — name the biggest drop-off as the bottleneck, from live numbers
+    // pace line — biggest drop-off across the teaser funnel
     let worst='', drop=-1;
     for(let i=0;i<bars.length-1;i++){
       if(bars[i][1]>0){ const d=bars[i][1]-bars[i+1][1]; if(d>drop){drop=d; worst=bars[i][0]+'→'+bars[i+1][0];} }
     }
-    const nda=bars[2][1];
     document.getElementById('pace').innerHTML=
-      `Month 4 / 6 to first close. <b>NDA pipeline: ${nda}</b>. `+
+      `<b>${bars[0][1]}</b> active · <b>${bars[1][1]}</b> teaser requested · <b>${bars[2][1]}</b> received. `+
       (worst?`Biggest drop-off: ${esc(worst)} — the current bottleneck.`:'');
   }catch(e){}
 
@@ -624,15 +624,21 @@ async function loadFortior(){
     }).join('') : '<div class="row"><div class="co">No stalled teasers — all chased</div></div>';
   }catch(e){}
 
-  // new targets
+  // new targets — freshly sourced deals NOT yet actioned (no teaser requested),
+  // active only, newest first; this-week arrivals get a "new" flag.
   try{
-    const {data}=await sb.from('rocket_targets').select('business,lane,score,date_first_seen')
-      .order('date_first_seen',{ascending:false}).limit(5);
-    if(data) document.getElementById('newt').innerHTML = data.length? data.map(t=>{
+    const actioned = t => ['Requested','Teaser requested','Teaser received','Received','Passed','Seller declined to share'].includes(t);
+    const {data}=await sb.from('rocket_targets').select('business,lane,score,date_first_seen,teaser_status,status')
+      .in('status',['Surfaced','Pursuing'])
+      .order('date_first_seen',{ascending:false}).limit(30);
+    const fresh=(data||[]).filter(t=>!actioned(t.teaser_status)).slice(0,6);
+    document.getElementById('newt').innerHTML = fresh.length? fresh.map(t=>{
       const age=daysAgo(t.date_first_seen);
-      return `<div class="row"><div class="co">${esc(t.business||'')}<div class="s">${esc(t.lane||'')}</div></div>`+
+      const isNew = age!=null && age<=7;
+      const flag = isNew? ' <span style="color:var(--accent);font-family:var(--mono);font-size:.58rem">● NEW</span>' : '';
+      return `<div class="row"><div class="co">${esc(t.business||'')}${flag}<div class="s">${esc(t.lane||'')}</div></div>`+
         `<span class="score">${t.score!=null?t.score:'—'}</span><span class="age">${age!=null?age+'d':'—'}</span></div>`;
-    }).join('') : '<div class="row"><div class="co">No targets logged yet</div></div>';
+    }).join('') : '<div class="row"><div class="co">No new un-actioned targets</div></div>';
   }catch(e){}
 
   // things to do

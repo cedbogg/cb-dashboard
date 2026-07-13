@@ -161,8 +161,14 @@ export default async function handler(req, res) {
     res.status(200).json({ ok: true, scanned: mails.length, created, note: created ? 'Tasks written to Notion; they appear on the dashboard after the next Notion→Supabase sync.' : 'No new action items found.' });
   } catch (e) {
     const msg = String(e.message || e);
-    const hint = /insufficient|scope|ACCESS_TOKEN|forbidden|403/i.test(msg)
-      ? ' — the Google token may lack the gmail.readonly scope; re-authorise with Gmail enabled.' : '';
+    const cid = (process.env.GOOGLE_CLIENT_ID || '').split('.')[0] || '(GOOGLE_CLIENT_ID unset)';
+    let hint = '';
+    if (/expired or revoked|invalid_grant/i.test(msg))
+      hint = ` — refresh token doesn't match this app's OAuth client [${cid}]. Re-mint in OAuth Playground with "Use your own OAuth credentials" ticked and THIS client's id/secret, then update GOOGLE_REFRESH_TOKEN + redeploy.`;
+    else if (/invalid_client/i.test(msg))
+      hint = ` — GOOGLE_CLIENT_ID/SECRET in Vercel are wrong (app expects client [${cid}]).`;
+    else if (/insufficient|scope|ACCESS_TOKEN|forbidden|403/i.test(msg))
+      hint = ' — token may lack gmail.readonly; re-authorise with Gmail enabled.';
     res.status(502).json({ error: msg + hint });
   }
 }

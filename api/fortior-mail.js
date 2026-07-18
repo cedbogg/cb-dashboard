@@ -28,10 +28,10 @@ async function authInfo(req) {
   else if ((req.headers['user-agent'] || '').includes('vercel-cron')) return { ok: true };
   // Owner path: manual "Scan Gmail" button sends the Supabase session token.
   const token = auth.replace(/^Bearer\s+/i, '');
-  if (!token) return { ok: false, why: 'no session token sent (are you logged into the dashboard?)' };
+  if (!token) return { ok: false, why: 'no session token — sign out and back in on the dashboard, then retry' };
   if (!OWNER) return { ok: false, why: 'OWNER_USER_ID not set on server' };
   const { data, error } = await sb.auth.getUser(token);
-  if (error) return { ok: false, why: 'token rejected: ' + error.message };
+  if (error) return { ok: false, why: 'dashboard session expired — sign out (lock icon, top-right) and back in, then retry [' + error.message + ']' };
   if (data?.user?.id !== OWNER) return { ok: false, why: 'user-id mismatch (token ok, but not the owner)' };
   return { ok: true };
 }

@@ -47,7 +47,10 @@ async function googleAccessToken() {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body
   });
   const data = await r.json();
-  if (!r.ok || !data.access_token) throw new Error(data.error_description || data.error || 'token exchange failed');
+  if (!r.ok || !data.access_token) {
+    // Surface the error CODE too — invalid_client vs invalid_grant need different fixes.
+    throw new Error(`${data.error || 'token_error'}: ${data.error_description || 'token exchange failed'}`);
+  }
   return data.access_token;
 }
 

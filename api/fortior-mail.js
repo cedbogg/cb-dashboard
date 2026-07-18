@@ -119,13 +119,15 @@ export default async function handler(req, res) {
   const dbId = process.env.NOTION_TASKS_DB_ID;
   if (!dbId) return res.status(500).json({ error: 'NOTION_TASKS_DB_ID not set' });
 
+  let stage = 'init';
   try {
     const notion = new Client({ auth: process.env.NOTION_TOKEN });
-    const token = await googleAccessToken();
-    const mails = await gmailCandidates(token);
-    const actions = await extractTasks(mails);
+    stage = 'google-token'; const token = await googleAccessToken();
+    stage = 'gmail';        const mails = await gmailCandidates(token);
+    stage = 'claude';       const actions = await extractTasks(mails);
     const byId = Object.fromEntries(mails.map(m => [m.id, m]));
 
+    stage = 'notion-retrieve';
     const schema = await notion.databases.retrieve({ database_id: dbId });
     const titleName = Object.keys(schema.properties).find(k => schema.properties[k].type === 'title');
 
@@ -144,6 +146,7 @@ export default async function handler(req, res) {
       set('Link', link);
       set('Notes', notes);
       if (a.due) set('Due date', a.due);
+      stage = 'notion-create';
       const page = await notion.pages.create({ parent: { database_id: dbId }, properties: props });
       // Mirror into fortior_tasks now (keyed on the Notion page id) so it shows
       // on the dashboard immediately; the next Notion→Supabase sync upserts the
@@ -169,6 +172,12 @@ export default async function handler(req, res) {
       hint = ` — GOOGLE_CLIENT_ID/SECRET in Vercel are wrong (app expects client [${cid}]).`;
     else if (/insufficient|scope|ACCESS_TOKEN|forbidden|403/i.test(msg))
       hint = ' — token may lack gmail.readonly; re-authorise with Gmail enabled.';
-    res.status(502).json({ error: msg + hint });
+    else if (stage === 'gmail')
+      hint = ' — Gmail API rejected the token (missing gmail.readonly scope, or Gmail API not enabled in the Cloud project).';
+    else if (stage === 'claude')
+      hint = ' — Claude API rejected the request (check ANTHROPIC_API_KEY in Vercel).';
+    else if (stage.startsWith('notion'))
+      hint = ' — Notion rejected it (share the Fortior Tasks DB with the integration, or check NOTION_TOKEN / NOTION_TASKS_DB_ID).';
+    res.status(502).json({ error: `[${stage}] ${msg}${hint}` });
   }
 }

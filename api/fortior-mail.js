@@ -169,8 +169,10 @@ export default async function handler(req, res) {
     const msg = String(e.message || e);
     const cid = (process.env.GOOGLE_CLIENT_ID || '').split('.')[0] || '(GOOGLE_CLIENT_ID unset)';
     let hint = '';
-    if (/expired or revoked|invalid_grant/i.test(msg))
-      hint = ` — refresh token doesn't match this app's OAuth client [${cid}]. Re-mint in OAuth Playground with "Use your own OAuth credentials" ticked and THIS client's id/secret, then update GOOGLE_REFRESH_TOKEN + redeploy.`;
+    if (/expired or revoked|invalid_grant/i.test(msg)) {
+      const rt = process.env.GOOGLE_REFRESH_TOKEN || '';
+      hint = ` — the GOOGLE_REFRESH_TOKEN in Vercel is wrong/stale. It currently ends "${rt.slice(-6) || '(empty)'}" and is ${rt.length} chars long. It should end "S95HoI" and be 103 chars. If it doesn't match, re-paste it and redeploy.`;
+    }
     else if (/invalid_client/i.test(msg))
       hint = ` — GOOGLE_CLIENT_ID/SECRET in Vercel are wrong (app expects client [${cid}]).`;
     else if (/insufficient|scope|ACCESS_TOKEN|forbidden|403/i.test(msg))

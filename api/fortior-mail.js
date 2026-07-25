@@ -56,39 +56,45 @@ async function googleAccessToken() {
 
 const header = (msg, name) => (msg.payload?.headers || []).find(h => h.name.toLowerCase() === name.toLowerCase())?.value || '';
 
-async function gmailCandidates(token) {
-  const list = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=25&q=' +
-    encodeURIComponent('Fortior newer_than:45d -in:chats'), { headers: { Authorization: `Bearer ${token}` } });
-  const lj = await list.json();
-  if (!list.ok) throw new Error(lj.error?.message || `Gmail list ${list.status}`);
-  const ids = (lj.messages || []).map(m => m.id);
-  // Drop ones we've already processed.
-  const { data: seen } = await sb.from('mail_tasks_seen').select('gmail_id').eq('owner_id', OWNER);
-  const seenSet = new Set((seen || []).map(s => s.gmail_id));
-  const fresh = ids.filter(id => !seenSet.has(id)).slice(0, MAX_NEW);
-
-  const out = [];
-  for (const id of fresh) {
-    const r = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,
-      { headers: { Authorization: `Bearer ${token}` } });
-    const m = await r.json();
-    if (!r.ok) continue;
-    out.push({ id, subject: header(m, 'Subject'), from: header(m, 'From'), snippet: m.snippet || '' });
-  }
-  return out;
+async function gmailFetch(token, path) {
+  const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/' + path, { headers: { Authorization: `Bearer ${token}` } });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error?.message || `Gmail ${r.status}`);
+  return j;
 }
 
-async function extractTasks(mails) {
-  if (!mails.length) return [];
-  const list = mails.map((m, i) => `#${i} | id=${m.id}\nSubject: ${m.subject}\nFrom: ${m.from}\nSnippet: ${m.snippet}`).join('\n\n');
-  const system = `You triage email for Cedric, who is buying a UK compliance business (project "Fortior"). For each email decide if it implies a concrete action Cedric must take (reply, send/chase a document, book/attend a call, sign, pay, file). Ignore pure newsletters, marketing, FYIs and receipts.
-Return ONLY a JSON array, one object per email that IS actionable, no prose:
-[{"id":"<gmail id>","task":"<imperative, <=90 chars>","type":"Email","due":"YYYY-MM-DD or null"}]
-If none are actionable, return [].`;
+// Full thread context, including Cedric's own SENT replies, so Claude can judge
+// what has already been handled.
+async function threadContext(token, threadId, ref) {
+  const t = await gmailFetch(token, `threads/${threadId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`);
+  const messages = (t.messages || []).map(m => ({
+    from: header(m, 'From'),
+    sent: (m.labelIds || []).includes('SENT'),
+    snippet: (m.snippet || '').slice(0, 300)
+  }));
+  return { ref, threadId, subject: header((t.messages || [])[0] || {}, 'Subject'), messages, msgIds: (t.messages || []).map(m => m.id) };
+}
+
+// Classify each thread: todo (outstanding), done (already handled — e.g. Cedric
+// replied/paid/sent the info), or skip (no action). SENT messages are the
+// evidence of completion.
+async function judgeThreads(threads) {
+  if (!threads.length) return [];
+  const body = threads.map(t => {
+    const conv = t.messages.map(m => `  - [${m.sent ? 'CEDRIC (SENT)' : 'FROM ' + m.from}] ${m.snippet}`).join('\n');
+    return `ref=${t.ref}\nSubject: ${t.subject}\n${conv}`;
+  }).join('\n\n');
+  const system = `You triage email threads for Cedric. "Fortior" is both his UK compliance-business buyout project AND his holding-company admin (banking, tax, Companies House, invoices). For each thread output one status:
+- "todo": Cedric still needs to act (pay, reply, chase/send a document, provide info, book/attend, sign, file).
+- "done": it has ALREADY been handled — e.g. a CEDRIC (SENT) message confirms payment, provides the requested info, or otherwise resolves it.
+- "skip": no action needed (newsletter, marketing, FYI, plain receipt/confirmation).
+Treat CEDRIC (SENT) messages as strong evidence of what is already done. Only include a due date if one is explicitly stated in the thread.
+Return ONLY a JSON array, no prose:
+[{"ref":"<ref>","status":"todo|done|skip","task":"<imperative, <=90 chars, only when todo>","due":"YYYY-MM-DD or null"}]`;
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 1500, system, messages: [{ role: 'user', content: list }] })
+    body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 2000, system, messages: [{ role: 'user', content: body }] })
   });
   const data = await r.json();
   if (!r.ok) throw new Error(data.error?.message || 'anthropic error');
@@ -96,6 +102,8 @@ If none are actionable, return [].`;
   text = text.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
   try { const arr = JSON.parse(text); return Array.isArray(arr) ? arr : []; } catch { return []; }
 }
+
+const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 
 // Build a Notion property payload matching each property's actual type, so we
 // don't guess (select/status/date/url/rich_text all differ). status options
@@ -126,45 +134,93 @@ export default async function handler(req, res) {
   try {
     const notion = new Client({ auth: process.env.NOTION_TOKEN });
     stage = 'google-token'; const token = await googleAccessToken();
-    stage = 'gmail';        const mails = await gmailCandidates(token);
-    stage = 'claude';       const actions = await extractTasks(mails);
-    const byId = Object.fromEntries(mails.map(m => [m.id, m]));
-
     stage = 'notion-retrieve';
     const schema = await notion.databases.retrieve({ database_id: dbId });
     const titleName = Object.keys(schema.properties).find(k => schema.properties[k].type === 'title');
 
+    const markDone = async (pageId) => {
+      await sb.from('fortior_tasks').update({ status: 'Done' }).eq('owner_id', OWNER).eq('notion_id', pageId);
+      try { const p = propPayload(schema, 'Status', 'Done'); if (p) await notion.pages.update({ page_id: pageId, properties: { Status: p } }); } catch {}
+    };
+    let closed = 0;
+
+    // 1. Collapse duplicate open Gmail tasks (same text) — keep the first.
+    stage = 'dedupe';
+    const { data: openTasks } = await sb.from('fortior_tasks')
+      .select('notion_id,task').eq('owner_id', OWNER).eq('source', 'Gmail').neq('status', 'Done');
+    const survivors = new Map();       // norm(text) -> notion_id kept
+    for (const t of (openTasks || [])) {
+      const key = norm(t.task);
+      if (survivors.has(key)) { await markDone(t.notion_id); closed++; }
+      else survivors.set(key, t.notion_id);
+    }
+    const openNorms = new Set(survivors.keys());
+    const openIds = new Set(survivors.values());
+
+    // 2. Reconcile still-open tasks: mark done if their thread is now handled
+    //    (e.g. Cedric has since replied confirming payment / sent the info).
+    const { data: createdSeen } = await sb.from('mail_tasks_seen')
+      .select('gmail_id,notion_page_id').eq('owner_id', OWNER).not('notion_page_id', 'is', null);
+    const reconThreads = [];
+    for (const row of (createdSeen || [])) {
+      if (!openIds.has(row.notion_page_id)) continue;   // task already closed
+      stage = 'gmail';
+      let msg; try { msg = await gmailFetch(token, `messages/${row.gmail_id}?format=minimal`); } catch { continue; }
+      try { reconThreads.push(await threadContext(token, msg.threadId, 'DONE:' + row.notion_page_id)); } catch {}
+    }
+    stage = 'claude';
+    for (const j of await judgeThreads(reconThreads)) {
+      if (j.status === 'done' && String(j.ref).startsWith('DONE:')) { await markDone(String(j.ref).slice(5)); closed++; }
+    }
+
+    // 3. New candidates: search Fortior mail, one per thread, judge, create.
+    stage = 'gmail';
+    const list = await gmailFetch(token, 'messages?maxResults=30&q=' + encodeURIComponent('Fortior newer_than:45d -in:chats'));
+    const { data: seen } = await sb.from('mail_tasks_seen').select('gmail_id').eq('owner_id', OWNER);
+    const seenSet = new Set((seen || []).map(s => s.gmail_id));
+    const freshByThread = new Map();   // threadId -> representative msgId
+    for (const m of (list.messages || [])) {
+      if (seenSet.has(m.id)) continue;
+      if (!freshByThread.has(m.threadId)) freshByThread.set(m.threadId, m.id);
+      if (freshByThread.size >= MAX_NEW) break;
+    }
+    const newThreads = [];
+    for (const [threadId, repId] of freshByThread) {
+      try { newThreads.push(await threadContext(token, threadId, 'NEW:' + repId)); } catch {}
+    }
+    stage = 'claude';
+    const newJudged = await judgeThreads(newThreads);
+
+    stage = 'notion-create';
     let created = 0;
-    const actedIds = new Set();
-    for (const a of actions) {
-      const mail = byId[a.id]; if (!mail || !a.task) continue;
-      const link = `https://mail.google.com/mail/u/0/#all/${a.id}`;
-      const notes = `From ${mail.from} — ${mail.subject}`;
+    const taskMsgIds = new Set();
+    for (const j of newJudged) {
+      const repId = String(j.ref).startsWith('NEW:') ? String(j.ref).slice(4) : null;
+      if (!repId || j.status !== 'todo' || !j.task) continue;
+      const key = norm(j.task);
+      if (openNorms.has(key)) continue;               // already on the board
+      openNorms.add(key);
+      const link = `https://mail.google.com/mail/u/0/#all/${repId}`;
       const props = {};
       const set = (name, val) => { const p = propPayload(schema, name, val); if (p) props[name] = p; };
-      set(titleName, a.task);
-      set('Type', a.type || 'Email');
-      set('Status', 'To do');
-      set('Source', 'Gmail');
-      set('Link', link);
-      set('Notes', notes);
-      if (a.due) set('Due date', a.due);
-      stage = 'notion-create';
+      set(titleName, j.task); set('Type', 'Email'); set('Status', 'To do');
+      set('Source', 'Gmail'); set('Link', link); if (j.due) set('Due date', j.due);
       const page = await notion.pages.create({ parent: { database_id: dbId }, properties: props });
-      // Mirror into fortior_tasks now (keyed on the Notion page id) so it shows
-      // on the dashboard immediately; the next Notion→Supabase sync upserts the
-      // same notion_id, so this never duplicates.
       await sb.from('fortior_tasks').upsert(
-        { owner_id: OWNER, notion_id: page.id, task: a.task, type: a.type || 'Email', status: 'To do', due_date: a.due || null, source: 'Gmail', link },
+        { owner_id: OWNER, notion_id: page.id, task: j.task, type: 'Email', status: 'To do', due_date: j.due || null, source: 'Gmail', link },
         { onConflict: 'notion_id' });
-      await sb.from('mail_tasks_seen').insert({ owner_id: OWNER, gmail_id: a.id, notion_page_id: page.id });
-      actedIds.add(a.id); created++;
+      await sb.from('mail_tasks_seen').insert({ owner_id: OWNER, gmail_id: repId, notion_page_id: page.id });
+      taskMsgIds.add(repId); created++;
     }
-    // Record the non-actionable ones too, so we don't re-triage them next run.
-    const noAction = mails.filter(m => !actedIds.has(m.id)).map(m => ({ owner_id: OWNER, gmail_id: m.id, notion_page_id: null }));
-    if (noAction.length) await sb.from('mail_tasks_seen').upsert(noAction, { onConflict: 'owner_id,gmail_id' });
+    // Mark every other message in the scanned threads as seen (null) so we don't
+    // re-triage them — but never overwrite an existing row.
+    const allIds = new Set();
+    newThreads.forEach(nt => (nt.msgIds || []).forEach(id => allIds.add(id)));
+    const toRecord = [...allIds].filter(id => !taskMsgIds.has(id) && !seenSet.has(id))
+      .map(id => ({ owner_id: OWNER, gmail_id: id, notion_page_id: null }));
+    if (toRecord.length) await sb.from('mail_tasks_seen').upsert(toRecord, { onConflict: 'owner_id,gmail_id' });
 
-    res.status(200).json({ ok: true, scanned: mails.length, created, note: created ? 'Tasks written to Notion; they appear on the dashboard after the next Notion→Supabase sync.' : 'No new action items found.' });
+    res.status(200).json({ ok: true, scanned: newThreads.length, created, closed });
   } catch (e) {
     const msg = String(e.message || e);
     const cid = (process.env.GOOGLE_CLIENT_ID || '').split('.')[0] || '(GOOGLE_CLIENT_ID unset)';

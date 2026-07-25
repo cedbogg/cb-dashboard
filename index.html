@@ -658,12 +658,15 @@ async function loadFortior(){
 
   // things to do
   try{
-    const {data}=await sb.from('fortior_tasks').select('task,type,due_date,status')
+    const {data}=await sb.from('fortior_tasks').select('task,type,due_date,status,link')
       .neq('status','Done').order('due_date',{ascending:true,nullsFirst:false});
     if(data) document.getElementById('todo').innerHTML = data.length? data.map(t=>{
       const due=t.due_date; const soon = due && daysAgo(due)!=null && (new Date(due)-Date.now())<7*86400000;
       const dueLabel = due? new Date(due).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : 'no date';
-      return `<div class="task"><span class="ty">${esc(t.type||'—')}</span><div class="tt">${esc(t.task||'')}</div>`+
+      const title = t.link
+        ? `<a href="${esc(t.link)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--muted)">${esc(t.task||'')}</a>`
+        : esc(t.task||'');
+      return `<div class="task"><span class="ty">${esc(t.type||'—')}</span><div class="tt">${title}</div>`+
         `<span class="due${soon?' soon':''}">${esc(dueLabel)}</span></div>`;
     }).join('') : '<div class="task"><div class="tt">Nothing outstanding</div></div>';
   }catch(e){}
@@ -682,8 +685,8 @@ async function scanFortiorMail(btn){
     const raw=await res.text();
     let data={}; try{ data=JSON.parse(raw); }catch(_){}
     if(!res.ok){ show(`HTTP ${res.status}: ${String(data.error||raw||'').slice(0,150)}`, true); return; }
-    show(data.created? `scanned ${data.scanned}, +${data.created} to-dos` : `scanned ${data.scanned??0}, none actionable`);
-    if(data.created) setTimeout(loadFortior, 1500);
+    show(`scanned ${data.scanned??0} · +${data.created||0} new · ${data.closed||0} done/deduped`);
+    setTimeout(loadFortior, 1500);
   }catch(e){ show('fetch error: '+String(e.message||e).slice(0,120), true); }
   finally{ if(btn){ btn.disabled=false; btn.textContent=orig; } }
 }

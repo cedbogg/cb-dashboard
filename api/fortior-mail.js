@@ -68,11 +68,13 @@ async function gmailFetch(token, path) {
 async function threadContext(token, threadId, ref) {
   const t = await gmailFetch(token, `threads/${threadId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`);
   const messages = (t.messages || []).map(m => ({
+    id: m.id,
     from: header(m, 'From'),
+    date: header(m, 'Date'),
     sent: (m.labelIds || []).includes('SENT'),
     snippet: (m.snippet || '').slice(0, 300)
   }));
-  return { ref, threadId, subject: header((t.messages || [])[0] || {}, 'Subject'), messages, msgIds: (t.messages || []).map(m => m.id) };
+  return { ref, threadId, subject: header((t.messages || [])[0] || {}, 'Subject'), messages, msgIds: messages.map(m => m.id) };
 }
 
 // Classify each thread: todo (outstanding), done (already handled — e.g. Cedric
@@ -104,6 +106,7 @@ Return ONLY a JSON array, no prose:
 }
 
 const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+const toDate = (s) => { const d = new Date(s); return isNaN(d) ? null : d.toISOString().slice(0, 10); };
 
 // Build a Notion property payload matching each property's actual type, so we
 // don't guess (select/status/date/url/rich_text all differ). status options
@@ -144,33 +147,53 @@ export default async function handler(req, res) {
     };
     let closed = 0;
 
+    // Set a Notion Due date (persists through the sync) + mirror to fortior_tasks.
+    const setDue = async (pageId, date) => {
+      if (!date) return;
+      const p = propPayload(schema, 'Due date', date);
+      if (p) { try { await notion.pages.update({ page_id: pageId, properties: { 'Due date': p } }); } catch {} }
+      await sb.from('fortior_tasks').update({ due_date: date }).eq('owner_id', OWNER).eq('notion_id', pageId);
+    };
+
     // 1. Collapse duplicate open Gmail tasks (same text) — keep the first.
     stage = 'dedupe';
     const { data: openTasks } = await sb.from('fortior_tasks')
-      .select('notion_id,task').eq('owner_id', OWNER).eq('source', 'Gmail').neq('status', 'Done');
+      .select('notion_id,task,due_date').eq('owner_id', OWNER).eq('source', 'Gmail').neq('status', 'Done');
     const survivors = new Map();       // norm(text) -> notion_id kept
+    const needsDate = new Set();       // open task page ids with no due date
     for (const t of (openTasks || [])) {
       const key = norm(t.task);
       if (survivors.has(key)) { await markDone(t.notion_id); closed++; }
-      else survivors.set(key, t.notion_id);
+      else { survivors.set(key, t.notion_id); if (!t.due_date) needsDate.add(t.notion_id); }
     }
     const openNorms = new Set(survivors.keys());
     const openIds = new Set(survivors.values());
 
     // 2. Reconcile still-open tasks: mark done if their thread is now handled
-    //    (e.g. Cedric has since replied confirming payment / sent the info).
+    //    (e.g. Cedric has since replied confirming payment / sent the info), and
+    //    backfill a date (email received date) for any that are missing one.
     const { data: createdSeen } = await sb.from('mail_tasks_seen')
       .select('gmail_id,notion_page_id').eq('owner_id', OWNER).not('notion_page_id', 'is', null);
     const reconThreads = [];
+    const dateByPage = new Map();      // page id -> received date of its email
     for (const row of (createdSeen || [])) {
       if (!openIds.has(row.notion_page_id)) continue;   // task already closed
       stage = 'gmail';
       let msg; try { msg = await gmailFetch(token, `messages/${row.gmail_id}?format=minimal`); } catch { continue; }
-      try { reconThreads.push(await threadContext(token, msg.threadId, 'DONE:' + row.notion_page_id)); } catch {}
+      let ctx; try { ctx = await threadContext(token, msg.threadId, 'DONE:' + row.notion_page_id); } catch { continue; }
+      reconThreads.push(ctx);
+      const d = toDate((ctx.messages.find(m => m.id === row.gmail_id) || {}).date);
+      if (d) dateByPage.set(row.notion_page_id, d);
     }
     stage = 'claude';
+    const closedPages = new Set();
     for (const j of await judgeThreads(reconThreads)) {
-      if (j.status === 'done' && String(j.ref).startsWith('DONE:')) { await markDone(String(j.ref).slice(5)); closed++; }
+      if (j.status === 'done' && String(j.ref).startsWith('DONE:')) { const id = String(j.ref).slice(5); await markDone(id); closedPages.add(id); closed++; }
+    }
+    stage = 'notion-create';
+    for (const pageId of needsDate) {                    // backfill dates on survivors
+      if (closedPages.has(pageId)) continue;
+      await setDue(pageId, dateByPage.get(pageId));
     }
 
     // 3. New candidates: search Fortior mail, one per thread, judge, create.
@@ -194,20 +217,24 @@ export default async function handler(req, res) {
     stage = 'notion-create';
     let created = 0;
     const taskMsgIds = new Set();
+    const threadByRep = Object.fromEntries(newThreads.map(t => [String(t.ref).slice(4), t]));
     for (const j of newJudged) {
       const repId = String(j.ref).startsWith('NEW:') ? String(j.ref).slice(4) : null;
       if (!repId || j.status !== 'todo' || !j.task) continue;
       const key = norm(j.task);
       if (openNorms.has(key)) continue;               // already on the board
       openNorms.add(key);
+      // Explicit due if Claude found one, else the email's received date.
+      const repMsg = (threadByRep[repId]?.messages || []).find(m => m.id === repId);
+      const due = j.due || toDate(repMsg?.date);
       const link = `https://mail.google.com/mail/u/0/#all/${repId}`;
       const props = {};
       const set = (name, val) => { const p = propPayload(schema, name, val); if (p) props[name] = p; };
       set(titleName, j.task); set('Type', 'Email'); set('Status', 'To do');
-      set('Source', 'Gmail'); set('Link', link); if (j.due) set('Due date', j.due);
+      set('Source', 'Gmail'); set('Link', link); if (due) set('Due date', due);
       const page = await notion.pages.create({ parent: { database_id: dbId }, properties: props });
       await sb.from('fortior_tasks').upsert(
-        { owner_id: OWNER, notion_id: page.id, task: j.task, type: 'Email', status: 'To do', due_date: j.due || null, source: 'Gmail', link },
+        { owner_id: OWNER, notion_id: page.id, task: j.task, type: 'Email', status: 'To do', due_date: due || null, source: 'Gmail', link },
         { onConflict: 'notion_id' });
       await sb.from('mail_tasks_seen').insert({ owner_id: OWNER, gmail_id: repId, notion_page_id: page.id });
       taskMsgIds.add(repId); created++;

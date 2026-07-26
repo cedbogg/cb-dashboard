@@ -1009,7 +1009,7 @@ async function loadFinance(){
     if(!p){ if(el('pensAlloc')) el('pensAlloc').innerHTML='<tr><td colspan="4">No pension data yet</td></tr>'; return; }
     const gbpk=v=> v==null?'—':'£'+(Math.round(v/100)/10)+'k';
     if(el('pensTotal')) el('pensTotal').textContent = gbpk(p.total_value);
-    if(el('pensOcf'))   el('pensOcf').textContent   = p.blended_ocf!=null? (p.blended_ocf+'%') : '—';
+    if(el('pensOcf'))   el('pensOcf').textContent   = p.blended_ocf!=null? ((+p.blended_ocf).toFixed(2)+'%') : '—';
     if(el('pensChg')){ const q=p.qtd_return;
       el('pensChg').textContent = q!=null? ((q>=0?'+':'')+q+'% QTD') : ('as of '+(p.as_of||''));
       el('pensChg').className   = 'chg '+(q>0?'up':q<0?'down':'flat'); }

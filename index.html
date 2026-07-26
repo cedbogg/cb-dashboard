@@ -322,22 +322,17 @@
   <section class="screen" id="finance">
     <div class="sub">Finance</div><div class="subd">Investments and cash flow · GBP</div>
     <div class="tiles">
-      <div class="tile"><div class="lab">Pension (Aegon)</div><div class="big">£486.2k</div><div class="chg up">+2.1% QTD</div></div>
+      <div class="tile"><div class="lab">Pension (Aegon)</div><div class="big" id="pensTotal">—</div><div class="chg" id="pensChg">—</div></div>
       <div class="tile"><div class="lab">Fortior Holdings</div><div class="big">£312.8k</div><div class="chg up">+1.4% MTD</div></div>
       <div class="tile"><div class="lab">Budget — June</div><div class="big">−£420</div><div class="chg down">vs plan</div></div>
-      <div class="tile"><div class="lab">Blended OCF</div><div class="big">0.85%</div><div class="chg flat">≤ 0.90% tgt</div></div>
+      <div class="tile"><div class="lab">Blended OCF</div><div class="big" id="pensOcf">—</div><div class="chg flat">≤ 0.90% tgt</div></div>
     </div>
     <div class="cols">
       <div>
         <div class="sec-ey">Pension · allocation</div>
         <div class="panel">
-          <table><thead><tr><th>Fund</th><th>Wt</th><th></th><th>QTD</th></tr></thead><tbody>
-            <tr><td>Artemis SmartGARP UK</td><td>22.3%</td><td><span class="wbar" style="width:42px"></span></td><td class="up">+3.1%</td></tr>
-            <tr><td>Jupiter Merian Gbl AR</td><td>18.0%</td><td><span class="wbar" style="width:34px"></span></td><td>+0.8%</td></tr>
-            <tr><td>Thornbridge Gbl Opps</td><td>20.0%</td><td><span class="wbar" style="width:38px"></span></td><td class="up">+2.6%</td></tr>
-            <tr><td>Guinness Innovators</td><td>16.0%</td><td><span class="wbar" style="width:30px"></span></td><td class="up">+4.2%</td></tr>
-            <tr><td>Lazard Infrastructure</td><td>18.7%</td><td><span class="wbar" style="width:36px"></span></td><td>+1.1%</td></tr>
-            <tr><td>M&amp;G Emerging Mkts</td><td>5.0%</td><td><span class="wbar" style="width:10px"></span></td><td class="down">−0.9%</td></tr>
+          <table><thead><tr><th>Fund</th><th>Wt</th><th></th><th>QTD</th></tr></thead><tbody id="pensAlloc">
+            <tr><td colspan="4">Loading…</td></tr>
           </tbody></table>
         </div>
       </div>
@@ -500,6 +495,7 @@ function setDomain(s){
   if(s==='home') loadHome();
   if(s==='perso') loadPerso();
   if(s==='fitness') loadFitness();
+  if(s==='finance') loadFinance();
 }
 function renderChips(s){
   const live=memCache[s];
@@ -1000,6 +996,31 @@ async function loadFitness(){
       const st = p.status==='Active'?'active':p.status==='Planned'?'plan':'';
       return `<div class="prog"><div class="nm">${esc(p.program||'')}<div class="d">${esc(sub)}</div></div><span class="st ${st}">${esc((p.status||'').toLowerCase())}</span></div>`;
     }).join('') : '<div class="prog"><div class="nm">No programmes logged yet</div></div>';
+  }catch(e){}
+}
+
+// ---- Finance · pension (fed by the monthly workbook agent via /api/pension-update)
+async function loadFinance(){
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+  try{
+    const {data}=await sb.from('pension')
+      .select('as_of,total_value,blended_ocf,qtd_return,funds').order('as_of',{ascending:false}).limit(1);
+    const p=data&&data[0]; const el=id=>document.getElementById(id);
+    if(!p){ if(el('pensAlloc')) el('pensAlloc').innerHTML='<tr><td colspan="4">No pension data yet</td></tr>'; return; }
+    const gbpk=v=> v==null?'—':'£'+(Math.round(v/100)/10)+'k';
+    if(el('pensTotal')) el('pensTotal').textContent = gbpk(p.total_value);
+    if(el('pensOcf'))   el('pensOcf').textContent   = p.blended_ocf!=null? (p.blended_ocf+'%') : '—';
+    if(el('pensChg')){ const q=p.qtd_return;
+      el('pensChg').textContent = q!=null? ((q>=0?'+':'')+q+'% QTD') : ('as of '+(p.as_of||''));
+      el('pensChg').className   = 'chg '+(q>0?'up':q<0?'down':'flat'); }
+    const funds=Array.isArray(p.funds)?p.funds:[];
+    const maxW=Math.max(0.01,...funds.map(f=>+f.weight||0));
+    if(el('pensAlloc')) el('pensAlloc').innerHTML = funds.length? funds.map(f=>{
+      const w=+f.weight||0, q=(f.qtd==null?null:+f.qtd);
+      const qcell = q==null? '<td>—</td>' : `<td class="${q>=0?'up':'down'}">${q>=0?'+':''}${q}%</td>`;
+      return `<tr><td>${esc(f.name||'')}</td><td>${(w*100).toFixed(1)}%</td>`+
+        `<td><span class="wbar" style="width:${Math.round(w/maxW*44)}px"></span></td>${qcell}</tr>`;
+    }).join('') : '<tr><td colspan="4">No fund breakdown</td></tr>';
   }catch(e){}
 }
 

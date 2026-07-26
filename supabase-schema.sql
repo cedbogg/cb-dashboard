@@ -260,6 +260,27 @@ create table if not exists mail_tasks_seen (
 create index if not exists mail_tasks_seen_idx on mail_tasks_seen(owner_id, gmail_id);
 alter table mail_tasks_seen enable row level security;  -- no policy: anon denied, service-role bypasses
 
+-- ------------------------------------------------------------
+-- 13. PENSION  (monthly snapshots pushed by the pension-workbook
+--     agent via /api/pension-update; Finance screen reads latest).
+--     One row per as-of date, so we also get value-over-time.
+-- ------------------------------------------------------------
+create table if not exists pension (
+  id           uuid primary key default gen_random_uuid(),
+  owner_id     uuid not null default auth.uid(),
+  as_of        date not null,
+  total_value  numeric,
+  blended_ocf  numeric,
+  qtd_return   numeric,
+  funds        jsonb,          -- [{name, isin, weight(0-1), value, ocf, qtd}]
+  updated_at   timestamptz not null default now(),
+  unique (owner_id, as_of)
+);
+alter table pension enable row level security;
+drop policy if exists owner_all on pension;
+create policy owner_all on pension
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
 -- ============================================================
 -- v1.1 migration — run this if schema v1 is already applied.
 -- training_programs was missing its Notion sync key.

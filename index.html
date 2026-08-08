@@ -329,7 +329,7 @@
     </div>
     <div class="cols">
       <div>
-        <div class="sec-ey">Pension · allocation</div>
+        <div class="sec-ey">Pension · allocation <span id="pensPerf" style="float:right;font-weight:400;text-transform:none;letter-spacing:0"></span></div>
         <div class="panel">
           <table><thead><tr><th>Fund</th><th>Wt</th><th></th><th>QTD</th></tr></thead><tbody id="pensAlloc">
             <tr><td colspan="4">Loading…</td></tr>
@@ -1004,15 +1004,22 @@ async function loadFinance(){
   let sb; try{ sb=await getClient(); }catch(e){ return; }
   try{
     const {data}=await sb.from('pension')
-      .select('as_of,total_value,blended_ocf,qtd_return,funds').order('as_of',{ascending:false}).limit(1);
+      .select('as_of,total_value,blended_ocf,mtd_return,qtd_return,ytd_return,funds').order('as_of',{ascending:false}).limit(1);
     const p=data&&data[0]; const el=id=>document.getElementById(id);
     if(!p){ if(el('pensAlloc')) el('pensAlloc').innerHTML='<tr><td colspan="4">No pension data yet</td></tr>'; return; }
     const gbpk=v=> v==null?'—':'£'+(Math.round(v/100)/10)+'k';
+    const pct=v=> v==null?'—':((v>=0?'+':'')+(+v).toFixed(1)+'%');
     if(el('pensTotal')) el('pensTotal').textContent = gbpk(p.total_value);
     if(el('pensOcf'))   el('pensOcf').textContent   = p.blended_ocf!=null? ((+p.blended_ocf).toFixed(2)+'%') : '—';
-    if(el('pensChg')){ const q=p.qtd_return;
-      el('pensChg').textContent = q!=null? ((q>=0?'+':'')+q+'% QTD') : ('as of '+(p.as_of||''));
-      el('pensChg').className   = 'chg '+(q>0?'up':q<0?'down':'flat'); }
+    // Tile change = YTD headline (falls back to as-of date).
+    if(el('pensChg')){ const y=p.ytd_return;
+      el('pensChg').textContent = y!=null? (pct(y)+' YTD') : ('as of '+(p.as_of||''));
+      el('pensChg').className   = 'chg '+(y>0?'up':y<0?'down':'flat'); }
+    // Performance strip: MTD · QTD · YTD.
+    if(el('pensPerf')){
+      const seg=(lab,v)=>`<span style="color:${v>0?'var(--ok)':v<0?'var(--bad)':'var(--muted)'}">${lab} ${pct(v)}</span>`;
+      el('pensPerf').innerHTML = [seg('MTD',p.mtd_return),seg('QTD',p.qtd_return),seg('YTD',p.ytd_return)].join(' · ');
+    }
     const funds=Array.isArray(p.funds)?p.funds:[];
     const maxW=Math.max(0.01,...funds.map(f=>+f.weight||0));
     if(el('pensAlloc')) el('pensAlloc').innerHTML = funds.length? funds.map(f=>{

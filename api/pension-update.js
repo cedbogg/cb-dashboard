@@ -34,7 +34,9 @@ export default async function handler(req, res) {
     as_of,
     total_value: num(b.total_value),
     blended_ocf: num(b.blended_ocf),
+    mtd_return: num(b.mtd_return),
     qtd_return: num(b.qtd_return),
+    ytd_return: num(b.ytd_return),
     funds: Array.isArray(b.funds) ? b.funds : null,   // stored as JSONB
     updated_at: new Date().toISOString()
   };

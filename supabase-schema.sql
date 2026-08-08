@@ -271,7 +271,9 @@ create table if not exists pension (
   as_of        date not null,
   total_value  numeric,
   blended_ocf  numeric,
-  qtd_return   numeric,
+  mtd_return   numeric,        -- blended total return, month-to-date (%)
+  qtd_return   numeric,        -- blended total return, quarter-to-date (%)
+  ytd_return   numeric,        -- blended total return, year-to-date (%)
   funds        jsonb,          -- [{name, isin, weight(0-1), value, ocf, qtd}]
   updated_at   timestamptz not null default now(),
   unique (owner_id, as_of)

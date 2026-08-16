@@ -193,7 +193,7 @@
   <nav class="nav" id="nav">
     <button data-s="home" class="on">Home</button><button data-s="perso">Perso</button>
     <button data-s="fortior">Fortior</button><button data-s="finance">Finance</button>
-    <button data-s="health">Health</button><button data-s="fitness">Fitness</button>
+    <button data-s="fitness">Fitness</button><button data-s="health">Health</button>
   </nav>
 
   <!-- HOME -->
@@ -1065,7 +1065,7 @@ async function loadMarathon(){
     const col={Pass:'var(--ok)',Partial:'var(--warn)',Fail:'var(--bad)',Pending:'var(--muted)'};
     const nurl=id=> id?('https://www.notion.so/'+String(id).replace(/-/g,'')):null;
     const todayDow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
-    const dayRows=(wn,isCurWk)=> MARA_DAYS.filter(d=>d.week===wn).map(d=>{
+    const dayRows=(wn,isCurWk)=> MARA_DAYS.filter(d=>Number(d.week)===Number(wn)).map(d=>{
       const hot=isCurWk && d.day===todayDow;
       const chip=`<span style="font-size:.55rem;font-weight:700;text-transform:uppercase;color:#fff;background:${DAY_C[d.type]||'var(--muted)'};padding:1px 6px;border-radius:4px">${esc(d.type)}</span>`;
       return `<div style="display:flex;gap:8px;align-items:baseline;padding:5px 2px;border-bottom:1px solid var(--line)${hot?';background:rgba(200,168,107,.10)':''}">`+
@@ -1075,7 +1075,7 @@ async function loadMarathon(){
     }).join('');
     el('marathonWeeks').innerHTML = wks.map((w,i)=>{
       const isCur = cur && w.notion_id===cur.notion_id;
-      const wn = w.week_num!=null ? w.week_num : parseInt(((w.week_title||'').match(/W\s*(\d+)/)||[])[1]);
+      const wn = Number(w.week_num) || parseInt(((w.week_title||'').match(/W\s*(\d+)/)||[])[1]) || (i+1);
       const plan=`${w.planned_km??'—'}km · ${w.planned_runs??'—'}r`;
       const act = w.actual_km!=null?`${w.actual_km}km · ${w.actual_runs??'—'}r`:'—';
       const link=nurl(w.notion_id);

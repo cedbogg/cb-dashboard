@@ -176,10 +176,18 @@ function mapTraining(page) {
   };
 }
 
-async function syncTable(dbId, table, mapper, onMissing) {
+async function syncTable(dbId, table, mapper, onMissing, requiredField) {
   if (!dbId) return { table, skipped: 'no database id configured' };
   const pages = await fetchAllPages(dbId);
-  const rows = pages.map(mapper).filter(r => r.notion_id);
+  let rows = pages.map(mapper).filter(r => r.notion_id);
+  // Skip pages missing their NOT-NULL title (e.g. an untitled Notion row) so one
+  // blank row can't fail the whole table.
+  let skipped = 0;
+  if (requiredField) {
+    const before = rows.length;
+    rows = rows.filter(r => r[requiredField] != null && r[requiredField] !== '');
+    skipped = before - rows.length;
+  }
   if (rows.length) {
     const { error } = await sb.from(table).upsert(rows, { onConflict: 'notion_id' });
     if (error) throw new Error(`${table}: ${error.message}`);
@@ -197,7 +205,7 @@ async function syncTable(dbId, table, mapper, onMissing) {
     if (error) throw new Error(`${table} reconcile: ${error.message}`);
     reconciled = missing.length;
   }
-  return { table, upserted: rows.length, reconciled };
+  return { table, upserted: rows.length, skipped, reconciled };
 }
 
 export default async function handler(req, res) {
@@ -209,31 +217,34 @@ export default async function handler(req, res) {
   }
   try {
     if (!OWNER) throw new Error('OWNER_USER_ID not set');
-    const results = await Promise.all([
+    // allSettled so one table's bad row can't abort the others.
+    const settled = await Promise.allSettled([
       // targets removed from Notion -> soft-kill (keep the record, mark Dead)
       syncTable(process.env.NOTION_ROCKET_DB_ID, 'rocket_targets', mapRocket,
         (ids) => sb.from('rocket_targets').update({ status: 'Dead' })
-          .eq('owner_id', OWNER).in('notion_id', ids).neq('status', 'Dead')),
+          .eq('owner_id', OWNER).in('notion_id', ids).neq('status', 'Dead'), 'business'),
       // tasks removed from Notion -> delete outright
       syncTable(process.env.NOTION_TASKS_DB_ID, 'fortior_tasks', mapTask,
         (ids) => sb.from('fortior_tasks').delete()
-          .eq('owner_id', OWNER).in('notion_id', ids)),
+          .eq('owner_id', OWNER).in('notion_id', ids), 'task'),
       // goals/habits, priorities, training programs removed from Notion -> delete outright
       syncTable(process.env.NOTION_GOALS_DB_ID, 'goals_habits', mapGoal,
         (ids) => sb.from('goals_habits').delete()
-          .eq('owner_id', OWNER).in('notion_id', ids)),
+          .eq('owner_id', OWNER).in('notion_id', ids), 'name'),
       syncTable(process.env.NOTION_PRIORITIES_DB_ID, 'priorities', mapPriority,
         (ids) => sb.from('priorities').delete()
-          .eq('owner_id', OWNER).in('notion_id', ids)),
+          .eq('owner_id', OWNER).in('notion_id', ids), 'project'),
       syncTable(process.env.NOTION_TRAINING_DB_ID, 'training_programs', mapTraining,
         (ids) => sb.from('training_programs').delete()
-          .eq('owner_id', OWNER).in('notion_id', ids)),
-      // NYC Marathon "Weekly Log — Plan vs Actual"
+          .eq('owner_id', OWNER).in('notion_id', ids), 'program'),
+      // NYC Marathon "Weekly Log — Plan vs Actual" (no required title filter)
       syncTable(process.env.NOTION_MARATHON_DB_ID, 'marathon_weeks', mapMarathon,
         (ids) => sb.from('marathon_weeks').delete()
           .eq('owner_id', OWNER).in('notion_id', ids))
     ]);
-    res.status(200).json({ ok: true, results });
+    const results = settled.map(s => s.status === 'fulfilled' ? s.value : { error: String(s.reason?.message || s.reason) });
+    const ok = settled.every(s => s.status === 'fulfilled');
+    res.status(200).json({ ok, results });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err.message || err) });
   }

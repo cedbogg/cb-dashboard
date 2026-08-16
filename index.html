@@ -1018,6 +1018,24 @@ async function loadFitness(){
 // naive actual/planned ratio — recovery (↓) weeks fail on OVER-delivery, so a raw
 // ratio reads the athlete's real failure mode backwards.
 const MARA = { raceDate:'2026-11-01', gate2:'2026-09-14' };
+const DAY_C={Easy:'#4a90d9',Long:'#c9a227',Threshold:'#c0392b',Intervals:'#c0392b',Recovery:'#2f9e5f',Strength:'#7a5fc0',Rest:'#6c7a89',Race:'#c9a227'};
+const MARA_DAYS=[
+  {week:1,day:'Mon',type:'Strength',km:0,note:'Upper body / core'},{week:1,day:'Tue',type:'Easy',km:6,note:'MAF ≤137 + Strength A'},{week:1,day:'Wed',type:'Recovery',km:0,note:'Aqua jog 40 min Z2 (knee-spared)'},{week:1,day:'Thu',type:'Easy',km:8,note:'MAF ≤137'},{week:1,day:'Fri',type:'Recovery',km:0,note:'Aqua/elliptical 50 min Z2 (knee-spared)'},{week:1,day:'Sat',type:'Rest',km:0,note:''},{week:1,day:'Sun',type:'Long',km:9,note:'MAF ≤137 + Strength B'},
+  {week:2,day:'Mon',type:'Strength',km:0,note:'Ride or upper body'},{week:2,day:'Tue',type:'Easy',km:7,note:'MAF ≤137 + Strength A'},{week:2,day:'Wed',type:'Recovery',km:0,note:'Aqua jog 40 min Z2 (knee-spared)'},{week:2,day:'Thu',type:'Easy',km:9,note:'MAF ≤137'},{week:2,day:'Fri',type:'Recovery',km:0,note:'Aqua/elliptical 55 min Z2 (knee-spared)'},{week:2,day:'Sat',type:'Rest',km:0,note:''},{week:2,day:'Sun',type:'Long',km:10,note:'MAF ≤137 + Strength B'},
+  {week:3,day:'Mon',type:'Strength',km:0,note:'Ride or upper body'},{week:3,day:'Tue',type:'Easy',km:6,note:'MAF ≤137'},{week:3,day:'Wed',type:'Easy',km:7,note:'MAF ≤137 + Strength A'},{week:3,day:'Thu',type:'Recovery',km:0,note:'Knee-spared 45 min aqua/elliptical Z2'},{week:3,day:'Fri',type:'Easy',km:5,note:'MAF ≤137'},{week:3,day:'Sat',type:'Rest',km:0,note:''},{week:3,day:'Sun',type:'Long',km:12,note:'MAF ≤137, flat + Strength B'},
+  {week:4,day:'Mon',type:'Strength',km:0,note:'Ride or upper body'},{week:4,day:'Tue',type:'Easy',km:5,note:'MAF ≤137'},{week:4,day:'Wed',type:'Easy',km:6,note:'MAF ≤137 + Strength A light'},{week:4,day:'Thu',type:'Recovery',km:0,note:'Knee-spared 40 min aqua/elliptical Z2'},{week:4,day:'Fri',type:'Easy',km:5,note:'MAF ≤137'},{week:4,day:'Sat',type:'Rest',km:0,note:''},{week:4,day:'Sun',type:'Long',km:10,note:'MAF ≤137, flat + Strength B (recovery week)'},
+  {week:5,day:'Mon',type:'Easy',km:5,note:'MAF ≤137, flat'},{week:5,day:'Tue',type:'Easy',km:8,note:'MAF ≤137 + Strength A'},{week:5,day:'Wed',type:'Threshold',km:9,note:'2 km + 2×10 min RPE7 (3 min jog) + 2 km'},{week:5,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:5,day:'Fri',type:'Easy',km:3,note:'MAF ≤137, flat'},{week:5,day:'Sat',type:'Rest',km:0,note:''},{week:5,day:'Sun',type:'Long',km:13,note:'Flat @MAF ≤137 + Strength B'},
+  {week:6,day:'Mon',type:'Easy',km:6,note:'MAF ≤137, flat'},{week:6,day:'Tue',type:'Easy',km:9,note:'MAF ≤137 + Strength A'},{week:6,day:'Wed',type:'Threshold',km:10,note:'2 km + 3×8 min RPE7 (2 min jog) + 2 km'},{week:6,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:6,day:'Fri',type:'Easy',km:4,note:'MAF ≤137, flat'},{week:6,day:'Sat',type:'Rest',km:0,note:''},{week:6,day:'Sun',type:'Long',km:15,note:'Flat @MAF ≤137 + Strength B'},
+  {week:7,day:'Mon',type:'Easy',km:7,note:'MAF ≤137, flat'},{week:7,day:'Tue',type:'Easy',km:10,note:'MAF ≤137 + Strength A'},{week:7,day:'Wed',type:'Threshold',km:11,note:'2 km + 2×15 min RPE7 (3 min jog) + 2 km'},{week:7,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:7,day:'Fri',type:'Easy',km:5,note:'MAF ≤137, flat'},{week:7,day:'Sat',type:'Rest',km:0,note:''},{week:7,day:'Sun',type:'Long',km:17,note:'Flat @MAF ≤137 + Strength B'},
+  {week:8,day:'Mon',type:'Easy',km:6,note:'MAF ≤137, flat'},{week:8,day:'Tue',type:'Easy',km:8,note:'MAF ≤137 + Strength A light'},{week:8,day:'Wed',type:'Threshold',km:9,note:'2 km + 2×10 min RPE7 + 2 km'},{week:8,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:8,day:'Fri',type:'Easy',km:6,note:'MAF ≤137, flat'},{week:8,day:'Sat',type:'Rest',km:0,note:''},{week:8,day:'Sun',type:'Long',km:15,note:'Flat @MAF ≤137 + Strength B (recovery week)'},
+  {week:9,day:'Mon',type:'Easy',km:8,note:'MAF ≤137, flat'},{week:9,day:'Tue',type:'Easy',km:11,note:'MAF ≤137 + Strength A'},{week:9,day:'Wed',type:'Threshold',km:13,note:'3 km + 3×10 min RPE7 (2 min jog) + 3 km'},{week:9,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:9,day:'Fri',type:'Easy',km:5,note:'MAF ≤137, flat'},{week:9,day:'Sat',type:'Rest',km:0,note:''},{week:9,day:'Sun',type:'Long',km:21,note:'Flat, last 3 km @MP (~148–158 bpm) + Strength B'},
+  {week:10,day:'Mon',type:'Easy',km:9,note:'MAF ≤137, flat'},{week:10,day:'Tue',type:'Easy',km:12,note:'MAF ≤137 + Strength A'},{week:10,day:'Wed',type:'Threshold',km:14,note:'3 km + 2×20 min RPE7 (3 min jog) + 3 km'},{week:10,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:10,day:'Fri',type:'Easy',km:7,note:'MAF ≤137, flat'},{week:10,day:'Sat',type:'Rest',km:0,note:''},{week:10,day:'Sun',type:'Long',km:24,note:'Flat, last 4 km @MP + Strength B'},
+  {week:11,day:'Mon',type:'Easy',km:10,note:'MAF ≤137, flat'},{week:11,day:'Tue',type:'Easy',km:13,note:'MAF ≤137 + Strength A'},{week:11,day:'Wed',type:'Threshold',km:15,note:'3 km + 3×12 min RPE7 (2 min jog) + 3 km'},{week:11,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:11,day:'Fri',type:'Easy',km:8,note:'MAF ≤137, flat'},{week:11,day:'Sat',type:'Rest',km:0,note:''},{week:11,day:'Sun',type:'Long',km:26,note:'Flat, last 5 km @MP + Strength B'},
+  {week:12,day:'Mon',type:'Easy',km:11,note:'MAF ≤137, flat'},{week:12,day:'Tue',type:'Easy',km:14,note:'MAF ≤137 + Strength A'},{week:12,day:'Wed',type:'Threshold',km:16,note:'3 km + 2×20 min RPE7 (3 min jog) + 4 km'},{week:12,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:12,day:'Fri',type:'Easy',km:10,note:'MAF ≤137, flat'},{week:12,day:'Sat',type:'Rest',km:0,note:''},{week:12,day:'Sun',type:'Long',km:29,note:'Peak long run — flat, last 6 km @MP + Strength B'},
+  {week:13,day:'Mon',type:'Easy',km:9,note:'MAF ≤137, flat'},{week:13,day:'Tue',type:'Easy',km:11,note:'MAF ≤137 + Strength A minimal'},{week:13,day:'Wed',type:'Threshold',km:12,note:'MP run — 3 km + 6 km @MP + 3 km'},{week:13,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:13,day:'Fri',type:'Easy',km:6,note:'MAF ≤137, flat'},{week:13,day:'Sat',type:'Rest',km:0,note:''},{week:13,day:'Sun',type:'Long',km:22,note:'Relaxed, mostly MAF ≤137 + Strength B light'},
+  {week:14,day:'Mon',type:'Easy',km:7,note:'MAF ≤137, flat'},{week:14,day:'Tue',type:'Easy',km:8,note:'MAF ≤137, no strength from here'},{week:14,day:'Wed',type:'Threshold',km:8,note:'MP tune-up — 2 km + 4 km @MP + 2 km'},{week:14,day:'Thu',type:'Rest',km:0,note:'Rest or 30 min easy spin'},{week:14,day:'Fri',type:'Easy',km:5,note:'MAF ≤137, flat'},{week:14,day:'Sat',type:'Rest',km:0,note:''},{week:14,day:'Sun',type:'Long',km:14,note:'Easy, MAF ≤137'},
+  {week:15,day:'Mon',type:'Rest',km:0,note:'Travel prep'},{week:15,day:'Tue',type:'Easy',km:6,note:'MAF ≤137, flat, then fly to NYC'},{week:15,day:'Wed',type:'Easy',km:5,note:'NYC shakeout + 4×20 s strides'},{week:15,day:'Thu',type:'Easy',km:4,note:'Easy shakeout; full rest if Wed flagged the knee'},{week:15,day:'Fri',type:'Rest',km:0,note:'Expo, feet up'},{week:15,day:'Sat',type:'Rest',km:0,note:'Full rest, carb load, kit prep'},{week:15,day:'Sun',type:'Race',km:42.2,note:'NYC Marathon — target 3:45–4:00, ~5:20–5:41/km; gels at km 6, 14, 21, 28, 34, 39'}
+];
 async function loadMarathon(){
   const el=id=>document.getElementById(id);
   const today=_startOfDay(new Date());
@@ -1046,17 +1064,27 @@ async function loadMarathon(){
       ? `${done.length} done · <span style="color:var(--ok)">${c('Pass')} pass</span> · <span style="color:var(--warn)">${c('Partial')} partial</span> · <span style="color:var(--bad)">${c('Fail')} fail</span>` : '';
     const col={Pass:'var(--ok)',Partial:'var(--warn)',Fail:'var(--bad)',Pending:'var(--muted)'};
     const nurl=id=> id?('https://www.notion.so/'+String(id).replace(/-/g,'')):null;
+    const todayDow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
+    const dayRows=(wn,isCurWk)=> MARA_DAYS.filter(d=>d.week===wn).map(d=>{
+      const hot=isCurWk && d.day===todayDow;
+      const chip=`<span style="font-size:.55rem;font-weight:700;text-transform:uppercase;color:#fff;background:${DAY_C[d.type]||'var(--muted)'};padding:1px 6px;border-radius:4px">${esc(d.type)}</span>`;
+      return `<div style="display:flex;gap:8px;align-items:baseline;padding:5px 2px;border-bottom:1px solid var(--line)${hot?';background:rgba(200,168,107,.10)':''}">`+
+        `<span style="width:30px;font-family:var(--mono);font-size:.62rem;color:${hot?'var(--accent)':'var(--faint)'}">${d.day}</span>`+
+        `${chip}<span style="font-family:var(--mono);font-size:.72rem;color:var(--accent);width:46px;text-align:right">${d.km?d.km+' km':'—'}</span>`+
+        `<span style="font-size:.72rem;color:var(--muted);flex:1">${esc(d.note||'')}</span></div>`;
+    }).join('');
     el('marathonWeeks').innerHTML = wks.map(w=>{
       const isCur = cur && w.notion_id===cur.notion_id;
       const plan=`${w.planned_km??'—'}km · ${w.planned_runs??'—'}r`;
       const act = w.actual_km!=null?`${w.actual_km}km · ${w.actual_runs??'—'}r`:'—';
       const link=nurl(w.notion_id);
-      const wk = link?`<a href="${link}" target="_blank" rel="noopener" style="color:inherit;border-bottom:1px dotted var(--muted);text-decoration:none">${esc(w.week_title||('W'+w.week_num))}</a>`:esc(w.week_title||('W'+w.week_num));
+      const wk = link?`<a href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;border-bottom:1px dotted var(--muted);text-decoration:none">${esc(w.week_title||('W'+w.week_num))}</a>`:esc(w.week_title||('W'+w.week_num));
       const tip = [w.verdict, w.red_flags?('flags: '+w.red_flags):''].filter(Boolean).join(' — ');
-      return `<tr${isCur?' style="background:rgba(200,168,107,.08)"':''}${tip?` title="${esc(tip)}"`:''}>`+
-        `<td>${wk}${isCur?' <span style="color:var(--accent);font-size:.58rem">● now</span>':''}</td>`+
+      return `<tr onclick="toggleWk(${w.week_num})" style="cursor:pointer${isCur?';background:rgba(200,168,107,.08)':''}"${tip?` title="${esc(tip)}"`:''}>`+
+        `<td><span style="color:var(--faint);font-size:.6rem">▸</span> ${wk}${isCur?' <span style="color:var(--accent);font-size:.58rem">● now</span>':''}</td>`+
         `<td>${esc(w.phase||'')}</td><td>${esc(plan)}</td><td>${esc(act)}</td>`+
-        `<td style="color:${col[w.compliance]||'var(--muted)'}">${esc(w.compliance||'—')}</td></tr>`;
+        `<td style="color:${col[w.compliance]||'var(--muted)'}">${esc(w.compliance||'—')}</td></tr>`+
+        `<tr id="wd-${w.week_num}" style="display:none"><td colspan="5" style="padding:2px 4px 10px">${dayRows(w.week_num,isCur)||'<div style="color:var(--muted);font-size:.72rem">No daily plan.</div>'}</td></tr>`;
     }).join('');
   }catch(e){}
 }
@@ -1086,6 +1114,7 @@ function marathonChartSVG(wks, curNum){
   const la=act[act.length-1]; if(la) s+=`<text x="${(la[0]+3).toFixed(1)}" y="${(la[1]-3).toFixed(1)}" fill="var(--accent)">Actual</text>`;
   return s+'</svg>';
 }
+function toggleWk(n){ const el=document.getElementById('wd-'+n); if(el) el.style.display = el.style.display==='none'?'':'none'; }
 function fitTab(t){
   const run=t==='running';
   document.getElementById('fit-running').style.display=run?'':'none';
@@ -1256,7 +1285,7 @@ async function loadHome(){
 }
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.saveStrength=saveStrength;
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

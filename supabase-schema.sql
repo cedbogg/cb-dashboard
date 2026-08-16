@@ -283,6 +283,26 @@ drop policy if exists owner_all on pension;
 create policy owner_all on pension
   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
+-- ------------------------------------------------------------
+-- 14. MARATHON WEEKS  (NYC Marathon "Weekly Log — Plan vs Actual"
+--     Notion DB → synced; Fitness screen shows plan vs actual).
+-- ------------------------------------------------------------
+create table if not exists marathon_weeks (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null default auth.uid(),
+  notion_id text unique,
+  week_num int, week_title text,
+  date_start date, date_end date, phase text,
+  planned_km numeric, actual_km numeric, planned_runs numeric, actual_runs numeric,
+  moving_min numeric, elevation_m numeric, relative_effort numeric,
+  avg_hr numeric, cadence_spm numeric, strength_done numeric,
+  compliance text, verdict text, red_flags text,
+  updated_at timestamptz not null default now()
+);
+alter table marathon_weeks enable row level security;
+drop policy if exists owner_all on marathon_weeks;
+create policy owner_all on marathon_weeks for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
 -- ============================================================
 -- v1.1 migration — run this if schema v1 is already applied.
 -- training_programs was missing its Notion sync key.

@@ -132,6 +132,36 @@ function mapPriority(page) {
   };
 }
 
+function mapMarathon(page) {
+  const p = page.properties;
+  const title = readProp(p, 'Week');                       // e.g. "W4 · Aug 10–16" (non-ASCII)
+  const m = title && String(title).match(/W\s*(\d+)/i);
+  const datesProp = Object.keys(p).find(k => k.toLowerCase().trim() === 'dates');
+  const dr = datesProp ? p[datesProp].date : null;         // date range: {start, end}
+  return {
+    owner_id: OWNER,
+    notion_id: page.id,
+    week_num: m ? parseInt(m[1], 10) : null,
+    week_title: title,
+    date_start: dr?.start ? String(dr.start).slice(0, 10) : null,
+    date_end: dr?.end ? String(dr.end).slice(0, 10) : null,
+    phase: readProp(p, 'Phase'),
+    planned_km: toNum(readProp(p, 'Planned km')),
+    actual_km: toNum(readProp(p, 'Actual km')),
+    planned_runs: toNum(readProp(p, 'Planned runs')),
+    actual_runs: toNum(readProp(p, 'Actual runs')),
+    moving_min: toNum(readProp(p, 'Moving min')),
+    elevation_m: toNum(readProp(p, 'Elevation m')),
+    relative_effort: toNum(readProp(p, 'Relative effort')),
+    avg_hr: toNum(readProp(p, 'Avg HR')),
+    cadence_spm: toNum(readProp(p, 'Cadence spm')),
+    strength_done: toNum(readProp(p, 'Strength done')),
+    compliance: readProp(p, 'Compliance'),
+    verdict: readProp(p, 'Verdict'),
+    red_flags: readProp(p, 'Red flags')
+  };
+}
+
 function mapTraining(page) {
   const p = page.properties;
   return {
@@ -197,6 +227,10 @@ export default async function handler(req, res) {
           .eq('owner_id', OWNER).in('notion_id', ids)),
       syncTable(process.env.NOTION_TRAINING_DB_ID, 'training_programs', mapTraining,
         (ids) => sb.from('training_programs').delete()
+          .eq('owner_id', OWNER).in('notion_id', ids)),
+      // NYC Marathon "Weekly Log — Plan vs Actual"
+      syncTable(process.env.NOTION_MARATHON_DB_ID, 'marathon_weeks', mapMarathon,
+        (ids) => sb.from('marathon_weeks').delete()
           .eq('owner_id', OWNER).in('notion_id', ids))
     ]);
     res.status(200).json({ ok: true, results });

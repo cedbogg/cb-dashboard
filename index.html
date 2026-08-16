@@ -393,32 +393,23 @@
 
   <!-- FITNESS -->
   <section class="screen" id="fitness">
-    <div class="sub">Fitness</div><div class="subd">Running &amp; strength · NYC Marathon 18 weeks out</div>
+    <div class="sub">Fitness</div><div class="subd" id="fitsub">NYC Marathon 2026</div>
     <div class="tiles">
-      <div class="tile"><div class="lab">This week</div><div class="big">32 km</div><div class="chg flat">4 sessions</div></div>
-      <div class="tile"><div class="lab">4-wk avg</div><div class="big">29 km</div><div class="chg flat">base</div></div>
-      <div class="tile"><div class="lab">Resting HR</div><div class="big">52</div><div class="chg up">▼ trend</div></div>
-      <div class="tile"><div class="lab">Strength</div><div class="big">2×</div><div class="chg flat">this week</div></div>
+      <div class="tile"><div class="lab">This week</div><div class="big" id="fitWk">—</div><div class="chg flat" id="fitWkSub">—</div></div>
+      <div class="tile"><div class="lab">Weeks to race</div><div class="big" id="fitWtr">—</div><div class="chg flat">Sun 1 Nov 2026</div></div>
+      <div class="tile"><div class="lab">Gate 2 · peak call</div><div class="big" id="fitGate">—</div><div class="chg flat">Mon 14 Sep</div></div>
+      <div class="tile"><div class="lab">Target</div><div class="big">3:45–4:00</div><div class="chg flat">MAF ≤137 bpm</div></div>
     </div>
+    <div class="sec-ey">Plan vs actual · 15 weeks <span id="fitSummary" style="float:right;font-weight:400;text-transform:none;letter-spacing:0"></span></div>
+    <div class="panel" style="overflow-x:auto"><table><thead><tr><th>Week</th><th>Phase</th><th>Plan</th><th>Actual</th><th>Status</th></tr></thead><tbody id="marathonWeeks"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
     <div class="cols">
       <div>
-        <div class="sec-ey">Running · Strava</div>
+        <div class="sec-ey">Plan</div>
         <div class="panel">
-          <div class="week">
-            <div class="wd"><div class="b" style="height:30%"></div><div class="k">6</div><div class="l">M</div></div>
-            <div class="wd"><div class="b" style="height:2%"></div><div class="k">—</div><div class="l">T</div></div>
-            <div class="wd"><div class="b" style="height:42%"></div><div class="k">8</div><div class="l">W</div></div>
-            <div class="wd"><div class="b" style="height:2%"></div><div class="k">—</div><div class="l">T</div></div>
-            <div class="wd"><div class="b" style="height:26%"></div><div class="k">5</div><div class="l">F</div></div>
-            <div class="wd"><div class="b" style="height:2%"></div><div class="k">—</div><div class="l">S</div></div>
-            <div class="wd"><div class="b" style="height:95%"></div><div class="k">18</div><div class="l">S</div></div>
-          </div>
-        </div>
-        <div class="sec-ey">Strength · key lifts</div>
-        <div class="panel">
-          <div class="lift"><div class="ln2">Back squat 3×5</div><div class="pr">100 kg <span class="up">+2.5</span></div></div>
-          <div class="lift"><div class="ln2">Deadlift 1×5</div><div class="pr">140 kg <span class="up">+5</span></div></div>
-          <div class="lift"><div class="ln2">Bench 3×5</div><div class="pr">80 kg</div></div>
+          <div class="lift"><div class="ln2">Peak volume</div><div class="pr">80 km · W12</div></div>
+          <div class="lift"><div class="ln2">Peak long run</div><div class="pr">29 km</div></div>
+          <div class="lift"><div class="ln2">Structure</div><div class="pr">5 runs/wk from W5</div></div>
+          <div class="lift"><div class="ln2">Weekly threshold</div><div class="pr">long-run-led</div></div>
         </div>
       </div>
       <div>
@@ -494,7 +485,7 @@ function setDomain(s){
   if(s==='fortior') loadFortior();
   if(s==='home') loadHome();
   if(s==='perso') loadPerso();
-  if(s==='fitness') loadFitness();
+  if(s==='fitness'){ loadFitness(); loadMarathon(); }
   if(s==='finance') loadFinance();
 }
 function renderChips(s){
@@ -996,6 +987,53 @@ async function loadFitness(){
       const st = p.status==='Active'?'active':p.status==='Planned'?'plan':'';
       return `<div class="prog"><div class="nm">${esc(p.program||'')}<div class="d">${esc(sub)}</div></div><span class="st ${st}">${esc((p.status||'').toLowerCase())}</span></div>`;
     }).join('') : '<div class="prog"><div class="nm">No programmes logged yet</div></div>';
+  }catch(e){}
+}
+
+// ---- Fitness · NYC Marathon plan vs actual (Notion Weekly Log → marathon_weeks)
+// Leans on the synced Compliance field (Pass/Partial/Fail/Pending) rather than a
+// naive actual/planned ratio — recovery (↓) weeks fail on OVER-delivery, so a raw
+// ratio reads the athlete's real failure mode backwards.
+const MARA = { raceDate:'2026-11-01', gate2:'2026-09-14' };
+async function loadMarathon(){
+  const el=id=>document.getElementById(id);
+  const today=_startOfDay(new Date());
+  const daysTo=iso=>{ const d=new Date(iso); return isNaN(d)?null:Math.round((_startOfDay(d)-today)/86400000); };
+  const wtr=daysTo(MARA.raceDate); if(el('fitWtr')) el('fitWtr').textContent = wtr!=null?(Math.max(0,Math.ceil(wtr/7))+' wk'):'—';
+  const g2=daysTo(MARA.gate2);    if(el('fitGate')) el('fitGate').textContent = g2!=null?(g2>0?g2+'d':'passed'):'—';
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+  try{
+    const {data}=await sb.from('marathon_weeks')
+      .select('week_num,week_title,phase,planned_km,actual_km,planned_runs,actual_runs,compliance,verdict,red_flags,date_start,date_end,notion_id')
+      .order('week_num',{ascending:true});
+    const wks=data||[];
+    if(!wks.length){ if(el('marathonWeeks')) el('marathonWeeks').innerHTML='<tr><td colspan="5">No plan synced yet</td></tr>'; return; }
+    const inRange=w=> w.date_start&&w.date_end && today>=_startOfDay(w.date_start) && today<=_startOfDay(w.date_end);
+    const cur = wks.find(inRange) || [...wks].reverse().find(w=>w.actual_km!=null) || wks[0];
+    if(el('fitsub')){ const wl=cur&&cur.week_title? (cur.week_title.match(/^W\s*\d+/)||[''])[0] : ''; el('fitsub').textContent = 'NYC Marathon 2026 · Sun 1 Nov · '+(wl?wl+' of 15':''); }
+    if(cur){
+      if(el('fitWk'))    el('fitWk').textContent    = ((cur.actual_km!=null?cur.actual_km:cur.planned_km)??'—')+' km';
+      if(el('fitWkSub')) el('fitWkSub').textContent = 'plan '+(cur.planned_km??'—')+'km · '+(cur.actual_runs!=null?cur.actual_runs:0)+'/'+(cur.planned_runs??'—')+' runs';
+    }
+    // Compliance summary — completed weeks only (exclude Pending + race week 15).
+    const done=wks.filter(w=>w.compliance&&w.compliance!=='Pending'&&w.week_num!==15);
+    const c=l=>done.filter(w=>w.compliance===l).length;
+    if(el('fitSummary')) el('fitSummary').innerHTML = done.length
+      ? `${done.length} done · <span style="color:var(--ok)">${c('Pass')} pass</span> · <span style="color:var(--warn)">${c('Partial')} partial</span> · <span style="color:var(--bad)">${c('Fail')} fail</span>` : '';
+    const col={Pass:'var(--ok)',Partial:'var(--warn)',Fail:'var(--bad)',Pending:'var(--muted)'};
+    const nurl=id=> id?('https://www.notion.so/'+String(id).replace(/-/g,'')):null;
+    el('marathonWeeks').innerHTML = wks.map(w=>{
+      const isCur = cur && w.notion_id===cur.notion_id;
+      const plan=`${w.planned_km??'—'}km · ${w.planned_runs??'—'}r`;
+      const act = w.actual_km!=null?`${w.actual_km}km · ${w.actual_runs??'—'}r`:'—';
+      const link=nurl(w.notion_id);
+      const wk = link?`<a href="${link}" target="_blank" rel="noopener" style="color:inherit;border-bottom:1px dotted var(--muted);text-decoration:none">${esc(w.week_title||('W'+w.week_num))}</a>`:esc(w.week_title||('W'+w.week_num));
+      const tip = [w.verdict, w.red_flags?('flags: '+w.red_flags):''].filter(Boolean).join(' — ');
+      return `<tr${isCur?' style="background:rgba(200,168,107,.08)"':''}${tip?` title="${esc(tip)}"`:''}>`+
+        `<td>${wk}${isCur?' <span style="color:var(--accent);font-size:.58rem">● now</span>':''}</td>`+
+        `<td>${esc(w.phase||'')}</td><td>${esc(plan)}</td><td>${esc(act)}</td>`+
+        `<td style="color:${col[w.compliance]||'var(--muted)'}">${esc(w.compliance||'—')}</td></tr>`;
+    }).join('');
   }catch(e){}
 }
 

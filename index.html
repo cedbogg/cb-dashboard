@@ -394,28 +394,51 @@
   <!-- FITNESS -->
   <section class="screen" id="fitness">
     <div class="sub">Fitness</div><div class="subd" id="fitsub">NYC Marathon 2026</div>
-    <div class="tiles">
-      <div class="tile"><div class="lab">This week</div><div class="big" id="fitWk">—</div><div class="chg flat" id="fitWkSub">—</div></div>
-      <div class="tile"><div class="lab">Weeks to race</div><div class="big" id="fitWtr">—</div><div class="chg flat">Sun 1 Nov 2026</div></div>
-      <div class="tile"><div class="lab">Gate 2 · peak call</div><div class="big" id="fitGate">—</div><div class="chg flat">Mon 14 Sep</div></div>
-      <div class="tile"><div class="lab">Target</div><div class="big">3:45–4:00</div><div class="chg flat">MAF ≤137 bpm</div></div>
+    <div style="display:flex;gap:8px;margin:2px 0 14px">
+      <button id="tab-running" onclick="fitTab('running')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--accent);color:var(--ink);cursor:pointer">Running</button>
+      <button id="tab-strength" onclick="fitTab('strength')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength</button>
     </div>
-    <div class="sec-ey">Plan vs actual · 15 weeks <span id="fitSummary" style="float:right;font-weight:400;text-transform:none;letter-spacing:0"></span></div>
-    <div class="panel" style="overflow-x:auto"><table><thead><tr><th>Week</th><th>Phase</th><th>Plan</th><th>Actual</th><th>Status</th></tr></thead><tbody id="marathonWeeks"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
-    <div class="cols">
-      <div>
-        <div class="sec-ey">Plan</div>
-        <div class="panel">
-          <div class="lift"><div class="ln2">Peak volume</div><div class="pr">80 km · W12</div></div>
-          <div class="lift"><div class="ln2">Peak long run</div><div class="pr">29 km</div></div>
-          <div class="lift"><div class="ln2">Structure</div><div class="pr">5 runs/wk from W5</div></div>
-          <div class="lift"><div class="ln2">Weekly threshold</div><div class="pr">long-run-led</div></div>
+
+    <div id="fit-running">
+      <div class="tiles">
+        <div class="tile"><div class="lab">This week</div><div class="big" id="fitWk">—</div><div class="chg flat" id="fitWkSub">—</div></div>
+        <div class="tile"><div class="lab">Weeks to race</div><div class="big" id="fitWtr">—</div><div class="chg flat">Sun 1 Nov 2026</div></div>
+        <div class="tile"><div class="lab">Gate 2 · peak call</div><div class="big" id="fitGate">—</div><div class="chg flat">Mon 14 Sep</div></div>
+        <div class="tile"><div class="lab">Target</div><div class="big">3:45–4:00</div><div class="chg flat">MAF ≤137 bpm</div></div>
+      </div>
+      <div class="sec-ey">Weekly volume · plan vs actual (km)</div>
+      <div class="panel" id="marathonChart" style="overflow-x:auto">—</div>
+      <div class="sec-ey">Weekly detail <span id="fitSummary" style="float:right;font-weight:400;text-transform:none;letter-spacing:0"></span></div>
+      <div class="panel" style="overflow-x:auto"><table><thead><tr><th>Week</th><th>Phase</th><th>Plan</th><th>Actual</th><th>Status</th></tr></thead><tbody id="marathonWeeks"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
+      <div class="cols">
+        <div>
+          <div class="sec-ey">Plan</div>
+          <div class="panel">
+            <div class="lift"><div class="ln2">Peak volume</div><div class="pr">80 km · W12</div></div>
+            <div class="lift"><div class="ln2">Peak long run</div><div class="pr">29 km</div></div>
+            <div class="lift"><div class="ln2">Structure</div><div class="pr">5 runs/wk from W5</div></div>
+            <div class="lift"><div class="ln2">Weekly threshold</div><div class="pr">long-run-led</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="sec-ey">Programmes</div>
+          <div class="panel" id="progs"><div class="prog"><div class="nm">Loading…</div></div></div>
         </div>
       </div>
-      <div>
-        <div class="sec-ey">Programmes</div>
-        <div class="panel" id="progs"><div class="prog"><div class="nm">Loading…</div></div></div>
-      </div>
+    </div>
+
+    <div id="fit-strength" style="display:none">
+      <div class="subd" style="margin-bottom:14px">Reload &amp; Run · 2×/week · meniscus reload + back-safe hinge · built around M. Gillett's progressive-running clearance</div>
+      <div class="sec-ey">The governors · read before every session</div>
+      <div class="panel" id="strGov"></div>
+      <div class="sec-ey">The arc · ~6 weeks, on the running clock</div>
+      <div class="panel" id="strPhases"></div>
+      <div class="sec-ey">Session A — Knee + Squat / Push · Tue</div>
+      <div class="panel" id="strA"></div>
+      <div class="sec-ey">Session B — Hinge + Single-leg / Pull · Fri</div>
+      <div class="panel" id="strB"></div>
+      <div class="sec-ey">How to progress</div>
+      <div class="panel" id="strProg"></div>
     </div>
   </section>
 
@@ -1010,6 +1033,7 @@ async function loadMarathon(){
     if(!wks.length){ if(el('marathonWeeks')) el('marathonWeeks').innerHTML='<tr><td colspan="5">No plan synced yet</td></tr>'; return; }
     const inRange=w=> w.date_start&&w.date_end && today>=_startOfDay(w.date_start) && today<=_startOfDay(w.date_end);
     const cur = wks.find(inRange) || [...wks].reverse().find(w=>w.actual_km!=null) || wks[0];
+    if(el('marathonChart')) el('marathonChart').innerHTML = marathonChartSVG(wks, cur?cur.week_num:null);
     if(el('fitsub')){ const wl=cur&&cur.week_title? (cur.week_title.match(/^W\s*\d+/)||[''])[0] : ''; el('fitsub').textContent = 'NYC Marathon 2026 · Sun 1 Nov · '+(wl?wl+' of 15':''); }
     if(cur){
       if(el('fitWk'))    el('fitWk').textContent    = ((cur.actual_km!=null?cur.actual_km:cur.planned_km)??'—')+' km';
@@ -1034,6 +1058,151 @@ async function loadMarathon(){
         `<td>${esc(w.phase||'')}</td><td>${esc(plan)}</td><td>${esc(act)}</td>`+
         `<td style="color:${col[w.compliance]||'var(--muted)'}">${esc(w.compliance||'—')}</td></tr>`;
     }).join('');
+  }catch(e){}
+}
+
+// Plan-vs-actual line chart (planned dashed/muted, actual solid/accent + labels).
+function marathonChartSVG(wks, curNum){
+  const W=340,H=140,L=10,R=32,T=10,B=20, pw=W-L-R, ph=H-T-B;
+  const ws=wks.filter(w=>w.week_num!=null).sort((a,b)=>a.week_num-b.week_num);
+  if(!ws.length) return '—';
+  const vals=[]; ws.forEach(w=>{ if(w.planned_km!=null)vals.push(+w.planned_km); if(w.actual_km!=null)vals.push(+w.actual_km); });
+  const nmax=Math.max(10,Math.ceil(Math.max(...vals)/10)*10);
+  const x=n=>L+(n-1)/14*pw, y=v=>T+(1-v/nmax)*ph;
+  const path=pts=>pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const plan=ws.filter(w=>w.planned_km!=null).map(w=>[x(w.week_num),y(+w.planned_km)]);
+  const act=ws.filter(w=>w.actual_km!=null).map(w=>[x(w.week_num),y(+w.actual_km),w]);
+  const y0=y(0), ym=y(nmax);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:520px;font-family:var(--mono);font-size:7px">`;
+  s+=`<line x1="${L}" y1="${y0}" x2="${W-R}" y2="${y0}" stroke="var(--line)" stroke-width="1"/>`;
+  s+=`<line x1="${L}" y1="${ym}" x2="${W-R}" y2="${ym}" stroke="var(--line)" stroke-width="0.5" stroke-dasharray="2 2"/>`;
+  s+=`<text x="${W-R+3}" y="${ym+2}" fill="var(--faint)">${nmax}</text><text x="${W-R+3}" y="${y0+2}" fill="var(--faint)">0</text>`;
+  ws.forEach(w=>{ if((w.week_num-1)%3===0||w.week_num===15) s+=`<text x="${x(w.week_num).toFixed(1)}" y="${H-6}" fill="var(--faint)" text-anchor="middle">W${w.week_num}</text>`; });
+  if(curNum) s+=`<line x1="${x(curNum).toFixed(1)}" y1="${T}" x2="${x(curNum).toFixed(1)}" y2="${y0}" stroke="var(--accent)" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.5"/>`;
+  s+=`<path d="${path(plan)}" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  if(act.length) s+=`<path d="${path(act)}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+  act.forEach(p=>{ s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.4" fill="var(--accent)"><title>W${p[2].week_num} · ${p[2].actual_km} km (plan ${p[2].planned_km})</title></circle>`; });
+  const lp=plan[plan.length-1]; if(lp) s+=`<text x="${(lp[0]+3).toFixed(1)}" y="${(lp[1]+2).toFixed(1)}" fill="var(--muted)">Plan</text>`;
+  const la=act[act.length-1]; if(la) s+=`<text x="${(la[0]+3).toFixed(1)}" y="${(la[1]-3).toFixed(1)}" fill="var(--accent)">Actual</text>`;
+  return s+'</svg>';
+}
+function fitTab(t){
+  const run=t==='running';
+  document.getElementById('fit-running').style.display=run?'':'none';
+  document.getElementById('fit-strength').style.display=run?'none':'';
+  const R=document.getElementById('tab-running'), S=document.getElementById('tab-strength');
+  R.style.background=run?'var(--accent)':'var(--panel)'; R.style.color=run?'var(--ink)':'var(--muted)';
+  S.style.background=run?'var(--panel)':'var(--accent)'; S.style.color=run?'var(--muted)':'var(--ink)';
+  if(!run) loadStrength();
+}
+
+// ---- Fitness · Strength (Reload & Run) — program hardcoded, weights in Supabase
+const _yt=q=>'https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+const _TAGC={Knee:'#4a90d9',Glute:'#c07a2a',Core:'#2f9e5f',Hinge:'#7a5fc0',Push:'#5a7a95',Pull:'#b09020'};
+// [name, prescription, tag, youtube query, note, weightKey]
+const STR_A=[
+  ['Prep · mobilise (~5 min)'],
+  ['McKenzie press-up','×10','','mckenzie press up prone extension','Primes extension — your back’s preferred direction.'],
+  ['Cat–camel','×10 slow','','cat camel exercise spine','Gentle, pain-free motion to lubricate the spine.'],
+  ['Half-kneeling hip-flexor stretch','2×30s/side','','half kneeling hip flexor stretch','Tuck pelvis, squeeze down-side glute — feel it in the hip front, not the low back.'],
+  ['Piriformis / figure-4 stretch','2×30s/side','','supine piriformis figure four stretch','Runner’s deep-hip and glute release.'],
+  ['Prep · activate (~5 min)'],
+  ['TrA activation + pelvic tilt','×15','','transverse abdominis activation pelvic tilt','Deep-core switch-on — draw the belly in, keep breathing.'],
+  ['Banded clamshell','×12/side','','clamshell with band','Glute-med switch-on — stops the knee caving in.'],
+  ['Banded side-step (monster walk)','×10/way','','banded lateral monster walk','Fires the glutes laterally before the working sets.'],
+  ['Glute bridge — ball squeeze / single-leg','×12','','glute bridge ball squeeze','Final glute wake-up before loading.'],
+  ['Knee priority'],
+  ['Wall sit (isometric)','4×30–45s','Knee','wall sit exercise','P1 ~60–80°. P2 DB on lap. P3 band-resisted Spanish-squat holds.','a-wallsit'],
+  ['Goblet squat → box','3×10 → 4×6','Knee','goblet box squat tempo','Sit to a box at pain-free depth, 3-sec lower, upright torso.','a-goblet'],
+  ['Leg extension — inner range','3×12','Knee','terminal knee extension leg extension','Last ~30° only early; P3 full pain-free range, heavier.','a-legext'],
+  ['Strength'],
+  ['Hip thrust','3×8–10','Glute','barbell hip thrust form','Big glute driver, minimal knee load — push it.','a-hipthrust'],
+  ['Bench press','4×6–8','Push','bench press form','','a-bench'],
+  ['Chest-supported DB row','3×10','Pull','chest supported dumbbell row','Supported = no loaded lumbar flexion.','a-row'],
+  ['Core finisher'],
+  ['Side plank (McGill)','3×20–30s/side','Core','mcgill side plank','Obliques/QL/glute-med, spine-sparing, zero knee load.'],
+  ['Pallof press','3×10/side','Core','pallof press','Anti-rotation — protects the disc.','a-pallof'],
+  ['Farmer’s carry','3×40m','Core','farmers carry exercise','','a-farmer']
+];
+const STR_B=[
+  ['Prep · mobilise (~5 min)'],
+  ['McKenzie press-up','×10','','mckenzie press up prone extension','Primes extension before loading.'],
+  ['Cat–camel','×10 slow','','cat camel exercise spine','Gentle, pain-free spine motion.'],
+  ['Half-kneeling hip-flexor stretch','2×30s/side','','half kneeling hip flexor stretch','Pelvis tucked, feel it in the hip front not the low back.'],
+  ['Piriformis / figure-4 stretch','2×30s/side','','supine piriformis figure four stretch','Deep-hip release.'],
+  ['Prep · activate (~5 min)'],
+  ['TrA activation + pelvic tilt','×15','','transverse abdominis activation pelvic tilt','Deep-core switch-on.'],
+  ['Banded clamshell','×12/side','','clamshell with band','Glute-med switch-on.'],
+  ['Banded side-step (monster walk)','×10/way','','banded lateral monster walk','Fires the glutes laterally.'],
+  ['Glute bridge — ball squeeze / single-leg','×12','','glute bridge ball squeeze','Final glute wake-up.'],
+  ['Hinge + posterior chain'],
+  ['RDL — progressive hinge','4×6–8','Hinge','romanian deadlift form','Back’s hinge ladder + knee’s posterior-chain offloader. Neutral spine, hips back, shins vertical.','b-rdl'],
+  ['Spanish squat hold → eccentric step-down','3×30s → 3×8','Knee','spanish squat eccentric step down','P1–2 band-resisted iso hold. P3 3-sec eccentric step-downs — impact prep.'],
+  ['Single-leg (knee + glute)'],
+  ['Split squat → Bulgarian (phased)','2×8 → 3×8/side','Glute','bulgarian split squat form','P1 shallow BW; P2 full range, light DBs; P3 rear foot elevated, loaded.','b-bss'],
+  ['Step-up (controlled)','3×8/side','Knee','dumbbell step up exercise','Low box, drive through the heel, no push-off from the trailing leg.','b-stepup'],
+  ['Single-leg RDL','3×8/side','Knee','single leg romanian deadlift','Hamstring + balance + proprioception. Light, slow, controlled.','b-slrdl'],
+  ['Push / pull'],
+  ['Landmine press','4×8','Push','landmine press form','Spine-neutral & elbow-friendlier than strict overhead.','b-landmine'],
+  ['Pull-ups / lat pulldown','4×6–8','Pull','pull up form','Assisted as needed; manage grip vs the elbow.','b-pull'],
+  ['Run-prep + core finisher'],
+  ['Standing calf raise','3×12/side','Knee','single leg standing calf raise','Primary shock absorber for the knee. Single-leg, full range, weighted as able.','b-calf'],
+  ['Side plank + clam / band walk','3×12','Core','clamshell band walk glute med','Glute-med — controls the inward knee collapse that stresses a meniscus.'],
+  ['Dead bug','3×10/side','Core','dead bug exercise','Anti-extension core — disc-safe (no loaded flexion).']
+];
+function _strRows(list){
+  return list.map(r=>{
+    if(r.length===1) return `<div style="font-family:var(--mono);font-size:.6rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);padding:12px 0 4px">${esc(r[0])}</div>`;
+    const [n,p,tag,q,note,k]=r;
+    const chip = tag?`<span style="font-size:.55rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:${_TAGC[tag]||'var(--muted)'};padding:2px 6px;border-radius:4px">${tag}</span>`:'';
+    const input = k?`<span style="display:inline-flex;align-items:center;gap:5px;margin-left:auto"><input class="strwt" data-key="${k}" type="number" inputmode="decimal" placeholder="kg" onchange="saveStrength(this.dataset.key,this.value,this)" style="width:64px;background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 7px;color:var(--text);font-family:var(--body);font-size:.8rem"><span style="font-size:.6rem;color:var(--faint)">kg</span><span class="strstamp" style="font-size:.58rem;color:var(--ok)"></span></span>`:'';
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--line)">`+
+      `<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><span style="font-size:.85rem;font-weight:500">${esc(n)}</span>`+
+      `<span style="font-family:var(--mono);font-size:.78rem;color:var(--accent);white-space:nowrap">${esc(p)}</span></div>`+
+      (note?`<div style="font-size:.72rem;color:var(--muted);margin-top:3px">${esc(note)}</div>`:'')+
+      `<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><a href="${_yt(q)}" target="_blank" rel="noopener" style="font-size:.6rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 7px;text-decoration:none">▶ form</a>${chip}${input}</div></div>`;
+  }).join('');
+}
+let _strRendered=false;
+function renderStrength(){
+  const gov=`<div style="padding:6px 0"><b style="color:var(--warn)">Knee — the morning-after state decides the dose.</b> <span style="color:var(--ok)">Green</span>: pain ≤2–3/10, settles by next morning, no new swelling → progress. <span style="color:var(--warn)">Amber</span>: puffy/warm/stiff next AM → hold or step back. <span style="color:var(--bad)">Red</span>: locking, catching, giving way → stop, contact Gillett.</div>`+
+    `<div style="padding:6px 0;border-top:1px solid var(--line)"><b style="color:var(--warn)">Back — symptom direction decides the hinge.</b> <span style="color:var(--ok)">Green</span>: no symptoms or centralising → climb the hinge ladder. <span style="color:var(--bad)">Regress</span>: leg symptoms travelling further down (peripheralising) or anything sharp. Neutral spine every hinge; no loaded lumbar flexion.</div>`+
+    `<div style="padding:8px 10px;margin-top:8px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Steroid caveat:</b> the 12 Jun triamcinolone still quiets the joint — it feels better than it structurally is. Run the conservative end of every progression until it washes out.</div>`+
+    `<div style="padding:8px 10px;margin-top:6px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>Load it, don’t rest it:</b> for a meniscus tear, progressive loading <em>is</em> the treatment — quad strength is the biggest protective factor. Load enough to drive adaptation while staying inside the governors.</div>`+
+    `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Daily mini-doses (off days):</b> TrA + pelvic tilt, cat–camel, hip-flexor mobility, clams, band walks, glute bridges, wall-sit / Spanish-squat holds — pain-quieting, not fatiguing. Do most days.</div>`;
+  const ph=[['P1 · W1–2','Re-groove & isometrics','Wake the quad and glute, restore pain-free range, no twisting under load. Isometrics first. Hinge Step 1: hip thrust + light RDL, partial range.'],
+    ['P2 · W3–4','Build & single-leg','Bilateral compounds heavier through pain-free range; introduce loaded single-leg (split squat, step-up). Hinge Step 2: full-range RDL, add load; light trap-bar if quiet.'],
+    ['P3 · W5–6+','Load, eccentrics & run-prep','Heavier compounds full range, single-leg under load, eccentric step-downs for impact. Hinge Step 3: progress trap-bar. Then converge to normal A/B.']]
+    .map(p=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="font-family:var(--mono);font-size:.6rem;letter-spacing:1px;color:var(--accent)">${p[0]}</div><div style="font-weight:600;font-size:.9rem;margin:2px 0 3px">${esc(p[1])}</div><div style="font-size:.74rem;color:var(--muted)">${esc(p[2])}</div></div>`).join('');
+  const prog=['Range before load — earn pain-free depth, then add weight.',
+    'Add load when the morning’s quiet — knee silent next day → nudge one step; else repeat.',
+    'P1→2 gate: wall sit & goblet box squats comfortable, no next-day swelling across a week.',
+    'P2→3 gate: split squats/step-ups clean and running continuously → load single-leg, add eccentric step-downs.',
+    'Never stack risk — don’t add load AND depth AND a new exercise in the same week.']
+    .map((t,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem"><b style="color:var(--accent)">${i+1}.</b> ${esc(t)}</div>`).join('')+
+    `<div style="padding:8px 10px;margin-top:8px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Concurrent-load watch:</b> leg-heavy 2×/week on top of a running return. The run is the priority signal — if long-run quality drops or the knee complains, cut strength leg volume before the run. Upper body sheds first in peak weeks.</div>`+
+    `<div style="padding:8px 10px;margin-top:6px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>Protein:</b> 1.8–2.2 g/kg/day, 30–40g within ~2h of each session.</div>`;
+  const set=(id,html)=>{ const e=document.getElementById(id); if(e) e.innerHTML=html; };
+  set('strGov',gov); set('strPhases',ph); set('strA',_strRows(STR_A)); set('strB',_strRows(STR_B)); set('strProg',prog);
+}
+async function loadStrength(){
+  if(!_strRendered){ renderStrength(); _strRendered=true; }
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+  try{
+    const {data}=await sb.from('strength_logs').select('exercise_key,weight,updated_at');
+    const map=Object.fromEntries((data||[]).map(r=>[r.exercise_key,r]));
+    document.querySelectorAll('.strwt').forEach(inp=>{
+      const r=map[inp.dataset.key], stamp=inp.parentNode.querySelector('.strstamp');
+      if(r&&r.weight){ inp.value=r.weight; if(stamp) stamp.textContent='last · '+new Date(r.updated_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); }
+    });
+  }catch(e){}
+}
+async function saveStrength(key,val,el){
+  const stamp=el&&el.parentNode.querySelector('.strstamp');
+  try{
+    const sb=await getClient();
+    if(String(val).trim()===''){ await sb.from('strength_logs').delete().eq('exercise_key',key); if(stamp) stamp.textContent=''; }
+    else { const {error}=await sb.from('strength_logs').upsert({exercise_key:key,weight:String(val),updated_at:new Date().toISOString()},{onConflict:'owner_id,exercise_key'}); if(!error&&stamp) stamp.textContent='saved · '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); }
   }catch(e){}
 }
 
@@ -1087,7 +1256,7 @@ async function loadHome(){
 }
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail;
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.saveStrength=saveStrength;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

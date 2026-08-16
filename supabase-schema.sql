@@ -303,6 +303,21 @@ alter table marathon_weeks enable row level security;
 drop policy if exists owner_all on marathon_weeks;
 create policy owner_all on marathon_weeks for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
+-- ------------------------------------------------------------
+-- 15. STRENGTH LOGS  (per-exercise weights for the Fitness ·
+--     Strength "Reload & Run" plan; edited on the dashboard).
+-- ------------------------------------------------------------
+create table if not exists strength_logs (
+  owner_id     uuid not null default auth.uid(),
+  exercise_key text not null,
+  weight       text,
+  updated_at   timestamptz not null default now(),
+  primary key (owner_id, exercise_key)
+);
+alter table strength_logs enable row level security;
+drop policy if exists owner_all on strength_logs;
+create policy owner_all on strength_logs for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
 -- ============================================================
 -- v1.1 migration — run this if schema v1 is already applied.
 -- training_programs was missing its Notion sync key.

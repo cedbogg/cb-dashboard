@@ -406,6 +406,27 @@
         <div class="tile"><div class="lab">Gate 2 · peak call</div><div class="big" id="fitGate">—</div><div class="chg flat">Mon 14 Sep</div></div>
         <div class="tile"><div class="lab">Target</div><div class="big">3:45–4:00</div><div class="chg flat">MAF ≤137 bpm</div></div>
       </div>
+      <div class="sec-ey">Non-negotiable knee rules</div>
+      <div class="panel">
+        <div style="padding:8px 10px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.8rem;margin-bottom:8px"><b style="color:var(--text)">The morning-after test governs.</b> Swelling, stiffness or warmth in the left knee the morning after a run = repeat the previous week's volume, don't progress. Two consecutive flagged mornings = drop back one week and hold until quiet.</div>
+        <div style="padding:8px 10px;background:var(--panel-2);border-left:3px solid var(--line);border-radius:0 8px 8px 0;font-size:.8rem;margin-bottom:8px"><b style="color:var(--text)">One variable at a time.</b> Frequency first, then long-run duration, then — only if quiet in October — pace. Never two in the same week.</div>
+        <div style="padding:8px 10px;background:var(--panel-2);border-left:3px solid var(--line);border-radius:0 8px 8px 0;font-size:.8rem"><b style="color:var(--text)">Strength stays 2×/week</b>, stacked on run days (Mon A, Thu B). Knee-spared days stay aqua jog / elliptical Z2 + hip, core, calf work.</div>
+      </div>
+
+      <div class="sec-ey">Decision gates</div>
+      <div class="cols">
+        <div class="panel">
+          <div class="chead"><span class="eyebrow">Gate 1 · passed 30 Jul</span><span class="sdot"></span></div>
+          <div class="hero" style="font-size:1.05rem">4 → 5 runs</div>
+          <div class="bnote">Stable through W1–W3. Fifth run added from W5. Non-Wednesday runs stay flat — this block has no hills.</div>
+        </div>
+        <div class="panel">
+          <div class="chead"><span class="eyebrow">Gate 2 · Mon 14 Sep</span><span class="sdot" style="background:var(--warn)"></span></div>
+          <div class="hero" style="font-size:1.05rem">Does 80km survive?</div>
+          <div class="bnote">Pass = zero flagged Monday knees, 17km LR clean, thresholds done, HRV holding. Peak proceeds to 80km / 29km LR. Fail or marginal → peak caps at 66–70km, LR at 26km.</div>
+        </div>
+      </div>
+
       <div class="sec-ey">Weekly volume · plan vs actual (km)</div>
       <div class="panel" id="marathonChart" style="overflow-x:auto">—</div>
       <div class="sec-ey">Weekly detail <span id="fitSummary" style="float:right;font-weight:400;text-transform:none;letter-spacing:0"></span></div>
@@ -423,6 +444,28 @@
         <div>
           <div class="sec-ey">Programmes</div>
           <div class="panel" id="progs"><div class="prog"><div class="nm">Loading…</div></div></div>
+        </div>
+      </div>
+
+      <div class="sec-ey">Race guide · NYC Marathon</div>
+      <div class="cols">
+        <div class="panel" style="overflow-x:auto">
+          <table><thead><tr><th>Section</th><th>km</th><th>Strategy</th></tr></thead><tbody>
+            <tr><td>Verrazzano + Brooklyn</td><td>0–10</td><td>Target pace +10 sec/km — resist the crowd</td></tr>
+            <tr><td>Brooklyn / Queens</td><td>11–22</td><td>Settle at target pace</td></tr>
+            <tr><td>Queensboro Bridge</td><td>24–26</td><td>Effort only (RPE 6)</td></tr>
+            <tr><td>First Avenue</td><td>27–32</td><td>Target pace, hold discipline</td></tr>
+            <tr><td>The Bronx</td><td>34–37</td><td>Target +5 sec/km</td></tr>
+            <tr><td>Central Park</td><td>38–42.2</td><td>Whatever you have — attack the downhills</td></tr>
+          </tbody></table>
+        </div>
+        <div class="panel">
+          <div class="bnote" style="margin-bottom:10px">Fly Tue, race Sun, fly home Mon. Target 3:45–4:00, locked from October's peak-week data.</div>
+          <div class="lines" style="border-top:none;padding-top:0">
+            <div class="ln"><span class="tk"></span><span class="t">Start village: arrive 2.5–3h early, throwaway layers</span></div>
+            <div class="ln"><span class="tk"></span><span class="t">Knee protocol travels — flagged shakeout = full rest Thursday</span></div>
+            <div class="ln"><span class="tk"></span><span class="t">Weather &gt;15°C at gun: add 15–20 sec/km and accept it</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1036,6 +1079,23 @@ const MARA_DAYS=[
   {week:14,day:'Mon',type:'Easy',km:7,note:'MAF ≤137, flat'},{week:14,day:'Tue',type:'Easy',km:8,note:'MAF ≤137, no strength from here'},{week:14,day:'Wed',type:'Threshold',km:8,note:'MP tune-up — 2 km + 4 km @MP + 2 km'},{week:14,day:'Thu',type:'Rest',km:0,note:'Rest or 30 min easy spin'},{week:14,day:'Fri',type:'Easy',km:5,note:'MAF ≤137, flat'},{week:14,day:'Sat',type:'Rest',km:0,note:''},{week:14,day:'Sun',type:'Long',km:14,note:'Easy, MAF ≤137'},
   {week:15,day:'Mon',type:'Rest',km:0,note:'Travel prep'},{week:15,day:'Tue',type:'Easy',km:6,note:'MAF ≤137, flat, then fly to NYC'},{week:15,day:'Wed',type:'Easy',km:5,note:'NYC shakeout + 4×20 s strides'},{week:15,day:'Thu',type:'Easy',km:4,note:'Easy shakeout; full rest if Wed flagged the knee'},{week:15,day:'Fri',type:'Rest',km:0,note:'Expo, feet up'},{week:15,day:'Sat',type:'Rest',km:0,note:'Full rest, carb load, kit prep'},{week:15,day:'Sun',type:'Race',km:42.2,note:'NYC Marathon — target 3:45–4:00, ~5:20–5:41/km; gels at km 6, 14, 21, 28, 34, 39'}
 ];
+const MARA_NUTRITION={
+  1:"Rebuild fuelling — runs under 70 min need no gels. 30g protein within 45 min post-run/strength. Protein 1.8–2g/kg daily — don't under-eat because volume looks small.",
+  2:"Hydration in heat — electrolyte tabs in water on any run over 45 min. LR 10km: water only, no gel yet.",
+  3:"Gut training restarts — LR crosses 70 min, one gel at 55–60min. Use the intended NYC race gel brand from day one.",
+  4:"Recovery week — anti-inflammatory focus (oily fish, berries, turmeric), 8h sleep. Sunday: honest knee audit for Gate 1.",
+  5:"5-run start — carb-rich dinner Tuesday before the first threshold since June. LR 13km: gel at 60min. Sodium 500–1000mg/L while heat persists.",
+  6:"Long-run fuelling rhythm — LR 15km: gels at 45 & 80min. Breakfast 90min pre-LR, 50–60g carbs. 40g protein + carbs within 30min post-LR.",
+  7:"Gatorade endurance starts — alternate with water on the LR from now. LR 17km: gels at 45, 85min. MAF retest this week if under 20°C.",
+  8:"Recovery + gate prep — whole foods, protein 2g/kg, 8h sleep. Sunday: review 4 weeks of knee mornings + HRV for the Gate 2 call. Order race gels.",
+  9:"Longest run since injury — 21km crosses 2h15: 3 gels (40, 75, 105min) + Gatorade. Carb-rich Saturday.",
+  10:"Carb-load rehearsal #1 — Saturday ~8g carbs/kg. Sunday breakfast = exact race-day meal/timing. LR 24km: gels at 35, 70, 105, 135min + Gatorade.",
+  11:"Eat like peak week — carbs at every meal on run days, protein 2g/kg. LR 26km: gels at 35, 70, 105, 140min + Gatorade. Dinner by 7:30pm, 8h sleep.",
+  12:"Peak week dress rehearsal — Sat full carb load. Sun: race breakfast/kit/shoes, gels at 30/60/90/120/150/180min + Gatorade at simulated stations. Nothing new after this week.",
+  13:"Taper — keep eating. Don't cut carbs as volume drops. Cut alcohol/processed food/GI risk. LR 22km: 2–3 gels. Race pace locked from October data.",
+  14:"Race week −1 — normal eating to Thu, then ease carbs up. No new foods. Hydrate steadily. Gels in carry-on, not checked luggage.",
+  15:"🏁 Race protocol — Thu–Sat 8–10g carbs/kg/day, low fibre from Fri. Race morning (3h before): 80–100g carbs. Gels at km 6, 14, 21, 28, 34, 39 (caffeinated at 28+34). Gatorade from km 10, water with every gel."
+};
 async function loadMarathon(){
   const el=id=>document.getElementById(id);
   const today=_startOfDay(new Date());
@@ -1082,11 +1142,12 @@ async function loadMarathon(){
       const wk = link?`<a href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;border-bottom:1px dotted var(--muted);text-decoration:none">${esc(w.week_title||('W'+wn))}</a>`:esc(w.week_title||('W'+wn));
       const tip = [w.verdict, w.red_flags?('flags: '+w.red_flags):''].filter(Boolean).join(' — ');
       const open = isCur;   // current week expanded by default
+      const nutrition = MARA_NUTRITION[wn] ? `<div style="margin-top:8px;padding:8px 10px;background:var(--panel-2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:.72rem;color:#C9D3DD"><b style="color:var(--accent);text-transform:uppercase;font-family:var(--mono);font-size:.6rem;letter-spacing:.5px;display:block;margin-bottom:2px">Nutrition focus</b>${esc(MARA_NUTRITION[wn])}</div>` : '';
       return `<tr onclick="toggleWk(${i})" style="cursor:pointer${isCur?';background:rgba(200,168,107,.08)':''}"${tip?` title="${esc(tip)}"`:''}>`+
         `<td><span id="wchev-${i}" style="color:var(--accent);font-size:.6rem">${open?'▾':'▸'}</span> ${wk}${isCur?' <span style="color:var(--accent);font-size:.58rem">● now</span>':''}</td>`+
         `<td>${esc(w.phase||'')}</td><td>${esc(plan)}</td><td>${esc(act)}</td>`+
         `<td style="color:${col[w.compliance]||'var(--muted)'}">${esc(w.compliance||'—')}</td></tr>`+
-        `<tr id="wd-${i}" style="display:${open?'':'none'}"><td colspan="5" style="padding:2px 4px 10px">${dayRows(wn,isCur)||'<div style="color:var(--muted);font-size:.72rem">No daily plan for this week.</div>'}</td></tr>`;
+        `<tr id="wd-${i}" style="display:${open?'':'none'}"><td colspan="5" style="padding:2px 4px 10px">${dayRows(wn,isCur)||'<div style="color:var(--muted);font-size:.72rem">No daily plan for this week.</div>'}${nutrition}</td></tr>`;
     }).join('');
   }catch(e){}
 }

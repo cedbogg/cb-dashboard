@@ -1139,12 +1139,13 @@ async function loadMarathon(){
       const plan=`${w.planned_km??'—'}km · ${w.planned_runs??'—'}r`;
       const act = w.actual_km!=null?`${w.actual_km}km · ${w.actual_runs??'—'}r`:'—';
       const link=nurl(w.notion_id);
-      const wk = link?`<a href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;border-bottom:1px dotted var(--muted);text-decoration:none">${esc(w.week_title||('W'+wn))}</a>`:esc(w.week_title||('W'+wn));
+      const wk = esc(w.week_title||('W'+wn));
+      const notionLink = link ? `<a href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open this week in Notion" style="margin-left:7px;color:var(--faint);font-size:.62rem;text-decoration:none">↗</a>` : '';
       const tip = [w.verdict, w.red_flags?('flags: '+w.red_flags):''].filter(Boolean).join(' — ');
       const open = isCur;   // current week expanded by default
       const nutrition = MARA_NUTRITION[wn] ? `<div style="margin-top:8px;padding:8px 10px;background:var(--panel-2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:.72rem;color:#C9D3DD"><b style="color:var(--accent);text-transform:uppercase;font-family:var(--mono);font-size:.6rem;letter-spacing:.5px;display:block;margin-bottom:2px">Nutrition focus</b>${esc(MARA_NUTRITION[wn])}</div>` : '';
       return `<tr onclick="toggleWk(${i})" style="cursor:pointer${isCur?';background:rgba(200,168,107,.08)':''}"${tip?` title="${esc(tip)}"`:''}>`+
-        `<td><span id="wchev-${i}" style="color:var(--accent);font-size:.6rem">${open?'▾':'▸'}</span> ${wk}${isCur?' <span style="color:var(--accent);font-size:.58rem">● now</span>':''}</td>`+
+        `<td><span id="wchev-${i}" style="color:var(--accent);font-size:.6rem">${open?'▾':'▸'}</span> ${wk}${notionLink}${isCur?' <span style="color:var(--accent);font-size:.58rem">● now</span>':''}</td>`+
         `<td>${esc(w.phase||'')}</td><td>${esc(plan)}</td><td>${esc(act)}</td>`+
         `<td style="color:${col[w.compliance]||'var(--muted)'}">${esc(w.compliance||'—')}</td></tr>`+
         `<tr id="wd-${i}" style="display:${open?'':'none'}"><td colspan="5" style="padding:2px 4px 10px">${dayRows(wn,isCur)||'<div style="color:var(--muted);font-size:.72rem">No daily plan for this week.</div>'}${nutrition}</td></tr>`;

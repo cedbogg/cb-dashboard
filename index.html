@@ -1096,8 +1096,19 @@ const MARA_NUTRITION={
   14:"Race week −1 — normal eating to Thu, then ease carbs up. No new foods. Hydrate steadily. Gels in carry-on, not checked luggage.",
   15:"🏁 Race protocol — Thu–Sat 8–10g carbs/kg/day, low fibre from Fri. Race morning (3h before): 80–100g carbs. Gels at km 6, 14, 21, 28, 34, 39 (caffeinated at 28+34). Gatorade from km 10, water with every gel."
 };
+// Pull fresh Strava activities once per page load, then re-render the plan.
+let _stravaRefreshed=false;
+async function refreshStrava(){
+  if(_stravaRefreshed) return; _stravaRefreshed=true;
+  try{
+    const sb=await getClient(); const {data:{session}}=await sb.auth.getSession();
+    const r=await fetch('/api/strava',{method:'POST',headers:{'Authorization':'Bearer '+(session?.access_token||'')}});
+    if(r.ok) loadMarathon();   // re-render with the freshly-synced actuals
+  }catch(e){}
+}
 async function loadMarathon(){
   const el=id=>document.getElementById(id);
+  refreshStrava();   // guarded to run once; updates actuals in the background
   const today=_startOfDay(new Date());
   const daysTo=iso=>{ const d=new Date(iso); return isNaN(d)?null:Math.round((_startOfDay(d)-today)/86400000); };
   const wtr=daysTo(MARA.raceDate); if(el('fitWtr')) el('fitWtr').textContent = wtr!=null?(Math.max(0,Math.ceil(wtr/7))+' wk'):'—';
@@ -1109,6 +1120,22 @@ async function loadMarathon(){
       .order('week_num',{ascending:true});
     const wks=data||[];
     if(!wks.length){ if(el('marathonWeeks')) el('marathonWeeks').innerHTML='<tr><td colspan="5">No plan synced yet</td></tr>'; return; }
+    // Strava actuals: run km per day + moving time per week, bucketed by sport.
+    const runKmByDate={}, weekSec={};
+    const fmtDur=s=>{ if(!s) return '0'; const h=Math.floor(s/3600), m=Math.round((s%3600)/60); return h?`${h}h${String(m).padStart(2,'0')}`:`${m}m`; };
+    try{
+      const {data:acts}=await sb.from('strava_activities').select('local_date,sport_type,distance_m,moving_time_s');
+      const RUN=['Run','TrailRun','VirtualRun'], ELL=['Elliptical'];
+      const weekNumOf=iso=>{ const t=+_startOfDay(iso); const w=wks.find(x=>x.date_start&&x.date_end&&t>=+_startOfDay(x.date_start)&&t<=+_startOfDay(x.date_end)); return w? (Number(w.week_num)||parseInt(((w.week_title||'').match(/W\s*(\d+)/)||[])[1])) : null; };
+      (acts||[]).forEach(a=>{
+        if(!a.local_date) return;
+        const isRun=RUN.includes(a.sport_type);
+        if(isRun) runKmByDate[a.local_date]=(runKmByDate[a.local_date]||0)+(a.distance_m||0)/1000;
+        const wn=weekNumOf(a.local_date); if(wn==null) return;
+        const b=weekSec[wn]||(weekSec[wn]={run:0,ellipt:0,other:0}); const s=a.moving_time_s||0;
+        if(isRun) b.run+=s; else if(ELL.includes(a.sport_type)) b.ellipt+=s; else b.other+=s;
+      });
+    }catch(e){}
     const inRange=w=> w.date_start&&w.date_end && today>=_startOfDay(w.date_start) && today<=_startOfDay(w.date_end);
     const cur = wks.find(inRange) || [...wks].reverse().find(w=>w.actual_km!=null) || wks[0];
     if(el('marathonChart')) el('marathonChart').innerHTML = marathonChartSVG(wks, cur?cur.week_num:null);
@@ -1125,13 +1152,23 @@ async function loadMarathon(){
     const col={Pass:'var(--ok)',Partial:'var(--warn)',Fail:'var(--bad)',Pending:'var(--muted)'};
     const nurl=id=> id?('https://www.notion.so/'+String(id).replace(/-/g,'')):null;
     const todayDow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
-    const dayRows=(wn,isCurWk)=> MARA_DAYS.filter(d=>Number(d.week)===Number(wn)).map(d=>{
+    const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const dayRows=(wn,isCurWk,weekStart)=> MARA_DAYS.filter(d=>Number(d.week)===Number(wn)).map(d=>{
       const hot=isCurWk && d.day===todayDow;
       const chip=`<span style="font-size:.55rem;font-weight:700;text-transform:uppercase;color:#fff;background:${DAY_C[d.type]||'var(--muted)'};padding:1px 6px;border-radius:4px">${esc(d.type)}</span>`;
+      // actual run km for this calendar day (from Strava)
+      let actKm=null;
+      const off=DOW.indexOf(d.day);
+      if(weekStart && off>=0){ const dt=_startOfDay(weekStart); dt.setDate(dt.getDate()+off);
+        const key=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+        if(runKmByDate[key]!=null) actKm=Math.round(runKmByDate[key]*10)/10; }
+      const actCol = actKm==null?'var(--faint)':(!d.km?'var(--ok)':actKm>=d.km*0.9?'var(--ok)':'var(--warn)');
+      const actTxt = actKm==null?'—':('✓ '+actKm);
       return `<div style="display:flex;gap:8px;align-items:baseline;padding:5px 2px;border-bottom:1px solid var(--line)${hot?';background:rgba(200,168,107,.10)':''}">`+
         `<span style="width:30px;font-family:var(--mono);font-size:.62rem;color:${hot?'var(--accent)':'var(--faint)'}">${d.day}</span>`+
-        `${chip}<span style="font-family:var(--mono);font-size:.72rem;color:var(--accent);width:46px;text-align:right">${d.km?d.km+' km':'—'}</span>`+
-        `<span style="font-size:.72rem;color:var(--muted);flex:1">${esc(d.note||'')}</span></div>`;
+        `${chip}<span style="font-family:var(--mono);font-size:.72rem;color:var(--muted);width:44px;text-align:right">${d.km?d.km+'km':'—'}</span>`+
+        `<span style="font-family:var(--mono);font-size:.72rem;color:${actCol};width:52px;text-align:right">${actTxt}</span>`+
+        `<span style="font-size:.72rem;color:var(--muted);flex:1;min-width:120px">${esc(d.note||'')}</span></div>`;
     }).join('');
     el('marathonWeeks').innerHTML = wks.map((w,i)=>{
       const isCur = cur && w.notion_id===cur.notion_id;
@@ -1144,12 +1181,14 @@ async function loadMarathon(){
       const tip = [w.verdict, w.red_flags?('flags: '+w.red_flags):''].filter(Boolean).join(' — ');
       const open = isCur;   // current week expanded by default
       const review = w.verdict ? `<div style="padding:8px 10px;margin-bottom:8px;background:var(--panel-2);border-radius:8px;font-size:.75rem;line-height:1.5"><b style="color:var(--accent)">Sunday review.</b> ${esc(w.verdict)}${w.red_flags?`<div style="color:var(--bad);margin-top:4px">⚑ ${esc(w.red_flags)}</div>`:''}</div>` : '';
+      const wt=weekSec[wn];
+      const timeLine = (wt && (wt.run||wt.ellipt||wt.other)) ? `<div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">⏱ Run <b style="color:var(--accent)">${fmtDur(wt.run)}</b>${wt.ellipt?` · Elliptical <b style="color:var(--accent)">${fmtDur(wt.ellipt)}</b>`:''}${wt.other?` · Cross <b style="color:var(--accent)">${fmtDur(wt.other)}</b>`:''}</div>` : '';
       const nutrition = MARA_NUTRITION[wn] ? `<div style="margin-top:8px;padding:8px 10px;background:var(--panel-2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:.72rem;color:#C9D3DD"><b style="color:var(--accent);text-transform:uppercase;font-family:var(--mono);font-size:.6rem;letter-spacing:.5px;display:block;margin-bottom:2px">Nutrition focus</b>${esc(MARA_NUTRITION[wn])}</div>` : '';
       return `<tr onclick="toggleWk(${i})" style="cursor:pointer${isCur?';background:rgba(200,168,107,.08)':''}"${tip?` title="${esc(tip)}"`:''}>`+
         `<td><span id="wchev-${i}" style="color:var(--accent);font-size:.6rem">${open?'▾':'▸'}</span> ${wk}${notionLink}${isCur?' <span style="color:var(--accent);font-size:.58rem">● now</span>':''}</td>`+
         `<td>${esc(w.phase||'')}</td><td>${esc(plan)}</td><td>${esc(act)}</td>`+
         `<td style="color:${col[w.compliance]||'var(--muted)'}">${esc(w.compliance||'—')}</td></tr>`+
-        `<tr id="wd-${i}" style="display:${open?'':'none'}"><td colspan="5" style="padding:2px 4px 10px">${review}${dayRows(wn,isCur)||'<div style="color:var(--muted);font-size:.72rem">No daily plan for this week.</div>'}${nutrition}</td></tr>`;
+        `<tr id="wd-${i}" style="display:${open?'':'none'}"><td colspan="5" style="padding:2px 4px 10px">${review}${timeLine}${dayRows(wn,isCur,w.date_start)||'<div style="color:var(--muted);font-size:.72rem">No daily plan for this week.</div>'}${nutrition}</td></tr>`;
     }).join('');
   }catch(e){}
 }

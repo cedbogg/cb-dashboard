@@ -318,6 +318,26 @@ alter table strength_logs enable row level security;
 drop policy if exists owner_all on strength_logs;
 create policy owner_all on strength_logs for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
+-- ------------------------------------------------------------
+-- 16. STRAVA ACTIVITIES  (synced from Strava; Fitness screen uses
+--     them for per-day actual km + per-week run/elliptical time).
+-- ------------------------------------------------------------
+create table if not exists strava_activities (
+  owner_id      uuid not null default auth.uid(),
+  activity_id   bigint not null,
+  start_date    timestamptz,
+  local_date    date,
+  sport_type    text,
+  distance_m    numeric,
+  moving_time_s int,
+  name          text,
+  updated_at    timestamptz not null default now(),
+  primary key (owner_id, activity_id)
+);
+alter table strava_activities enable row level security;
+drop policy if exists owner_all on strava_activities;
+create policy owner_all on strava_activities for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
 -- ============================================================
 -- v1.1 migration — run this if schema v1 is already applied.
 -- training_programs was missing its Notion sync key.

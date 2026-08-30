@@ -1164,11 +1164,12 @@ async function loadMarathon(){
         if(runKmByDate[key]!=null) actKm=Math.round(runKmByDate[key]*10)/10; }
       const actCol = actKm==null?'var(--faint)':(!d.km?'var(--ok)':actKm>=d.km*0.9?'var(--ok)':'var(--warn)');
       const actTxt = actKm==null?'—':('✓ '+actKm);
+      const dnote = (d.type==='Easy' && !/strid/i.test(d.note||'')) ? ((d.note?d.note+' · ':'')+'+ 4×20 s strides') : (d.note||'');
       return `<div style="display:flex;gap:8px;align-items:baseline;padding:5px 2px;border-bottom:1px solid var(--line)${hot?';background:rgba(200,168,107,.10)':''}">`+
         `<span style="width:30px;font-family:var(--mono);font-size:.62rem;color:${hot?'var(--accent)':'var(--faint)'}">${d.day}</span>`+
         `${chip}<span style="font-family:var(--mono);font-size:.72rem;color:var(--muted);width:44px;text-align:right">${d.km?d.km+'km':'—'}</span>`+
         `<span style="font-family:var(--mono);font-size:.72rem;color:${actCol};width:52px;text-align:right">${actTxt}</span>`+
-        `<span style="font-size:.72rem;color:var(--muted);flex:1;min-width:120px">${esc(d.note||'')}</span></div>`;
+        `<span style="font-size:.72rem;color:var(--muted);flex:1;min-width:120px">${esc(dnote)}</span></div>`;
     }).join('');
     el('marathonWeeks').innerHTML = wks.map((w,i)=>{
       const isCur = cur && w.notion_id===cur.notion_id;
@@ -1241,7 +1242,6 @@ const STR_A=[
   ['Half-kneeling hip-flexor stretch','2×30s/side','','half kneeling hip flexor stretch','Tuck pelvis, squeeze down-side glute — feel it in the hip front, not the low back.'],
   ['Piriformis / figure-4 stretch','2×30s/side','','supine piriformis figure four stretch','Runner’s deep-hip and glute release.'],
   ['Prep · activate (~5 min)'],
-  ['TrA activation + pelvic tilt','×15','','transverse abdominis activation pelvic tilt','Deep-core switch-on — draw the belly in, keep breathing.'],
   ['Banded clamshell','×12/side','','clamshell with band','Glute-med switch-on — stops the knee caving in.'],
   ['Banded side-step (monster walk)','×10/way','','banded lateral monster walk','Fires the glutes laterally before the working sets.'],
   ['Glute bridge — ball squeeze / single-leg','×12','','glute bridge ball squeeze','Final glute wake-up before loading.'],
@@ -1250,6 +1250,7 @@ const STR_A=[
   ['Goblet squat → box','3×10 → 4×6','Knee','goblet box squat tempo','Sit to a box at pain-free depth, 3-sec lower, upright torso.','a-goblet'],
   ['Leg extension — inner range','3×12','Knee','terminal knee extension leg extension','Last ~30° only early; P3 full pain-free range, heavier.','a-legext'],
   ['Strength'],
+  ['Back squat','4×6–8','Knee','barbell back squat form','Full pain-free depth, controlled tempo; add load per the knee governor.','a-squat'],
   ['Hip thrust','3×8–10','Glute','barbell hip thrust form','Big glute driver, minimal knee load — push it.','a-hipthrust'],
   ['Bench press','4×6–8','Push','bench press form','','a-bench'],
   ['Chest-supported DB row','3×10','Pull','chest supported dumbbell row','Supported = no loaded lumbar flexion.','a-row'],
@@ -1265,24 +1266,21 @@ const STR_B=[
   ['Half-kneeling hip-flexor stretch','2×30s/side','','half kneeling hip flexor stretch','Pelvis tucked, feel it in the hip front not the low back.'],
   ['Piriformis / figure-4 stretch','2×30s/side','','supine piriformis figure four stretch','Deep-hip release.'],
   ['Prep · activate (~5 min)'],
-  ['TrA activation + pelvic tilt','×15','','transverse abdominis activation pelvic tilt','Deep-core switch-on.'],
   ['Banded clamshell','×12/side','','clamshell with band','Glute-med switch-on.'],
   ['Banded side-step (monster walk)','×10/way','','banded lateral monster walk','Fires the glutes laterally.'],
   ['Glute bridge — ball squeeze / single-leg','×12','','glute bridge ball squeeze','Final glute wake-up.'],
-  ['Hinge + posterior chain'],
-  ['RDL — progressive hinge','4×6–8','Hinge','romanian deadlift form','Back’s hinge ladder + knee’s posterior-chain offloader. Neutral spine, hips back, shins vertical.','b-rdl'],
+  ['Squat + posterior chain'],
+  ['Back squat','4×6–8','Knee','barbell back squat form','Full pain-free depth, controlled tempo; add load per the knee governor.','b-squat'],
   ['Spanish squat hold → eccentric step-down','3×30s → 3×8','Knee','spanish squat eccentric step down','P1–2 band-resisted iso hold. P3 3-sec eccentric step-downs — impact prep.'],
   ['Single-leg (knee + glute)'],
   ['Split squat → Bulgarian (phased)','2×8 → 3×8/side','Glute','bulgarian split squat form','P1 shallow BW; P2 full range, light DBs; P3 rear foot elevated, loaded.','b-bss'],
   ['Step-up (controlled)','3×8/side','Knee','dumbbell step up exercise','Low box, drive through the heel, no push-off from the trailing leg.','b-stepup'],
   ['Single-leg RDL','3×8/side','Knee','single leg romanian deadlift','Hamstring + balance + proprioception. Light, slow, controlled.','b-slrdl'],
-  ['Push / pull'],
-  ['Landmine press','4×8','Push','landmine press form','Spine-neutral & elbow-friendlier than strict overhead.','b-landmine'],
+  ['Pull'],
   ['Pull-ups / lat pulldown','4×6–8','Pull','pull up form','Assisted as needed; manage grip vs the elbow.','b-pull'],
   ['Run-prep + core finisher'],
   ['Standing calf raise','3×12/side','Knee','single leg standing calf raise','Primary shock absorber for the knee. Single-leg, full range, weighted as able.','b-calf'],
-  ['Side plank + clam / band walk','3×12','Core','clamshell band walk glute med','Glute-med — controls the inward knee collapse that stresses a meniscus.'],
-  ['Dead bug','3×10/side','Core','dead bug exercise','Anti-extension core — disc-safe (no loaded flexion).']
+  ['Side plank + clam / band walk','3×12','Core','clamshell band walk glute med','Glute-med — controls the inward knee collapse that stresses a meniscus.']
 ];
 function _strRows(list){
   return list.map(r=>{

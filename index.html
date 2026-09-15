@@ -134,7 +134,21 @@
   svg.spark{width:80px;height:24px;flex:none}
   .mk .val{font-family:var(--mono);font-size:.8rem;width:56px;text-align:right}
   .mk .fl{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;width:62px;text-align:right}
-  .fl.ok{color:var(--ok)}.fl.b{color:var(--warn)}
+  .fl.ok{color:var(--ok)}.fl.b{color:var(--warn)}.fl.m{color:var(--accent)}.fl.x{color:var(--bad)}
+  .mk .dl{font-family:var(--mono);font-size:.66rem;width:58px;text-align:right;color:var(--faint)}
+  .mk .dl.g{color:var(--ok)}.mk .dl.r{color:var(--bad)}
+  .subtabs{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 16px}
+  .subtab{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;
+    border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;transition:.15s}
+  .subtab:hover{color:var(--text);border-color:#33414f}
+  .subtab.on{background:var(--accent);color:var(--ink);border-color:var(--accent);font-weight:600}
+  .foot{font-family:var(--mono);font-size:.62rem;color:var(--faint);line-height:1.6;margin-top:12px;
+    padding-top:10px;border-top:1px solid var(--line)}
+  .tl{display:flex;gap:13px;padding:12px 0;border-top:1px solid var(--line)}.tl:first-of-type{border-top:none}
+  .tl .dt{font-family:var(--mono);font-size:.64rem;color:var(--accent);text-transform:uppercase;width:76px;flex:none;padding-top:2px}
+  .tl .bd{flex:1;font-size:.84rem}.tl .bd .h{font-weight:500;margin-bottom:3px}
+  .tl .bd .n{font-size:.8rem;color:var(--muted)}
+  .tl .sc{font-family:var(--mono);font-size:.78rem;color:var(--text);width:52px;text-align:right;flex:none}
   .mb{padding:10px 0;border-top:1px solid var(--line)}.mb:first-of-type{border-top:none}
   .mb .lbl{display:flex;justify-content:space-between;font-size:.84rem;margin-bottom:6px}.mb .lbl .v{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
   .mb .track{height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden}.mb .fill{height:100%;background:linear-gradient(90deg,var(--accent),#9c7d44)}
@@ -363,31 +377,55 @@
 
   <!-- HEALTH -->
   <section class="screen" id="health">
-    <div class="sub">Health</div><div class="subd">Biomarkers over time · last panel 121 days ago</div>
-    <div class="cols">
-      <div>
-        <div class="sec-ey">Blood panel · trend</div>
-        <div class="panel">
-          <div class="mk"><div class="nm">Vitamin D<div class="u">nmol/L</div></div><svg class="spark" viewBox="0 0 80 24"><polyline points="0,8 26,12 52,17 80,19" fill="none" stroke="#E0A23C" stroke-width="2"/></svg><div class="val">48</div><div class="fl b">borderline</div></div>
-          <div class="mk"><div class="nm">ApoB<div class="u">g/L</div></div><svg class="spark" viewBox="0 0 80 24"><polyline points="0,17 26,13 52,10 80,8" fill="none" stroke="#3FB68B" stroke-width="2"/></svg><div class="val">0.78</div><div class="fl ok">in range</div></div>
-          <div class="mk"><div class="nm">HbA1c<div class="u">mmol/mol</div></div><svg class="spark" viewBox="0 0 80 24"><polyline points="0,12 26,12 52,13 80,12" fill="none" stroke="#3FB68B" stroke-width="2"/></svg><div class="val">34</div><div class="fl ok">in range</div></div>
-          <div class="mk"><div class="nm">hs-CRP<div class="u">mg/L</div></div><svg class="spark" viewBox="0 0 80 24"><polyline points="0,10 26,14 52,9 80,7" fill="none" stroke="#3FB68B" stroke-width="2"/></svg><div class="val">0.6</div><div class="fl ok">in range</div></div>
-        </div>
-      </div>
-      <div>
-        <div class="sec-ey">Microbiome · latest vs prior</div>
-        <div class="panel">
-          <div class="mb"><div class="lbl"><span>Diversity (Shannon)</span><span class="v">3.8 ▲</span></div><div class="track"><div class="fill" style="width:76%"></div></div></div>
-          <div class="mb"><div class="lbl"><span>Bifidobacterium</span><span class="v">good ▲</span></div><div class="track"><div class="fill" style="width:68%"></div></div></div>
-          <div class="mb"><div class="lbl"><span>Akkermansia</span><span class="v">low ▼</span></div><div class="track"><div class="fill" style="width:28%"></div></div></div>
-          <div class="mb"><div class="lbl"><span>Butyrate producers</span><span class="v">moderate</span></div><div class="track"><div class="fill" style="width:54%"></div></div></div>
-        </div>
-      </div>
+    <div class="sub">Health</div><div class="subd" id="healthsub">Gut · blood · consults</div>
+    <div class="subtabs">
+      <button id="htab-gut"   class="subtab on" onclick="hlTab('gut')">Gut health</button>
+      <button id="htab-blood" class="subtab"    onclick="hlTab('blood')">Blood test</button>
+      <button id="htab-consults" class="subtab" onclick="hlTab('consults')">Tests &amp; consults</button>
     </div>
-    <div class="sec-ey">Tests &amp; consults</div>
-    <div class="panel">
-      <div class="task"><span class="ty">Overdue</span><div class="tt">Quarterly blood panel — 121d ago</div><span class="due soon">book</span></div>
-      <div class="task"><span class="ty">No date</span><div class="tt">GP follow-up — Vit D re-test</div><span class="due">book</span></div>
+
+    <!-- 1 · GUT HEALTH -->
+    <div id="hl-gut">
+      <div class="tiles" id="gutTiles"></div>
+
+      <div class="sec-ey">Gut score · progression</div>
+      <div class="panel">
+        <div id="gutChart">—</div>
+        <div class="foot">Composite of every marker below, each scored 0–100 against its own reference scale, then averaged. Direction-aware: markers where less is better are inverted.</div>
+      </div>
+
+      <div class="sec-ey">Marker progression · every test</div>
+      <div class="panel" id="gutMarkers"></div>
+
+      <div class="sec-ey">Test timeline</div>
+      <div class="panel" id="gutTimeline"></div>
+    </div>
+
+    <!-- 2 · BLOOD TEST -->
+    <div id="hl-blood" style="display:none">
+      <div class="tiles" id="bloodTiles"></div>
+
+      <div class="sec-ey">Blood panel · trend</div>
+      <div class="panel" id="bloodMarkers"></div>
+
+      <div class="sec-ey">Panel history</div>
+      <div class="panel" id="bloodHistory"></div>
+    </div>
+
+    <!-- 3 · TESTS &amp; CONSULTS -->
+    <div id="hl-consults" style="display:none">
+      <div class="sec-ey">Due now</div>
+      <div class="panel">
+        <div class="task"><span class="ty">Overdue</span><div class="tt">Quarterly blood panel — <span id="bloodOverdue">—</span></div><span class="due soon">book</span></div>
+        <div class="task"><span class="ty">No date</span><div class="tt">GP follow-up — Vit D re-test</div><span class="due">book</span></div>
+        <div class="task"><span class="ty">Due</span><div class="tt">Gut microbiome re-test — 6-month cadence</div><span class="due" id="gutNextDue">—</span></div>
+      </div>
+
+      <div class="sec-ey">Cadence</div>
+      <div class="panel" id="consultCadence"></div>
+
+      <div class="sec-ey">History</div>
+      <div class="panel" id="consultHistory"></div>
     </div>
   </section>
 
@@ -1387,8 +1425,222 @@ async function loadHome(){
   }catch(e){}
 }
 
+// ---- Health · gut / blood / consults ---------------------------------------
+// SEED DATA — replace the rows below with your real report values. Everything
+// on the Health screen (tiles, charts, flags, deltas, timeline) derives from
+// these arrays; nothing else needs touching when a new test lands.
+//
+// Marker fields: dir 'up' = higher is better, 'down' = lower is better.
+//   min/max = the scale the composite score is measured on; lo/hi = target band.
+const GUT_MARKERS=[
+  {key:'shannon',  name:'Diversity (Shannon)',     unit:'index',    dir:'up',   min:1.5, max:5,  lo:3.3, hi:4.5},
+  {key:'bifido',   name:'Bifidobacterium',         unit:'% abund.', dir:'up',   min:0,   max:10, lo:2,   hi:8},
+  {key:'akker',    name:'Akkermansia muciniphila', unit:'% abund.', dir:'up',   min:0,   max:5,  lo:0.5, hi:4},
+  {key:'butyrate', name:'Butyrate producers',      unit:'% abund.', dir:'up',   min:0,   max:25, lo:10,  hi:25},
+  {key:'fprau',    name:'F. prausnitzii',          unit:'% abund.', dir:'up',   min:0,   max:12, lo:4,   hi:12},
+  {key:'proteo',   name:'Proteobacteria',          unit:'% abund.', dir:'down', min:0,   max:10, lo:0,   hi:4},
+];
+const GUT_TESTS=[
+  {date:'2025-06-14', label:'Baseline',           note:'Low diversity, Bifidobacterium depleted, Proteobacteria elevated.',
+   v:{shannon:3.1, bifido:1.4, akker:0.9, butyrate:9.2,  fprau:3.1, proteo:6.8}},
+  {date:'2025-12-06', label:'Re-test · 24 weeks', note:'Fermented foods daily + 30 plants/week. Diversity and Bifidobacterium both moving.',
+   v:{shannon:3.4, bifido:3.2, akker:0.6, butyrate:11.8, fprau:4.4, proteo:5.1}},
+  {date:'2026-05-17', label:'Re-test · 48 weeks', note:'Diversity into the target band. Akkermansia still falling — add polyphenols, check fibre spread.',
+   v:{shannon:3.8, bifido:4.6, akker:0.3, butyrate:13.5, fprau:5.2, proteo:3.4}},
+];
+const BLOOD_MARKERS=[
+  {key:'vitd',  name:'Vitamin D', unit:'nmol/L',   dir:'up',   lo:50, hi:150},
+  {key:'apob',  name:'ApoB',      unit:'g/L',      dir:'down', lo:0,  hi:0.8},
+  {key:'hba1c', name:'HbA1c',     unit:'mmol/mol', dir:'down', lo:0,  hi:39},
+  {key:'crp',   name:'hs-CRP',    unit:'mg/L',     dir:'down', lo:0,  hi:1.0},
+];
+const BLOOD_TESTS=[
+  {date:'2025-05-20', lab:'Full panel',     v:{vitd:72, apob:0.95, hba1c:34, crp:0.9}},
+  {date:'2025-11-14', lab:'Full panel',     v:{vitd:62, apob:0.89, hba1c:34, crp:1.3}},
+  {date:'2026-02-10', lab:'Lipids + HbA1c', v:{vitd:52, apob:0.83, hba1c:35, crp:0.8}},
+  {date:'2026-05-17', lab:'Full panel',     v:{vitd:48, apob:0.78, hba1c:34, crp:0.6}},
+];
+const BLOOD_CADENCE_DAYS=90, GUT_CADENCE_DAYS=182;
+
+const _hDays=d=>Math.round((Date.now()-new Date(d+'T00:00:00'))/86400000);
+const _hShort=d=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
+const _hFull=d=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+const _clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const _sig=(v,ref)=>{ if(v==null) return '—'; const r=Math.abs(ref==null?v:ref); return v.toFixed(r>=10?0:r>=1?1:2); };
+
+// 0-100 against the marker's own scale, inverted where less is better.
+function markerScore(m,v){
+  if(v==null) return null;
+  const p=_clamp((v-m.min)/(m.max-m.min),0,1);
+  return Math.round(100*(m.dir==='up'?p:1-p));
+}
+function gutScore(t){
+  const s=GUT_MARKERS.map(m=>markerScore(m,t.v[m.key])).filter(x=>x!=null);
+  return s.length?Math.round(s.reduce((a,b)=>a+b,0)/s.length):null;
+}
+// Target-band verdict. Inside the band but sitting in the weak third reads 'moderate'.
+function gutFlag(m,v){
+  if(v==null) return ['—',''];
+  if(v<m.lo) return m.dir==='up'?['low','b']:['in range','ok'];
+  if(v>m.hi) return ['high','b'];
+  const p=(v-m.lo)/((m.hi-m.lo)||1);
+  const weak=m.dir==='up'?p<0.33:p>0.67;
+  return weak?['moderate','m']:['in range','ok'];
+}
+function bloodFlag(m,v){
+  if(v==null) return ['—',''];
+  if(v<m.lo) return v>=m.lo*0.9?['borderline','b']:['low','x'];
+  if(v>m.hi) return v<=m.hi*1.1?['borderline','b']:['high','x'];
+  return ['in range','ok'];
+}
+// Change vs the previous test, coloured by whether it moved the right way.
+function delta(m,vals){
+  const v=vals.filter(x=>x!=null);
+  if(v.length<2) return ['—',''];
+  const d=v[v.length-1]-v[v.length-2];
+  if(Math.abs(d)<1e-9) return ['flat',''];
+  const good=(m.dir==='up')===(d>0);
+  return [(d>0?'▲ +':'▼ ')+_sig(Math.abs(d), v[v.length-1]), good?'g':'r'];
+}
+function sparkSVG(vals,dir){
+  const v=vals.filter(x=>x!=null);
+  if(v.length<2) return '<svg class="spark" viewBox="0 0 80 24"></svg>';
+  const mn=Math.min(...v), mx=Math.max(...v), rg=(mx-mn)||1;
+  const pts=v.map((x,i)=>(i/(v.length-1)*80).toFixed(1)+','+(21-(x-mn)/rg*18).toFixed(1)).join(' ');
+  const better=dir==='up'?v[v.length-1]>=v[0]:v[v.length-1]<=v[0];
+  return '<svg class="spark" viewBox="0 0 80 24"><polyline points="'+pts+'" fill="none" stroke="'+(better?'#3FB68B':'#E0A23C')+'" stroke-width="2"/></svg>';
+}
+
+// Composite gut score over time, on a real time axis so the gaps between tests show.
+function gutChartSVG(tests){
+  const ts=tests.filter(t=>gutScore(t)!=null);
+  if(!ts.length) return '—';
+  const W=340,H=140,L=10,R=30,T=14,B=22, pw=W-L-R, ph=H-T-B;
+  const t0=+new Date(ts[0].date), t1=+new Date(ts[ts.length-1].date), span=(t1-t0)||1;
+  const x=d=>ts.length<2?L+pw/2:L+(+new Date(d)-t0)/span*pw;
+  const y=v=>T+(1-v/100)*ph;
+  const pts=ts.map(t=>[x(t.date),y(gutScore(t)),t]);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:520px;font-family:var(--mono);font-size:7px">`;
+  [0,50,100].forEach(g=>{
+    s+=`<line x1="${L}" y1="${y(g)}" x2="${W-R}" y2="${y(g)}" stroke="var(--line)" stroke-width="${g?0.5:1}"${g?' stroke-dasharray="2 2"':''}/>`;
+    s+=`<text x="${W-R+3}" y="${(y(g)+2).toFixed(1)}" fill="var(--faint)">${g}</text>`;
+  });
+  s+=`<path d="${pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+  pts.forEach(p=>{
+    const sc=gutScore(p[2]);
+    s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.8" fill="var(--accent)"><title>${_hFull(p[2].date)} · ${sc}/100 — ${p[2].label}</title></circle>`;
+    s+=`<text x="${p[0].toFixed(1)}" y="${(p[1]-6).toFixed(1)}" fill="var(--text)" text-anchor="middle">${sc}</text>`;
+    s+=`<text x="${p[0].toFixed(1)}" y="${H-6}" fill="var(--faint)" text-anchor="middle">${_hShort(p[2].date)}</text>`;
+  });
+  return s+'</svg>';
+}
+
+function renderGut(){
+  const ts=GUT_TESTS, last=ts[ts.length-1], prev=ts[ts.length-2];
+  const sc=gutScore(last), d=prev?sc-gutScore(prev):null;
+  const improving=prev?GUT_MARKERS.filter(m=>last.v[m.key]!==prev.v[m.key]&&((m.dir==='up')===(last.v[m.key]>prev.v[m.key]))).length:null;
+  const since=_hDays(last.date), due=GUT_CADENCE_DAYS-since;
+  const shan=GUT_MARKERS[0];
+  document.getElementById('gutTiles').innerHTML=`
+    <div class="tile"><div class="lab">Gut score</div><div class="big">${sc}<span style="font-size:.9rem;color:var(--faint)">/100</span></div>
+      <div class="chg ${d>0?'up':d<0?'down':'flat'}">${d==null?'first test':(d>0?'+':'')+d+' vs prior'}</div></div>
+    <div class="tile"><div class="lab">Diversity (Shannon)</div><div class="big">${last.v.shannon}</div>
+      <div class="chg ${gutFlag(shan,last.v.shannon)[1]==='ok'?'up':'flat'}">target ≥ ${shan.lo}</div></div>
+    <div class="tile"><div class="lab">Markers improving</div><div class="big">${improving==null?'—':improving}<span style="font-size:.9rem;color:var(--faint)">/${GUT_MARKERS.length}</span></div>
+      <div class="chg flat">vs ${prev?_hShort(prev.date):'—'}</div></div>
+    <div class="tile"><div class="lab">Last test</div><div class="big">${since}d</div>
+      <div class="chg ${due<0?'down':'flat'}">${due<0?'re-test overdue':'re-test in '+due+'d'}</div></div>`;
+
+  document.getElementById('gutChart').innerHTML=gutChartSVG(ts);
+
+  document.getElementById('gutMarkers').innerHTML=GUT_MARKERS.map(m=>{
+    const vals=ts.map(t=>t.v[m.key]), v=vals[vals.length-1];
+    const fl=gutFlag(m,v), dl=delta(m,vals);
+    return `<div class="mk"><div class="nm">${m.name}<div class="u">${m.unit} · target ${m.dir==='up'?'≥ '+m.lo:'≤ '+m.hi}</div></div>`+
+      sparkSVG(vals,m.dir)+
+      `<div class="val">${_sig(v)}</div><div class="dl ${dl[1]}">${dl[0]}</div><div class="fl ${fl[1]}">${fl[0]}</div></div>`;
+  }).join('');
+
+  document.getElementById('gutTimeline').innerHTML=ts.slice().reverse().map(t=>
+    `<div class="tl"><div class="dt">${_hFull(t.date)}</div>
+      <div class="bd"><div class="h">${t.label}</div><div class="n">${t.note}</div></div>
+      <div class="sc">${gutScore(t)}</div></div>`).join('');
+}
+
+function renderBlood(){
+  const ts=BLOOD_TESTS, last=ts[ts.length-1];
+  const flags=BLOOD_MARKERS.map(m=>bloodFlag(m,last.v[m.key])[0]);
+  const inRange=flags.filter(f=>f==='in range').length;
+  const since=_hDays(last.date), due=BLOOD_CADENCE_DAYS-since;
+  document.getElementById('bloodTiles').innerHTML=`
+    <div class="tile"><div class="lab">Last panel</div><div class="big">${since}d</div>
+      <div class="chg ${due<0?'down':'flat'}">${_hFull(last.date)}</div></div>
+    <div class="tile"><div class="lab">In range</div><div class="big">${inRange}<span style="font-size:.9rem;color:var(--faint)">/${BLOOD_MARKERS.length}</span></div>
+      <div class="chg flat">${flags.filter(f=>f!=='in range').join(', ')||'all clear'}</div></div>
+    <div class="tile"><div class="lab">Panels logged</div><div class="big">${ts.length}</div>
+      <div class="chg flat">since ${_hShort(ts[0].date)}</div></div>
+    <div class="tile"><div class="lab">Next due</div><div class="big">${Math.abs(due)}d</div>
+      <div class="chg ${due<0?'down':'flat'}">${due<0?'overdue':'to go'} · ${BLOOD_CADENCE_DAYS}d cadence</div></div>`;
+
+  document.getElementById('bloodMarkers').innerHTML=BLOOD_MARKERS.map(m=>{
+    const vals=ts.map(t=>t.v[m.key]), v=vals[vals.length-1];
+    const fl=bloodFlag(m,v), dl=delta(m,vals);
+    const range=m.lo>0?m.lo+'–'+m.hi:'< '+m.hi;
+    return `<div class="mk"><div class="nm">${m.name}<div class="u">${m.unit} · ref ${range}</div></div>`+
+      sparkSVG(vals,m.dir)+
+      `<div class="val">${_sig(v)}</div><div class="dl ${dl[1]}">${dl[0]}</div><div class="fl ${fl[1]}">${fl[0]}</div></div>`;
+  }).join('');
+
+  document.getElementById('bloodHistory').innerHTML=
+    '<table><thead><tr><th>Date</th><th>Panel</th>'+BLOOD_MARKERS.map(m=>'<th>'+m.name+'</th>').join('')+'</tr></thead><tbody>'+
+    ts.slice().reverse().map(t=>'<tr><td>'+_hFull(t.date)+'</td><td>'+t.lab+'</td>'+
+      BLOOD_MARKERS.map(m=>{
+        const off=bloodFlag(m,t.v[m.key])[1]!=='ok';
+        return '<td'+(off?' style="color:var(--warn)"':'')+'>'+_sig(t.v[m.key])+'</td>';
+      }).join('')+'</tr>').join('')+
+    '</tbody></table>';
+}
+
+function renderConsults(){
+  const lb=BLOOD_TESTS[BLOOD_TESTS.length-1], lg=GUT_TESTS[GUT_TESTS.length-1];
+  const bSince=_hDays(lb.date), bDue=BLOOD_CADENCE_DAYS-bSince, gDue=GUT_CADENCE_DAYS-_hDays(lg.date);
+  document.getElementById('bloodOverdue').textContent=bSince+'d ago';
+  const gn=document.getElementById('gutNextDue');
+  gn.textContent=gDue<0?Math.abs(gDue)+'d over':'in '+gDue+'d';
+  gn.className='due'+(gDue<0?' soon':'');
+
+  const cad=[['Blood panel',BLOOD_CADENCE_DAYS,lb.date,bDue],['Gut microbiome',GUT_CADENCE_DAYS,lg.date,gDue]];
+  document.getElementById('consultCadence').innerHTML=
+    '<table><thead><tr><th>Test</th><th>Cadence</th><th>Last</th><th>Status</th></tr></thead><tbody>'+
+    cad.map(c=>'<tr><td>'+c[0]+'</td><td>'+c[1]+'d</td><td>'+_hFull(c[2])+'</td>'+
+      '<td class="'+(c[3]<0?'down':'up')+'">'+(c[3]<0?Math.abs(c[3])+'d overdue':c[3]+'d to go')+'</td></tr>').join('')+
+    '</tbody></table>';
+
+  const hist=BLOOD_TESTS.map(t=>({date:t.date,h:'Blood panel — '+t.lab,
+      n:BLOOD_MARKERS.map(m=>m.name+' '+_sig(t.v[m.key])).join(' · ')}))
+    .concat(GUT_TESTS.map(t=>({date:t.date,h:'Gut microbiome — '+t.label,n:t.note})))
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('consultHistory').innerHTML=hist.map(e=>
+    '<div class="tl"><div class="dt">'+_hFull(e.date)+'</div><div class="bd"><div class="h">'+e.h+'</div><div class="n">'+e.n+'</div></div></div>').join('');
+}
+
+function hlTab(t){
+  ['gut','blood','consults'].forEach(k=>{
+    document.getElementById('hl-'+k).style.display = k===t?'':'none';
+    document.getElementById('htab-'+k).classList.toggle('on', k===t);
+  });
+}
+function renderHealth(){
+  try{
+    renderGut(); renderBlood(); renderConsults();
+    const sub=document.getElementById('healthsub');
+    if(sub) sub.textContent='Gut score '+gutScore(GUT_TESTS[GUT_TESTS.length-1])+'/100 · last blood panel '+_hDays(BLOOD_TESTS[BLOOD_TESTS.length-1].date)+' days ago';
+  }catch(e){ console.error('health render',e); }
+}
+renderHealth();
+
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.hlTab=hlTab; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

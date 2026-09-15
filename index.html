@@ -149,6 +149,114 @@
   .tl .bd{flex:1;font-size:.84rem}.tl .bd .h{font-weight:500;margin-bottom:3px}
   .tl .bd .n{font-size:.8rem;color:var(--muted)}
   .tl .sc{font-family:var(--mono);font-size:.78rem;color:var(--text);width:52px;text-align:right;flex:none}
+
+  /* health · gut dashboard (Biomesight) */
+  .subtab.sm{font-size:.62rem;padding:6px 11px}
+  .tiles.auto{grid-template-columns:repeat(auto-fill,minmax(172px,1fr))}
+  @media(max-width:760px){.tiles.auto{grid-template-columns:repeat(2,1fr)}}
+  .gutsrc{font-family:var(--mono);font-size:.62rem;color:var(--faint);margin:-4px 0 14px;letter-spacing:.4px}
+  .tile .pill{font-family:var(--mono);font-size:.68rem;font-weight:600;border-radius:5px;padding:2px 7px}
+  .tile .pill.g{color:var(--ok);background:rgba(63,182,139,.12)}
+  .tile .pill.r{color:var(--bad);background:rgba(229,99,77,.12)}
+  .tile .pill.n{color:var(--muted);background:var(--panel-2)}
+  .tile .ab{display:flex;justify-content:space-between;align-items:flex-end;margin:6px 0 4px}
+  .tile .prg{height:4px;border-radius:3px;background:var(--panel-2);overflow:hidden;margin-top:7px}
+  .tile .prg i{display:block;height:100%;background:linear-gradient(90deg,#4a6fa5,var(--accent))}
+  .tile .tgt{font-family:var(--mono);font-size:.56rem;color:var(--faint);text-align:right;margin-top:3px}
+  /* prior-vs-latest twin bar, used for butyrate pool and phyla */
+  .dbar{display:flex;align-items:center;gap:9px;padding:6px 0}
+  .dbar .n{font-size:.78rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dbar .t{position:relative;flex:1.2;height:6px;border-radius:3px;background:var(--ink)}
+  .dbar .t i{position:absolute;left:0;top:0;height:100%;border-radius:3px}
+  .dbar .t i.a{background:#4a6fa5;opacity:.65}.dbar .t i.b{background:var(--accent);opacity:.85}
+  .dbar .v{font-family:var(--mono);font-size:.7rem;color:var(--accent);width:52px;text-align:right}
+  .lgd{display:flex;gap:14px;justify-content:center;font-family:var(--mono);font-size:.62rem;margin-top:10px}
+  .lgd .a{color:#4a6fa5}.lgd .b{color:var(--accent)}
+  /* bacteria rows */
+  .btx{display:grid;grid-template-columns:1fr 62px 62px 68px 78px;gap:10px;align-items:start;padding:11px 0;border-top:1px solid var(--line)}
+  .btx:first-of-type{border-top:none}
+  .btx .nm{font-size:.85rem}.btx .nm .rk{font-family:var(--mono);font-size:.58rem;color:var(--faint);text-transform:uppercase}
+  .btx .nm .no{font-size:.76rem;color:var(--muted);margin-top:2px;line-height:1.45}
+  .btx .a,.btx .b,.btx .d{font-family:var(--mono);font-size:.72rem;text-align:right;padding-top:2px}
+  .btx .a{color:#4a6fa5}.btx .b{color:var(--accent)}.btx .d.g{color:var(--ok)}.btx .d.r{color:var(--bad)}
+  .btx .st{font-family:var(--mono);font-size:.56rem;text-transform:uppercase;text-align:center;border-radius:5px;padding:3px 6px;border:1px solid}
+  .bhead{display:grid;grid-template-columns:1fr 62px 62px 68px 78px;gap:10px;padding-bottom:9px;border-bottom:1px solid var(--line);margin-bottom:2px}
+  .bhead span{font-family:var(--mono);font-size:.58rem;letter-spacing:.8px;text-transform:uppercase;color:var(--faint);text-align:right}
+  .bhead span:first-child{text-align:left}.bhead span:last-child{text-align:center}
+  @media(max-width:760px){.btx,.bhead{grid-template-columns:1fr 54px 54px 60px}.btx .st,.bhead span:last-child{display:none}}
+  /* callout strip inside a panel */
+  .call{border-radius:0 8px 8px 0;padding:8px 11px;font-size:.78rem;margin:10px 0 2px;border-left:3px solid}
+  .call.g{background:rgba(63,182,139,.08);border-color:var(--ok);color:var(--ok)}
+  .call.w{background:rgba(224,162,60,.08);border-color:var(--warn);color:var(--warn)}
+  /* wins / concerns list */
+  .hl{padding:9px 0;border-top:1px solid var(--line)}.hl:first-of-type{border-top:none}
+  .hl .h{font-family:var(--mono);font-size:.76rem;color:var(--text)}
+  .hl .d{font-size:.78rem;color:var(--muted);margin-top:2px;line-height:1.45}
+  /* functional marker cards */
+  .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:14px;margin-bottom:18px}
+  .fcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+  .fcard .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px}
+  .fcard .t .n{font-size:.85rem}.fcard .t .s{font-family:var(--mono);font-size:.62rem;text-transform:uppercase}
+  .fcard .v{font-family:var(--mono);font-size:1.3rem;font-weight:600}
+  .fcard .m{font-family:var(--mono);font-size:.6rem;color:var(--faint);margin:2px 0 8px}
+  .fcard .no{font-size:.78rem;color:var(--muted);line-height:1.5}
+  /* protocol */
+  .phase{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+  .phase .ph{padding:10px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px}
+  .phase .ph .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .phase .ph .tt{font-family:var(--mono);font-size:.64rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase}
+  .pitem{display:grid;grid-template-columns:200px 120px 165px 1fr;gap:14px;align-items:start;padding:12px 18px;border-bottom:1px solid var(--line)}
+  .pitem:last-child{border-bottom:none}
+  .pitem .n{font-size:.83rem}.pitem .ty{display:inline-block;font-family:var(--mono);font-size:.55rem;border-radius:4px;padding:2px 5px;margin-top:4px;border:1px solid}
+  .pitem .ds,.pitem .tg{font-family:var(--mono);font-size:.7rem;color:var(--muted);padding-top:1px}
+  .pitem .wy{font-size:.78rem;color:var(--muted);line-height:1.5}
+  @media(max-width:900px){.pitem{grid-template-columns:1fr;gap:5px}}
+  /* foods + targets */
+  .foods{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:0}
+  .food{padding:12px 4px;border-top:1px solid var(--line)}
+  .food .t{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px}
+  .food .t .n{font-size:.84rem;font-weight:500}
+  .food .t .fq{font-family:var(--mono);font-size:.56rem;border-radius:4px;padding:2px 6px;white-space:nowrap;align-self:flex-start;border:1px solid}
+  .food .tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+  .food .tags span{font-family:var(--mono);font-size:.55rem;color:var(--muted);background:var(--panel-2);border-radius:4px;padding:2px 5px}
+  .food .no{font-size:.77rem;color:var(--muted);line-height:1.45}
+  .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:10px}
+  .tcard{background:var(--panel-2);border-radius:9px;padding:10px 12px}
+  .tcard .l{font-family:var(--mono);font-size:.58rem;color:var(--faint);margin-bottom:5px}
+  .tcard .c{font-size:.68rem;color:var(--muted)}.tcard .c b{font-family:var(--mono);font-weight:500;color:var(--warn)}
+  .tcard .n{font-family:var(--mono);font-size:.76rem;font-weight:600;color:var(--ok);margin-top:2px}
+
+  /* health · supplement schedule */
+  .phsel{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+  .phsel button{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+    padding:11px 14px;cursor:pointer;color:var(--muted);font-family:var(--body);transition:.15s}
+  .phsel button:hover{border-color:#33414f}
+  .phsel button .l{font-size:.86rem;font-weight:500;color:var(--text)}
+  .phsel button .d{font-family:var(--mono);font-size:.6rem;margin-top:3px}
+  .phsel button .c{font-family:var(--mono);font-size:.58rem;color:var(--faint);margin-top:2px}
+  .phsel button .now{font-family:var(--mono);font-size:.54rem;text-transform:uppercase;letter-spacing:.8px;
+    border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:1px}
+  .slot{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+  .slot .sh{display:flex;align-items:center;gap:11px;padding:11px 18px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+  .slot .sh .ic{font-size:1rem;line-height:1}
+  .slot .sh .l{font-size:.85rem;font-weight:500}
+  .slot .sh .d{font-family:var(--mono);font-size:.58rem;color:var(--faint)}
+  .slot .sh .ct{margin-left:auto;font-family:var(--mono);font-size:.6rem;color:var(--faint)}
+  .sitem,.shead{display:grid;grid-template-columns:1fr 118px 1.15fr;gap:12px;padding:10px 18px}
+  .shead{padding-bottom:8px;padding-top:9px;border-bottom:1px solid var(--line)}
+  .shead span{font-family:var(--mono);font-size:.56rem;letter-spacing:.9px;text-transform:uppercase;color:var(--faint)}
+  .sitem{align-items:start;border-bottom:1px solid var(--line)}.sitem:last-child{border-bottom:none}
+  .sitem .nm{display:flex;gap:9px;align-items:stretch}
+  .sitem .nm .bar{width:3px;border-radius:2px;flex:none}
+  .sitem .nm .t{font-size:.83rem;line-height:1.3}
+  .sitem .ds{font-family:var(--mono);font-size:.72rem;font-weight:500;padding-top:1px}
+  .sitem .no{font-size:.77rem;color:var(--muted);line-height:1.5;padding-top:1px}
+  @media(max-width:760px){.sitem{grid-template-columns:1fr;gap:5px}.shead{display:none}}
+  .stag{display:inline-block;font-family:var(--mono);font-size:.54rem;font-weight:600;letter-spacing:.8px;
+    text-transform:uppercase;border-radius:4px;padding:2px 6px;border:1px solid;white-space:nowrap;margin-top:4px}
+  .snote{display:flex;align-items:flex-start;gap:10px;padding:8px 0}
+  .snote .tx{font-size:.8rem;color:var(--muted);line-height:1.5}
+  .snote .stag{margin-top:1px;flex:none}
   .mb{padding:10px 0;border-top:1px solid var(--line)}.mb:first-of-type{border-top:none}
   .mb .lbl{display:flex;justify-content:space-between;font-size:.84rem;margin-bottom:6px}.mb .lbl .v{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
   .mb .track{height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden}.mb .fill{height:100%;background:linear-gradient(90deg,var(--accent),#9c7d44)}
@@ -384,21 +492,64 @@
       <button id="htab-consults" class="subtab" onclick="hlTab('consults')">Tests &amp; consults</button>
     </div>
 
-    <!-- 1 · GUT HEALTH -->
+    <!-- 1 · GUT HEALTH — every panel below is rendered from Supabase (gut_*) -->
     <div id="hl-gut">
-      <div class="tiles" id="gutTiles"></div>
+      <div class="subtabs">
+        <button id="gtab-dashboard" class="subtab sm on" onclick="gutView('dashboard')">Gut Dashboard</button>
+        <button id="gtab-bacteria"  class="subtab sm"    onclick="gutView('bacteria')">Bacteria</button>
+        <button id="gtab-structure" class="subtab sm"    onclick="gutView('structure')">Structure</button>
+        <button id="gtab-protocol"  class="subtab sm"    onclick="gutView('protocol')">Protocol</button>
+        <button id="gtab-schedule"  class="subtab sm"    onclick="gutView('schedule')">Supplement Schedule</button>
+      </div>
+      <div class="gutsrc" id="gutSource">Loading gut panels…</div>
 
-      <div class="sec-ey">Gut score · progression</div>
-      <div class="panel">
-        <div id="gutChart">—</div>
-        <div class="foot">Composite of every marker below, each scored 0–100 against its own reference scale, then averaged. Direction-aware: markers where less is better are inverted.</div>
+      <div id="gv-dashboard">
+        <div class="tiles auto" id="gutScores"></div>
+        <div class="cols">
+          <div><div class="sec-ey">Health radar</div><div class="panel" id="gutRadar">—</div></div>
+          <div><div class="sec-ey">Butyrate pool</div><div class="panel" id="gutButyrate">—</div></div>
+        </div>
+        <div class="cols">
+          <div><div class="sec-ey">Major wins</div><div class="panel" id="gutWins">—</div></div>
+          <div><div class="sec-ey">Active concerns</div><div class="panel" id="gutConcerns">—</div></div>
+        </div>
+        <div class="sec-ey">Test timeline</div>
+        <div class="panel" id="gutTimeline">—</div>
       </div>
 
-      <div class="sec-ey">Marker progression · every test</div>
-      <div class="panel" id="gutMarkers"></div>
+      <div id="gv-bacteria" style="display:none">
+        <div class="sec-ey">Tracked organisms</div>
+        <div class="panel" id="gutBacteria">—</div>
+      </div>
 
-      <div class="sec-ey">Test timeline</div>
-      <div class="panel" id="gutTimeline"></div>
+      <div id="gv-structure" style="display:none">
+        <div class="cols">
+          <div><div class="sec-ey">Phyla distribution</div><div class="panel" id="gutPhyla">—</div></div>
+          <div><div class="sec-ey">Firmicutes : Bacteroidetes</div><div class="panel" id="gutFB">—</div></div>
+        </div>
+        <div class="sec-ey">LPS risk profile</div>
+        <div class="panel" id="gutLPS">—</div>
+        <div class="sec-ey">Functional markers</div>
+        <div class="fgrid" id="gutFunctional">—</div>
+      </div>
+
+      <div id="gv-schedule" style="display:none">
+        <div class="phsel" id="schPhases"></div>
+        <div id="schBanner"></div>
+        <div class="tiles" id="schCounts"></div>
+        <div id="schSlots">—</div>
+        <div class="sec-ey">Additional notes</div>
+        <div class="panel" id="schNotes">—</div>
+      </div>
+
+      <div id="gv-protocol" style="display:none">
+        <div class="sec-ey">Supplement protocol</div>
+        <div id="gutProtocol">—</div>
+        <div class="sec-ey">Food protocol</div>
+        <div class="panel" id="gutFoods">—</div>
+        <div class="sec-ey">6-month targets</div>
+        <div class="panel"><div class="tgrid" id="gutTargets">—</div></div>
+      </div>
     </div>
 
     <!-- 2 · BLOOD TEST -->
@@ -591,6 +742,7 @@ function setDomain(s){
   if(s==='perso') loadPerso();
   if(s==='fitness'){ loadFitness(); loadMarathon(); }
   if(s==='finance') loadFinance();
+  if(s==='health') loadGut();
 }
 function renderChips(s){
   const live=memCache[s];
@@ -1425,29 +1577,12 @@ async function loadHome(){
   }catch(e){}
 }
 
-// ---- Health · gut / blood / consults ---------------------------------------
-// SEED DATA — replace the rows below with your real report values. Everything
-// on the Health screen (tiles, charts, flags, deltas, timeline) derives from
-// these arrays; nothing else needs touching when a new test lands.
+// ---- Health · blood panel --------------------------------------------------
+// SEED DATA — the blood tab still runs off these two arrays; replace the rows
+// with your real panel values. (The gut tab is live from Supabase, below.)
 //
-// Marker fields: dir 'up' = higher is better, 'down' = lower is better.
-//   min/max = the scale the composite score is measured on; lo/hi = target band.
-const GUT_MARKERS=[
-  {key:'shannon',  name:'Diversity (Shannon)',     unit:'index',    dir:'up',   min:1.5, max:5,  lo:3.3, hi:4.5},
-  {key:'bifido',   name:'Bifidobacterium',         unit:'% abund.', dir:'up',   min:0,   max:10, lo:2,   hi:8},
-  {key:'akker',    name:'Akkermansia muciniphila', unit:'% abund.', dir:'up',   min:0,   max:5,  lo:0.5, hi:4},
-  {key:'butyrate', name:'Butyrate producers',      unit:'% abund.', dir:'up',   min:0,   max:25, lo:10,  hi:25},
-  {key:'fprau',    name:'F. prausnitzii',          unit:'% abund.', dir:'up',   min:0,   max:12, lo:4,   hi:12},
-  {key:'proteo',   name:'Proteobacteria',          unit:'% abund.', dir:'down', min:0,   max:10, lo:0,   hi:4},
-];
-const GUT_TESTS=[
-  {date:'2025-06-14', label:'Baseline',           note:'Low diversity, Bifidobacterium depleted, Proteobacteria elevated.',
-   v:{shannon:3.1, bifido:1.4, akker:0.9, butyrate:9.2,  fprau:3.1, proteo:6.8}},
-  {date:'2025-12-06', label:'Re-test · 24 weeks', note:'Fermented foods daily + 30 plants/week. Diversity and Bifidobacterium both moving.',
-   v:{shannon:3.4, bifido:3.2, akker:0.6, butyrate:11.8, fprau:4.4, proteo:5.1}},
-  {date:'2026-05-17', label:'Re-test · 48 weeks', note:'Diversity into the target band. Akkermansia still falling — add polyphenols, check fibre spread.',
-   v:{shannon:3.8, bifido:4.6, akker:0.3, butyrate:13.5, fprau:5.2, proteo:3.4}},
-];
+// Marker fields: dir 'up' = higher is better, 'down' = lower is better;
+//   lo/hi = the reference range.
 const BLOOD_MARKERS=[
   {key:'vitd',  name:'Vitamin D', unit:'nmol/L',   dir:'up',   lo:50, hi:150},
   {key:'apob',  name:'ApoB',      unit:'g/L',      dir:'down', lo:0,  hi:0.8},
@@ -1468,25 +1603,6 @@ const _hFull=d=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric
 const _clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const _sig=(v,ref)=>{ if(v==null) return '—'; const r=Math.abs(ref==null?v:ref); return v.toFixed(r>=10?0:r>=1?1:2); };
 
-// 0-100 against the marker's own scale, inverted where less is better.
-function markerScore(m,v){
-  if(v==null) return null;
-  const p=_clamp((v-m.min)/(m.max-m.min),0,1);
-  return Math.round(100*(m.dir==='up'?p:1-p));
-}
-function gutScore(t){
-  const s=GUT_MARKERS.map(m=>markerScore(m,t.v[m.key])).filter(x=>x!=null);
-  return s.length?Math.round(s.reduce((a,b)=>a+b,0)/s.length):null;
-}
-// Target-band verdict. Inside the band but sitting in the weak third reads 'moderate'.
-function gutFlag(m,v){
-  if(v==null) return ['—',''];
-  if(v<m.lo) return m.dir==='up'?['low','b']:['in range','ok'];
-  if(v>m.hi) return ['high','b'];
-  const p=(v-m.lo)/((m.hi-m.lo)||1);
-  const weak=m.dir==='up'?p<0.33:p>0.67;
-  return weak?['moderate','m']:['in range','ok'];
-}
 function bloodFlag(m,v){
   if(v==null) return ['—',''];
   if(v<m.lo) return v>=m.lo*0.9?['borderline','b']:['low','x'];
@@ -1511,60 +1627,314 @@ function sparkSVG(vals,dir){
   return '<svg class="spark" viewBox="0 0 80 24"><polyline points="'+pts+'" fill="none" stroke="'+(better?'#3FB68B':'#E0A23C')+'" stroke-width="2"/></svg>';
 }
 
-// Composite gut score over time, on a real time axis so the gaps between tests show.
-function gutChartSVG(tests){
-  const ts=tests.filter(t=>gutScore(t)!=null);
-  if(!ts.length) return '—';
-  const W=340,H=140,L=10,R=30,T=14,B=22, pw=W-L-R, ph=H-T-B;
-  const t0=+new Date(ts[0].date), t1=+new Date(ts[ts.length-1].date), span=(t1-t0)||1;
-  const x=d=>ts.length<2?L+pw/2:L+(+new Date(d)-t0)/span*pw;
-  const y=v=>T+(1-v/100)*ph;
-  const pts=ts.map(t=>[x(t.date),y(gutScore(t)),t]);
-  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:520px;font-family:var(--mono);font-size:7px">`;
-  [0,50,100].forEach(g=>{
-    s+=`<line x1="${L}" y1="${y(g)}" x2="${W-R}" y2="${y(g)}" stroke="var(--line)" stroke-width="${g?0.5:1}"${g?' stroke-dasharray="2 2"':''}/>`;
-    s+=`<text x="${W-R+3}" y="${(y(g)+2).toFixed(1)}" fill="var(--faint)">${g}</text>`;
+// ---- Health · Gut (Biomesight) — everything below comes from Supabase ------
+// Tables: gut_tests (one row per stool test) + gut_metrics / gut_taxa /
+// gut_highlights / gut_protocol / gut_foods / gut_targets hanging off it.
+// Adding a new test row + its metrics/taxa is all that's needed for the whole
+// screen to re-point at it: "prior" and "latest" are the last two by date.
+const GUT={tests:[],metrics:[],taxa:[],highlights:[],protocol:[],foods:[],targets:[],
+  phases:[],schedItems:[],schedNotes:[],phaseKey:null,loaded:false};
+const PRIOR_COL='#4a6fa5';
+const _STC={improved:'var(--ok)',progress:PRIOR_COL,concern:'var(--warn)',danger:'var(--bad)'};
+const _STL={improved:'✓ Great',progress:'→ Progress',concern:'⚠ Low',danger:'⚠ Concern'};
+const _PHC={ok:'var(--ok)',info:'var(--accent)',warn:'var(--warn)',bad:'var(--bad)'};
+const _FSC={Optimal:'var(--ok)',Satisfactory:'var(--ok)',High:'var(--bad)',Low:'var(--warn)'};
+
+const ord=n=>{const t=['th','st','nd','rd'],v=n%100;return n+(t[(v-20)%10]||t[v]||t[0]);};
+const pc=v=>v==null?'—':Math.abs(v)>=10?(+v).toFixed(1):Math.abs(v)<0.1?(+v).toFixed(3):(+v).toFixed(2);
+const pcD=v=>(v>0?'+':v<0?'−':'')+pc(Math.abs(v));
+const gutPair=()=>({prev:GUT.tests.length>1?GUT.tests[GUT.tests.length-2]:null, last:GUT.tests[GUT.tests.length-1]||null});
+const gm=(t,cat,key)=>t?GUT.metrics.find(m=>m.test_id===t.id&&m.category===cat&&m.key===key):null;
+const gmAll=(t,cat)=>t?GUT.metrics.filter(m=>m.test_id===t.id&&m.category===cat).sort((a,b)=>a.sort-b.sort):[];
+const gtx=(t,grp)=>t?GUT.taxa.filter(x=>x.test_id===t.id&&(x.groups||[]).includes(grp)).sort((a,b)=>a.sort-b.sort):[];
+const gtxOf=(t,name)=>t?GUT.taxa.find(x=>x.test_id===t.id&&x.name===name):null;
+// Did it move the right way? null when the metric has no meaningful direction.
+const moved=(hib,d)=>d===0||hib==null?null:(hib?d>0:d<0);
+
+function gutView(v){
+  ['dashboard','bacteria','structure','protocol','schedule'].forEach(k=>{
+    document.getElementById('gv-'+k).style.display = k===v?'':'none';
+    document.getElementById('gtab-'+k).classList.toggle('on', k===v);
   });
-  s+=`<path d="${pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
-  pts.forEach(p=>{
-    const sc=gutScore(p[2]);
-    s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.8" fill="var(--accent)"><title>${_hFull(p[2].date)} · ${sc}/100 — ${p[2].label}</title></circle>`;
-    s+=`<text x="${p[0].toFixed(1)}" y="${(p[1]-6).toFixed(1)}" fill="var(--text)" text-anchor="middle">${sc}</text>`;
-    s+=`<text x="${p[0].toFixed(1)}" y="${H-6}" fill="var(--faint)" text-anchor="middle">${_hShort(p[2].date)}</text>`;
+}
+
+// Hexagonal radar, prior vs latest, all axes on a shared 0–100 scale.
+function radarSVG(axes){
+  if(!axes.length) return '—';
+  const W=260,H=200,cx=W/2,cy=96,R=64,n=axes.length;
+  const pt=(i,v)=>{ const a=-Math.PI/2+i*2*Math.PI/n, r=R*_clamp((v||0)/100,0,1);
+    return [(cx+r*Math.cos(a)).toFixed(1),(cy+r*Math.sin(a)).toFixed(1)]; };
+  const ring=f=>axes.map((_,i)=>pt(i,100*f).join(',')).join(' ');
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:420px;font-family:var(--mono);font-size:7px">`;
+  [1,0.66,0.33].forEach(f=>{ s+=`<polygon points="${ring(f)}" fill="none" stroke="var(--line)" stroke-width="0.6"/>`; });
+  axes.forEach((_,i)=>{ const p=pt(i,100); s+=`<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}" stroke="var(--line)" stroke-width="0.5"/>`; });
+  const poly=(key,col,op,w)=>`<polygon points="${axes.map((a,i)=>pt(i,a[key]).join(',')).join(' ')}" fill="${col}" fill-opacity="${op}" stroke="${col}" stroke-width="${w}"/>`;
+  s+=poly('a',PRIOR_COL,0.10,1.4)+poly('b','#C8A86B',0.14,2);
+  axes.forEach((a,i)=>{
+    const ang=-Math.PI/2+i*2*Math.PI/n, lx=cx+(R+14)*Math.cos(ang), ly=cy+(R+14)*Math.sin(ang);
+    const anch=Math.abs(Math.cos(ang))<0.3?'middle':(Math.cos(ang)>0?'start':'end');
+    s+=`<text x="${lx.toFixed(1)}" y="${(ly+2).toFixed(1)}" fill="var(--faint)" text-anchor="${anch}">${esc(a.label)}</text>`;
   });
   return s+'</svg>';
 }
+// Prior/latest twin bar. `scale` is the common denominator for the row set.
+function dbarRow(name,a,b,scale,fmt){
+  const w=v=>Math.min((v||0)/scale*100,100).toFixed(1);
+  return `<div class="dbar"><div class="n" title="${esc(name)}">${esc(name)}</div>
+    <div class="t"><i class="a" style="width:${w(a)}%"></i><i class="b" style="width:${w(b)}%"></i></div>
+    <div class="v">${(fmt||pc)(b)}</div></div>`;
+}
+const gutLegend=(p,l)=>`<div class="lgd"><span class="a">● ${p}</span><span class="b">● ${l}</span></div>`;
 
 function renderGut(){
-  const ts=GUT_TESTS, last=ts[ts.length-1], prev=ts[ts.length-2];
-  const sc=gutScore(last), d=prev?sc-gutScore(prev):null;
-  const improving=prev?GUT_MARKERS.filter(m=>last.v[m.key]!==prev.v[m.key]&&((m.dir==='up')===(last.v[m.key]>prev.v[m.key]))).length:null;
-  const since=_hDays(last.date), due=GUT_CADENCE_DAYS-since;
-  const shan=GUT_MARKERS[0];
-  document.getElementById('gutTiles').innerHTML=`
-    <div class="tile"><div class="lab">Gut score</div><div class="big">${sc}<span style="font-size:.9rem;color:var(--faint)">/100</span></div>
-      <div class="chg ${d>0?'up':d<0?'down':'flat'}">${d==null?'first test':(d>0?'+':'')+d+' vs prior'}</div></div>
-    <div class="tile"><div class="lab">Diversity (Shannon)</div><div class="big">${last.v.shannon}</div>
-      <div class="chg ${gutFlag(shan,last.v.shannon)[1]==='ok'?'up':'flat'}">target ≥ ${shan.lo}</div></div>
-    <div class="tile"><div class="lab">Markers improving</div><div class="big">${improving==null?'—':improving}<span style="font-size:.9rem;color:var(--faint)">/${GUT_MARKERS.length}</span></div>
-      <div class="chg flat">vs ${prev?_hShort(prev.date):'—'}</div></div>
-    <div class="tile"><div class="lab">Last test</div><div class="big">${since}d</div>
-      <div class="chg ${due<0?'down':'flat'}">${due<0?'re-test overdue':'re-test in '+due+'d'}</div></div>`;
+  const {prev,last}=gutPair();
+  const src=document.getElementById('gutSource');
+  if(!last){ if(src) src.textContent = GUT.loaded?'No gut test in Supabase yet — add a row to gut_tests.':'Loading gut panels…'; return; }
+  const pL=prev?_hShort(prev.test_date):'—', lL=_hShort(last.test_date);
+  if(src) src.textContent=[
+    (last.provider||'Gut panel'),
+    prev?`${_hFull(prev.test_date)} (${prev.species_detected||'?'} species) → ${_hFull(last.test_date)} (${last.species_detected||'?'} species)`
+        :`${_hFull(last.test_date)} (${last.species_detected||'?'} species)`,
+    _hDays(last.test_date)+' days ago'
+  ].join(' · ');
 
-  document.getElementById('gutChart').innerHTML=gutChartSVG(ts);
-
-  document.getElementById('gutMarkers').innerHTML=GUT_MARKERS.map(m=>{
-    const vals=ts.map(t=>t.v[m.key]), v=vals[vals.length-1];
-    const fl=gutFlag(m,v), dl=delta(m,vals);
-    return `<div class="mk"><div class="nm">${m.name}<div class="u">${m.unit} · target ${m.dir==='up'?'≥ '+m.lo:'≤ '+m.hi}</div></div>`+
-      sparkSVG(vals,m.dir)+
-      `<div class="val">${_sig(v)}</div><div class="dl ${dl[1]}">${dl[0]}</div><div class="fl ${fl[1]}">${fl[0]}</div></div>`;
+  // --- score tiles -----------------------------------------------------
+  document.getElementById('gutScores').innerHTML=gmAll(last,'score').map(m=>{
+    const p=prev?gm(prev,'score',m.key):null, d=p&&p.value!=null?+m.value-+p.value:null;
+    const ok=d==null?null:moved(m.higher_is_better,d);
+    const tgt=m.target_value?Math.min(+m.value/+m.target_value*100,100):null;
+    return `<div class="tile"><div class="lab">${esc(m.label)}</div>
+      <div class="ab"><div><span class="big">${+m.value}</span><span style="font-size:.8rem;color:var(--faint)">${esc(m.unit||'')}</span></div>
+        <div class="pill ${ok==null?'n':ok?'g':'r'}">${d==null?'—':(d>0?'+':'')+(+d).toFixed(1)}</div></div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--faint)">${p?`<span style="color:${PRIOR_COL}">${+p.value}</span> → `:''}<span style="color:var(--accent)">${+m.value}</span>${esc(m.unit||'')}</div>
+      ${tgt!=null?`<div class="prg"><i style="width:${tgt.toFixed(0)}%"></i></div><div class="tgt">Target ${+m.target_value}${esc(m.unit||'')}</div>`:''}
+    </div>`;
   }).join('');
 
-  document.getElementById('gutTimeline').innerHTML=ts.slice().reverse().map(t=>
-    `<div class="tl"><div class="dt">${_hFull(t.date)}</div>
-      <div class="bd"><div class="h">${t.label}</div><div class="n">${t.note}</div></div>
-      <div class="sc">${gutScore(t)}</div></div>`).join('');
+  // --- radar -----------------------------------------------------------
+  document.getElementById('gutRadar').innerHTML=
+    radarSVG(gmAll(last,'radar').map(m=>({label:m.label, a:prev?+(gm(prev,'radar',m.key)||{}).value||0:0, b:+m.value})))
+    + gutLegend(pL,lL);
+
+  // --- butyrate pool ---------------------------------------------------
+  const bFn=gm(last,'functional','butyrate'), bFp=prev?gm(prev,'functional','butyrate'):null;
+  const pool=gtx(last,'butyrate');
+  const bScale=Math.max(1,...pool.map(x=>Math.max(+x.abundance_pct||0,+(gtxOf(prev,x.name)||{}).abundance_pct||0)));
+  document.getElementById('gutButyrate').innerHTML=
+    (bFn?`<div style="display:flex;gap:14px;align-items:baseline;margin-bottom:4px">
+       ${bFp?`<div><span class="hero" style="font-size:1.3rem;color:${PRIOR_COL}">${+bFp.value}%</span> <span style="font-family:var(--mono);font-size:.6rem;color:var(--faint)">${pL}</span></div><div style="color:var(--accent)">→</div>`:''}
+       <div><span class="hero" style="font-size:1.3rem;color:var(--accent)">${+bFn.value}%</span>
+         <span style="font-family:var(--mono);font-size:.6rem;color:var(--faint)">${lL}${bFn.percentile?' · '+ord(bFn.percentile)+' pct':''}</span></div></div>`:'')
+    + (bFn&&bFn.status==='Optimal'?`<div class="call g">✓ Crossed the 40% anti-inflammatory threshold — inside the ${esc(bFn.target_text||'')} optimal range</div>`:'')
+    + pool.map(x=>dbarRow(x.name,+(gtxOf(prev,x.name)||{}).abundance_pct||0,+x.abundance_pct,bScale,v=>pc(v)+'%')).join('')
+    + gutLegend(pL,lL);
+
+  // --- wins / concerns -------------------------------------------------
+  const hl=k=>{ const rows=GUT.highlights.filter(h=>h.kind===k&&h.test_id===last.id).sort((a,b)=>a.sort-b.sort);
+    return rows.length?rows.map(h=>`<div class="hl"><div class="h" style="color:${k==='win'?'var(--ok)':'var(--bad)'}">${esc(h.headline)}</div><div class="d">${esc(h.detail||'')}</div></div>`).join('')
+      :'<div class="hl"><div class="d">Nothing logged for this test.</div></div>'; };
+  document.getElementById('gutWins').innerHTML=hl('win');
+  document.getElementById('gutConcerns').innerHTML=hl('concern');
+
+  // --- timeline --------------------------------------------------------
+  document.getElementById('gutTimeline').innerHTML=GUT.tests.slice().reverse().map(t=>{
+    const w=gm(t,'score','gut_wellness');
+    return `<div class="tl"><div class="dt">${_hFull(t.test_date)}</div>
+      <div class="bd"><div class="h">${esc(t.label||'Test')}${t.species_detected?` <span style="font-family:var(--mono);font-size:.62rem;color:var(--faint)">${t.species_detected} species</span>`:''}</div>
+        <div class="n">${esc(t.notes||'')}</div></div>
+      <div class="sc">${w?+w.value:'—'}</div></div>`;
+  }).join('');
+
+  // --- bacteria --------------------------------------------------------
+  const tracked=gtx(last,'tracked');
+  document.getElementById('gutBacteria').innerHTML=
+    `<div class="bhead"><span>Organism</span><span>${pL}</span><span>${lL}</span><span>Δ change</span><span>Status</span></div>`+
+    tracked.map(x=>{
+      const p=gtxOf(prev,x.name), a=p?+p.abundance_pct:null, b=+x.abundance_pct;
+      const d=a==null?null:b-a, ok=d==null?null:moved(x.higher_is_better,d);
+      const c=_STC[x.status]||'var(--muted)';
+      return `<div class="btx">
+        <div class="nm">${esc(x.name)} <span class="rk">${esc(x.taxon_rank||'')}</span><div class="no">${esc(x.note||'')}</div></div>
+        <div class="a">${a==null?'—':pc(a)+'%'}</div><div class="b">${pc(b)}%</div>
+        <div class="d ${ok==null?'':ok?'g':'r'}">${d==null?'—':pcD(d)+'%'}</div>
+        <div class="st" style="color:${c};border-color:${c}55;background:${c}18">${_STL[x.status]||'—'}</div></div>`;
+    }).join('');
+
+  // --- structure: phyla, F:B, LPS, functional markers -------------------
+  const phyla=gtx(last,'phylum');
+  const pScale=Math.max(1,...phyla.map(x=>Math.max(+x.abundance_pct||0,+(gtxOf(prev,x.name)||{}).abundance_pct||0)));
+  document.getElementById('gutPhyla').innerHTML=
+    phyla.map(x=>dbarRow(x.name,+(gtxOf(prev,x.name)||{}).abundance_pct||0,+x.abundance_pct,pScale,v=>pc(v)+'%')).join('')+gutLegend(pL,lL);
+
+  const fbL=gm(last,'structure','fb_ratio'), fbP=prev?gm(prev,'structure','fb_ratio'):null;
+  const fbRows=[];
+  if(fbP) fbRows.push([pL,+fbP.value,PRIOR_COL,fbP.note||'']);
+  const fbFlag=fbL&&(fbL.status==='High'||fbL.status==='Low');
+  if(fbL) fbRows.push([lL,+fbL.value,fbFlag?'var(--warn)':'var(--ok)',fbFlag?'':(fbL.note||'')]);
+  if(fbL&&fbL.target_value) fbRows.push(['Target',+fbL.target_value,'var(--ok)','Ideal range: '+(fbL.target_text||'')]);
+  document.getElementById('gutFB').innerHTML=fbRows.map(([l,v,c,n])=>
+    `<div style="margin-bottom:13px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-family:var(--mono);font-size:.64rem;color:var(--faint)">${esc(l)}</span>
+        <span style="font-family:var(--mono);font-size:.84rem;font-weight:600;color:${c}">${v.toFixed(2)}x</span></div>
+      <div style="background:var(--ink);border-radius:4px;height:7px"><div style="height:100%;width:${Math.min(v/5*100,100).toFixed(1)}%;background:${c};border-radius:4px"></div></div>
+      <div style="font-size:.74rem;color:var(--muted);margin-top:3px">${esc(n)}</div></div>`).join('')
+    + (fbFlag&&fbL.note?`<div class="call w">⚠ ${esc(fbL.note)}</div>`:'');
+
+  const lpsRow=key=>{
+    const L=gm(last,'structure',key), P=prev?gm(prev,'structure',key):null;
+    if(!L) return '';
+    const bar=(lab,v,c)=>`<div style="margin-bottom:7px">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:.64rem;margin-bottom:3px">
+        <span style="color:var(--faint)">${esc(lab)}</span><span style="color:${c};font-weight:600">${(+v).toFixed(2)}%</span></div>
+      <div style="background:var(--ink);border-radius:3px;height:6px"><div style="height:100%;width:${Math.min(+v,100).toFixed(1)}%;background:${c};border-radius:3px"></div></div></div>`;
+    return `<div><div style="font-size:.85rem;margin-bottom:9px">${esc(L.label)}</div>
+      ${P?bar(pL,P.value,PRIOR_COL):''}${bar(lL,L.value,'var(--accent)')}
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--ok)">Target: ${esc(L.target_text||'—')}${L.percentile?' · '+ord(L.percentile)+' pct':''}</div></div>`;
+  };
+  const gnL=gm(last,'structure','gram_negative');
+  document.getElementById('gutLPS').innerHTML=
+    `<div class="cols">${lpsRow('gram_negative')}${lpsRow('gram_positive')}</div>`+
+    (gnL&&gnL.note?`<div class="call g">✓ ${esc(gnL.note)}</div>`:'');
+
+  document.getElementById('gutFunctional').innerHTML=gmAll(last,'functional').map(m=>{
+    const p=prev?gm(prev,'functional',m.key):null, c=_FSC[m.status]||'var(--muted)';
+    const d=p&&p.value!=null?+m.value-+p.value:null, ok=d==null?null:moved(m.higher_is_better,d);
+    return `<div class="fcard" style="border-color:${c}44">
+      <div class="t"><div class="n">${esc(m.label)}</div><div class="s" style="color:${c}">${esc(m.status||'')}</div></div>
+      <div class="v" style="color:${c}">${+m.value}${esc(m.unit||'')}</div>
+      <div class="m">${m.percentile?ord(m.percentile)+' pct · ':''}Target: ${esc(m.target_text||'—')}${d!=null?` · <span style="color:${ok?'var(--ok)':'var(--bad)'}">${pcD(d)}${esc(m.unit||'')} vs ${pL}</span>`:''}</div>
+      <div class="no">${esc(m.note||'')}</div></div>`;
+  }).join('');
+
+  // --- protocol, foods, targets ----------------------------------------
+  const phases=[...new Set(GUT.protocol.map(p=>p.phase_order))].sort((a,b)=>a-b);
+  document.getElementById('gutProtocol').innerHTML=phases.map(po=>{
+    const items=GUT.protocol.filter(p=>p.phase_order===po).sort((a,b)=>a.sort-b.sort);
+    const c=_PHC[items[0].phase_color]||'var(--accent)';
+    return `<div class="phase"><div class="ph" style="background:${c}14">
+        <div class="dot" style="background:${c}"></div><div class="tt" style="color:${c}">${esc(items[0].phase)}</div></div>`+
+      items.map(it=>`<div class="pitem">
+        <div><div class="n">${esc(it.name)}</div><div class="ty" style="color:${c};border-color:${c}44;background:${c}18">${esc(it.item_type||'')}</div></div>
+        <div class="ds">${esc(it.dose||'')}</div>
+        <div class="tg" style="color:${c}">${esc(it.target||'')}</div>
+        <div class="wy">${esc(it.why||'')}</div></div>`).join('')+'</div>';
+  }).join('');
+
+  document.getElementById('gutFoods').innerHTML='<div class="foods">'+GUT.foods.map(f=>{
+    const c=f.reduce?'var(--bad)':'var(--ok)';
+    return `<div class="food"><div class="t"><div class="n">${esc((f.emoji||'')+' '+f.name)}</div>
+        <div class="fq" style="color:${c};border-color:${c}44;background:${c}18">${esc(f.frequency||'')}</div></div>
+      <div class="tags">${(f.targets||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>
+      <div class="no">${esc(f.note||'')}</div></div>`;
+  }).join('')+'</div>';
+
+  document.getElementById('gutTargets').innerHTML=GUT.targets.map(t=>
+    `<div class="tcard"><div class="l">${esc(t.label)}</div>
+      <div class="c">Now: <b>${esc(t.current_text||'—')}</b></div>
+      <div class="n">→ ${esc(t.target_text||'—')}</div></div>`).join('');
+}
+
+// ---- Health · Gut · supplement schedule ------------------------------------
+// gut_schedule_phases / _items / _notes. Phases carry real dates, so the view
+// opens on whichever phase today falls inside.
+const _SUPC={Probiotic:'var(--ok)',Prebiotic:'var(--warn)',Detox:'#9d8cd4',Polyphenol:'#d4728a',
+  Antimicrobial:'#d98c4a',Postbiotic:'#b57fc4',Rx:'#7f8fd4','3x/week':'#4a6fa5',
+  Food:'var(--ok)',Stop:'var(--bad)',Reassess:'var(--warn)',New:'var(--accent)'};
+const _SLOTS=[['morning','Morning','☀️','With breakfast'],
+              ['midday','Midday','🌤','Mid-morning / lunch'],
+              ['evening','Evening','🌙','With dinner']];
+const supC=t=>_SUPC[t]||'var(--muted)';
+const stag=t=>t?`<span class="stag" style="color:${supC(t)};border-color:${supC(t)}44;background:${supC(t)}18">${esc(t)}</span>`:'';
+// "18 Jul – 17 Sep 2026", collapsing the year when both ends share it.
+function phaseDates(p){
+  if(!p.date_start||!p.date_end) return '';
+  const a=new Date(p.date_start+'T00:00:00'), b=new Date(p.date_end+'T00:00:00');
+  const f=(d,y)=>d.toLocaleDateString('en-GB',Object.assign({day:'numeric',month:'short'},y?{year:'numeric'}:{}));
+  return f(a,a.getFullYear()!==b.getFullYear())+' – '+f(b,true);
+}
+const isNow=p=>{ if(!p.date_start||!p.date_end) return false;
+  const t=_startOfDay(new Date()); return t>=_startOfDay(p.date_start)&&t<=_startOfDay(p.date_end); };
+
+function schedPhase(key){ GUT.phaseKey=key; renderSchedule(); }
+
+function renderSchedule(){
+  const ph=GUT.phases;
+  if(!ph.length){ document.getElementById('schSlots').innerHTML='<div class="panel">No supplement schedule in Supabase yet.</div>'; return; }
+  const cur=ph.find(isNow);
+  const sel=ph.find(p=>p.key===GUT.phaseKey)||cur||ph[ph.length-1];
+  GUT.phaseKey=sel.key;
+  const col=_PHC[sel.color]||'var(--accent)';
+  const items=GUT.schedItems.filter(i=>i.phase_id===sel.id);
+  const slotItems=k=>items.filter(i=>i.time_slot===k).sort((a,b)=>a.sort-b.sort);
+
+  document.getElementById('schPhases').innerHTML=ph.map(p=>{
+    const c=_PHC[p.color]||'var(--accent)', on=p.key===sel.key, n=GUT.schedItems.filter(i=>i.phase_id===p.id).length;
+    return `<button onclick="schedPhase('${p.key}')" style="${on?`border-color:${c}66;background:${c}12`:''}">
+      <div class="l" style="${on?`color:${c}`:''}">${esc(p.label)}${isNow(p)?`<span class="now" style="color:var(--ink);background:${c}">now</span>`:''}</div>
+      <div class="d" style="color:${on?c:'var(--faint)'}">${phaseDates(p)}</div>
+      <div class="c">${n} supplements/day</div></button>`;
+  }).join('');
+
+  const ends=sel.date_end?Math.round((_startOfDay(sel.date_end)-_startOfDay(new Date()))/86400000):null;
+  document.getElementById('schBanner').innerHTML=
+    `<div class="call" style="border-color:${col};background:${col}0f;color:${col};margin:0 0 16px;border-radius:0 8px 8px 0">
+      <b>${esc(sel.subtitle||'')}</b>
+      <div style="font-family:var(--mono);font-size:.62rem;opacity:.8;margin-top:2px">${phaseDates(sel)}${
+        isNow(sel)&&ends!=null?` · current phase, ${ends<=0?'ends today':ends+' days left'}`:''}</div></div>`;
+
+  document.getElementById('schCounts').innerHTML=_SLOTS.map(([k,l,ic])=>
+    `<div class="tile" style="text-align:center"><div style="font-size:1.1rem">${ic}</div>
+      <div class="big" style="color:${col};font-family:var(--mono)">${slotItems(k).length}</div>
+      <div class="lab" style="margin:2px 0 0">${l}</div></div>`).join('')+
+    `<div class="tile" style="text-align:center"><div style="font-size:1.1rem">💊</div>
+      <div class="big" style="color:${col};font-family:var(--mono)">${items.length}</div>
+      <div class="lab" style="margin:2px 0 0">Per day</div></div>`;
+
+  document.getElementById('schSlots').innerHTML=_SLOTS.map(([k,l,ic,desc])=>{
+    const its=slotItems(k); if(!its.length) return '';
+    return `<div class="slot"><div class="sh"><span class="ic">${ic}</span>
+        <div><div class="l">${l}</div><div class="d">${desc}</div></div>
+        <div class="ct">${its.length} item${its.length>1?'s':''}</div></div>
+      <div class="shead"><span>Supplement</span><span>Dose</span><span>Note</span></div>`+
+      its.map(i=>`<div class="sitem">
+        <div class="nm"><div class="bar" style="background:${supC(i.tag)}"></div>
+          <div><div class="t">${esc(i.name)}</div>${stag(i.tag)}</div></div>
+        <div class="ds" style="color:${col}">${esc(i.dose||'')}</div>
+        <div class="no">${esc(i.note||'')}</div></div>`).join('')+'</div>';
+  }).join('');
+
+  const notes=GUT.schedNotes.filter(n=>n.phase_id===sel.id).sort((a,b)=>a.sort-b.sort);
+  document.getElementById('schNotes').innerHTML=notes.length
+    ? notes.map(n=>`<div class="snote">${stag(n.tag)}<div class="tx">${esc(n.text)}</div></div>`).join('')
+    : '<div class="snote"><div class="tx">No standing notes for this phase.</div></div>';
+}
+
+async function loadGut(){
+  if(GUT.loaded) { renderGut(); return; }
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+  try{
+    const [tests,metrics,taxa,highlights,protocol,foods,targets,phases,schedItems,schedNotes]=await Promise.all([
+      sb.from('gut_tests').select('*').order('test_date',{ascending:true}),
+      sb.from('gut_metrics').select('*'),
+      sb.from('gut_taxa').select('*'),
+      sb.from('gut_highlights').select('*'),
+      sb.from('gut_protocol').select('*'),
+      sb.from('gut_foods').select('*').order('sort',{ascending:true}),
+      sb.from('gut_targets').select('*').order('sort',{ascending:true}),
+      sb.from('gut_schedule_phases').select('*').order('sort',{ascending:true}),
+      sb.from('gut_schedule_items').select('*'),
+      sb.from('gut_schedule_notes').select('*'),
+    ]);
+    Object.assign(GUT,{
+      tests:tests.data||[], metrics:metrics.data||[], taxa:taxa.data||[],
+      highlights:highlights.data||[], protocol:protocol.data||[],
+      foods:foods.data||[], targets:targets.data||[],
+      phases:phases.data||[], schedItems:schedItems.data||[], schedNotes:schedNotes.data||[],
+      loaded:true });
+    renderGut(); renderSchedule();
+    renderConsults();                // consults reads the gut cadence off GUT.tests
+  }catch(e){ console.error('loadGut',e); }
 }
 
 function renderBlood(){
@@ -1602,14 +1972,16 @@ function renderBlood(){
 }
 
 function renderConsults(){
-  const lb=BLOOD_TESTS[BLOOD_TESTS.length-1], lg=GUT_TESTS[GUT_TESTS.length-1];
-  const bSince=_hDays(lb.date), bDue=BLOOD_CADENCE_DAYS-bSince, gDue=GUT_CADENCE_DAYS-_hDays(lg.date);
+  const lb=BLOOD_TESTS[BLOOD_TESTS.length-1], lg=GUT.tests[GUT.tests.length-1];
+  const bSince=_hDays(lb.date), bDue=BLOOD_CADENCE_DAYS-bSince;
+  const gDue=lg?GUT_CADENCE_DAYS-_hDays(lg.test_date):null;
   document.getElementById('bloodOverdue').textContent=bSince+'d ago';
   const gn=document.getElementById('gutNextDue');
-  gn.textContent=gDue<0?Math.abs(gDue)+'d over':'in '+gDue+'d';
-  gn.className='due'+(gDue<0?' soon':'');
+  gn.textContent=gDue==null?'—':gDue<0?Math.abs(gDue)+'d over':'in '+gDue+'d';
+  gn.className='due'+(gDue!=null&&gDue<0?' soon':'');
 
-  const cad=[['Blood panel',BLOOD_CADENCE_DAYS,lb.date,bDue],['Gut microbiome',GUT_CADENCE_DAYS,lg.date,gDue]];
+  const cad=[['Blood panel',BLOOD_CADENCE_DAYS,lb.date,bDue]];
+  if(lg) cad.push(['Gut microbiome',GUT_CADENCE_DAYS,lg.test_date,gDue]);
   document.getElementById('consultCadence').innerHTML=
     '<table><thead><tr><th>Test</th><th>Cadence</th><th>Last</th><th>Status</th></tr></thead><tbody>'+
     cad.map(c=>'<tr><td>'+c[0]+'</td><td>'+c[1]+'d</td><td>'+_hFull(c[2])+'</td>'+
@@ -1618,7 +1990,7 @@ function renderConsults(){
 
   const hist=BLOOD_TESTS.map(t=>({date:t.date,h:'Blood panel — '+t.lab,
       n:BLOOD_MARKERS.map(m=>m.name+' '+_sig(t.v[m.key])).join(' · ')}))
-    .concat(GUT_TESTS.map(t=>({date:t.date,h:'Gut microbiome — '+t.label,n:t.note})))
+    .concat(GUT.tests.map(t=>({date:t.test_date,h:'Gut microbiome — '+(t.label||'Test'),n:t.notes||''})))
     .sort((a,b)=>b.date.localeCompare(a.date));
   document.getElementById('consultHistory').innerHTML=hist.map(e=>
     '<div class="tl"><div class="dt">'+_hFull(e.date)+'</div><div class="bd"><div class="h">'+e.h+'</div><div class="n">'+e.n+'</div></div></div>').join('');
@@ -1632,15 +2004,18 @@ function hlTab(t){
 }
 function renderHealth(){
   try{
-    renderGut(); renderBlood(); renderConsults();
+    renderBlood(); renderConsults();
+    const last=GUT.tests[GUT.tests.length-1], w=last?gm(last,'score','gut_wellness'):null;
     const sub=document.getElementById('healthsub');
-    if(sub) sub.textContent='Gut score '+gutScore(GUT_TESTS[GUT_TESTS.length-1])+'/100 · last blood panel '+_hDays(BLOOD_TESTS[BLOOD_TESTS.length-1].date)+' days ago';
+    if(sub) sub.textContent=(w?'Gut wellness '+(+w.value)+' · ':'')+
+      'last blood panel '+_hDays(BLOOD_TESTS[BLOOD_TESTS.length-1].date)+' days ago';
   }catch(e){ console.error('health render',e); }
 }
 renderHealth();
+loadGut();
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.hlTab=hlTab; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

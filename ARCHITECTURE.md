@@ -72,7 +72,7 @@ One self-contained file: HTML + CSS + an ES-module `<script>`. Key pieces:
 | **Fortior** | Funnel from the Rocket-Log **teaser column** (`rocket_targets`, active = Surfaced+Pursuing); In-dialogue / Stalled / New-targets; **Things to do** (`fortior_tasks` + Gmail extractor); sprint "month X of 6" computed from 1 Jul 2026 start. |
 | **Finance** | **Pension (Aegon)** tile + blended OCF + allocation table (`pension` table via `/api/pension-update`). Fortior Holdings (IBKR) + personal budget still **mock**. |
 | **Fitness** | Programmes from `training_programs` (live). Session logs still mock. |
-| **Health** | Biomarkers — **mock** (schema exists, not wired). |
+| **Health** | Three tabs. **Gut Health** — **live** from the `gut_*` tables (Biomesight), five sub-tabs: Gut Dashboard (scores, radar, butyrate pool, wins/concerns, timeline), Bacteria, Structure (phyla, F:B, LPS, functional markers), Protocol (supplements, foods, 6-month targets) and Supplement Schedule (phased daily dosing, opens on the current phase). **Blood test** and **Tests & consults** still **mock** (seed arrays in `index.html`). |
 
 ---
 
@@ -102,7 +102,17 @@ and stamp `owner_id = OWNER_USER_ID`.
 | `fortior_tasks` | Notion sync + Gmail extractor | "Things to do". `source='Gmail'` rows link to the email. |
 | `rocket_targets` | Notion sync (Rocket Sourcing Log) | Funnel/dialogue/new-targets. `stage` is empty → funnel uses `teaser_status`. |
 | `personal_budget` | Notion sync | Not yet on screen. |
-| `biomarkers` | (unused yet) | Health screen mock. |
+| `biomarkers` | (unused yet) | Superseded for gut by the `gut_*` tables; still free for blood panels. |
+| `gut_tests` | manual / report import | One row per stool test. "Prior" and "latest" are the last two by `test_date` — adding a row re-points the whole Gut Health tab. |
+| `gut_metrics` | manual | Scores, radar axes, functional markers, structural ratios. Keyed `(test_id, category, key)`; `higher_is_better` drives delta colouring. |
+| `gut_taxa` | manual | Relative abundance per organism per test. `groups` tags the list it renders in: `tracked` / `butyrate` / `phylum`. |
+| `gut_highlights` | manual | Wins + concerns per test. |
+| `gut_protocol` | manual | Supplement phases. `phase_color` is a CSS token name (`ok`/`info`/`warn`/`bad`). |
+| `gut_foods` | manual | Food protocol; `reduce=true` renders as an avoid card. |
+| `gut_targets` | manual | The 6-month target grid. |
+| `gut_schedule_phases` | manual | Supplement-schedule phases with real `date_start`/`date_end` — the view opens on whichever phase contains today. |
+| `gut_schedule_items` | manual | One row per supplement per time slot (`morning`/`midday`/`evening`) per phase. |
+| `gut_schedule_notes` | manual | Standing per-phase instructions that aren't a timed dose (3x/week, food rules, stop/reassess). |
 | `training_programs` | Notion sync | Fitness programmes. |
 | `goals_habits` | seeded direct + Notion | Habits + Big Goals. `last_checkin` = latest tick. |
 | `agent_memory` / `agent_messages` | agent.js | Durable memory + chat history per domain. |

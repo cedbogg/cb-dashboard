@@ -343,3 +343,208 @@ create policy owner_all on strava_activities for all using (owner_id = auth.uid(
 -- training_programs was missing its Notion sync key.
 -- ============================================================
 alter table training_programs add column if not exists notion_id text unique;
+
+-- ============================================================
+-- 16. GUT HEALTH  (Biomesight stool panels)
+--     One row per test in gut_tests; metrics / taxa / highlights /
+--     protocol / foods / targets hang off it. The Health > Gut Health
+--     tab in index.html renders entirely from these tables — "prior"
+--     and "latest" are simply the last two gut_tests rows by date, so
+--     adding a new test re-points the whole screen.
+-- ============================================================
+create table if not exists gut_tests (
+  id               uuid primary key default gen_random_uuid(),
+  owner_id         uuid not null default auth.uid(),
+  test_date        date not null,
+  label            text,                      -- Baseline | Re-test · 8 months
+  provider         text default 'Biomesight',
+  species_detected int,
+  source_file      text,
+  notes            text,
+  updated_at       timestamptz not null default now(),
+  unique (owner_id, test_date)
+);
+
+-- Scores, radar axes, functional markers and structural ratios all share
+-- one shape: a named value with an optional target and verdict.
+create table if not exists gut_metrics (
+  id               uuid primary key default gen_random_uuid(),
+  owner_id         uuid not null default auth.uid(),
+  test_id          uuid not null references gut_tests(id) on delete cascade,
+  category         text not null,   -- score | radar | functional | structure
+  key              text not null,
+  label            text not null,
+  value            numeric,
+  unit             text,
+  target_value     numeric,
+  target_text      text,
+  percentile       int,
+  status           text,            -- Optimal | Satisfactory | High | Low
+  note             text,
+  sort             int default 0,
+  higher_is_better boolean not null default true,
+  updated_at       timestamptz not null default now(),
+  unique (owner_id, test_id, category, key)
+);
+
+-- Relative abundance per organism, per test. `groups` tags which dashboard
+-- list a row belongs to: tracked | butyrate | phylum.
+create table if not exists gut_taxa (
+  id               uuid primary key default gen_random_uuid(),
+  owner_id         uuid not null default auth.uid(),
+  test_id          uuid not null references gut_tests(id) on delete cascade,
+  name             text not null,
+  taxon_rank       text,            -- phylum | genus | species
+  abundance_pct    numeric,
+  higher_is_better boolean default true,   -- null = no meaningful direction
+  status           text,            -- improved | progress | concern | danger
+  groups           text[] not null default '{}',
+  note             text,
+  sort             int default 0,
+  updated_at       timestamptz not null default now(),
+  unique (owner_id, test_id, name)
+);
+
+create table if not exists gut_highlights (
+  id         uuid primary key default gen_random_uuid(),
+  owner_id   uuid not null default auth.uid(),
+  test_id    uuid references gut_tests(id) on delete cascade,
+  kind       text not null,   -- win | concern
+  headline   text not null,
+  detail     text,
+  sort       int default 0,
+  updated_at timestamptz not null default now()
+);
+
+-- The forward plan. Not tied to one test, but records which test it was
+-- derived from so a re-test can supersede it.
+create table if not exists gut_protocol (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    uuid not null default auth.uid(),
+  test_id     uuid references gut_tests(id) on delete set null,
+  phase       text not null,
+  phase_order int not null default 0,
+  phase_color text,            -- ok | info | warn | bad (maps to CSS tokens)
+  name        text not null,
+  item_type   text,            -- Probiotic | Prebiotic | Polyphenol | ...
+  dose        text,
+  target      text,
+  why         text,
+  status      text default 'active',   -- active | stop | reduce
+  sort        int default 0,
+  updated_at  timestamptz not null default now()
+);
+
+create table if not exists gut_foods (
+  id         uuid primary key default gen_random_uuid(),
+  owner_id   uuid not null default auth.uid(),
+  test_id    uuid references gut_tests(id) on delete set null,
+  emoji      text,
+  name       text not null,
+  frequency  text,
+  targets    text[] not null default '{}',
+  note       text,
+  reduce     boolean not null default false,
+  sort       int default 0,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists gut_targets (
+  id           uuid primary key default gen_random_uuid(),
+  owner_id     uuid not null default auth.uid(),
+  label        text not null,
+  current_text text,
+  target_text  text,
+  sort         int default 0,
+  updated_at   timestamptz not null default now()
+);
+
+create index if not exists gut_tests_date_idx      on gut_tests(owner_id, test_date);
+create index if not exists gut_metrics_test_idx    on gut_metrics(test_id, category, sort);
+create index if not exists gut_taxa_test_idx       on gut_taxa(test_id, sort);
+create index if not exists gut_taxa_groups_idx     on gut_taxa using gin(groups);
+create index if not exists gut_highlights_test_idx on gut_highlights(test_id, kind, sort);
+create index if not exists gut_protocol_phase_idx  on gut_protocol(owner_id, phase_order, sort);
+create index if not exists gut_foods_sort_idx      on gut_foods(owner_id, sort);
+create index if not exists gut_targets_sort_idx    on gut_targets(owner_id, sort);
+
+do $$
+declare t text;
+begin
+  foreach t in array array['gut_tests','gut_metrics','gut_taxa','gut_highlights',
+      'gut_protocol','gut_foods','gut_targets']
+  loop
+    execute format('drop trigger if exists trg_touch on %I;', t);
+    execute format('create trigger trg_touch before update on %I
+      for each row execute function touch_updated_at();', t);
+    execute format('alter table %I enable row level security;', t);
+    execute format('drop policy if exists owner_all on %I;', t);
+    execute format($f$create policy owner_all on %I
+      for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());$f$, t);
+  end loop;
+end $$;
+
+-- ============================================================
+-- 17. GUT SUPPLEMENT SCHEDULE
+--     The daily dosing plan derived from gut_protocol: what to take,
+--     when, in which phase. Phases carry real dates, so the Gut Health >
+--     Supplement Schedule tab opens on whichever phase today falls in.
+-- ============================================================
+create table if not exists gut_schedule_phases (
+  id         uuid primary key default gen_random_uuid(),
+  owner_id   uuid not null default auth.uid(),
+  key        text not null,          -- m1 | m2 | m4
+  label      text not null,          -- Months 1–2
+  date_start date,
+  date_end   date,
+  subtitle   text,
+  color      text,                   -- ok | info | warn | bad (CSS token name)
+  sort       int default 0,
+  updated_at timestamptz not null default now(),
+  unique (owner_id, key)
+);
+
+create table if not exists gut_schedule_items (
+  id         uuid primary key default gen_random_uuid(),
+  owner_id   uuid not null default auth.uid(),
+  phase_id   uuid not null references gut_schedule_phases(id) on delete cascade,
+  time_slot  text not null,          -- morning | midday | evening
+  name       text not null,
+  dose       text,
+  note       text,
+  tag        text,                   -- Probiotic | Prebiotic | Detox | Polyphenol |
+                                     -- Antimicrobial | Postbiotic | Rx
+  sort       int default 0,
+  updated_at timestamptz not null default now()
+);
+
+-- Standing instructions that aren't a timed dose (3x/week items, food
+-- rules, stop/reassess flags).
+create table if not exists gut_schedule_notes (
+  id         uuid primary key default gen_random_uuid(),
+  owner_id   uuid not null default auth.uid(),
+  phase_id   uuid not null references gut_schedule_phases(id) on delete cascade,
+  text       text not null,
+  tag        text,                   -- 3x/week | Stop | Food | Reassess | New | Rx
+  sort       int default 0,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists gut_sched_phase_idx on gut_schedule_phases(owner_id, sort);
+create index if not exists gut_sched_item_idx  on gut_schedule_items(phase_id, time_slot, sort);
+create index if not exists gut_sched_note_idx  on gut_schedule_notes(phase_id, sort);
+
+do $$
+declare t text;
+begin
+  foreach t in array array['gut_schedule_phases','gut_schedule_items','gut_schedule_notes']
+  loop
+    execute format('drop trigger if exists trg_touch on %I;', t);
+    execute format('create trigger trg_touch before update on %I
+      for each row execute function touch_updated_at();', t);
+    execute format('alter table %I enable row level security;', t);
+    execute format('drop policy if exists owner_all on %I;', t);
+    execute format($f$create policy owner_all on %I
+      for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());$f$, t);
+  end loop;
+end $$;

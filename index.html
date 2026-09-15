@@ -308,7 +308,7 @@
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="mono-mark">CB</div>
-      <div><div class="hello" id="hello">Hello, Cedric <span>— here's where things stand</span></div>
+      <div><div class="hello" id="hello">Hello, Cedric</div>
       <div class="date" id="clock">—</div></div></div>
     <button class="lock" id="signout" style="cursor:pointer;background:none" title="Sign out"><span class="dot"></span> <span id="locklabel">Private · Locked</span></button>
   </div>
@@ -2022,7 +2022,7 @@ function updateHeader(){
   const now=new Date(), h=now.getHours();
   const greet = h<5?'Good evening' : h<12?'Good morning' : h<18?'Good afternoon' : 'Good evening';
   const hello=document.getElementById('hello');
-  if(hello) hello.innerHTML = `${greet}, Cedric <span>— here's where things stand</span>`;
+  if(hello) hello.textContent = `${greet}, Cedric`;
   const clock=document.getElementById('clock');
   if(clock) clock.textContent =
     now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})

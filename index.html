@@ -678,11 +678,11 @@
 </div>
 
 <!-- AGENT DOCK -->
-<div class="ask" id="ask">
+<div class="ask min" id="ask">
   <div class="ask-h" onclick="toggleDock()">
     <span class="av" id="ax">FD</span>
     <div><div class="nm" id="an">Deal Desk</div><div class="mem"><span class="d"></span> <span id="am">learning · 14 notes</span></div></div>
-    <button class="tg" id="tg" aria-label="Toggle">–</button>
+    <button class="tg" id="tg" aria-label="Toggle">+</button>
   </div>
   <div class="ask-body" id="stream"></div>
   <div class="memchips" id="chips"></div>
@@ -777,7 +777,14 @@ function renderStream(){
   msgs.forEach(m=>{const el=document.createElement('div');el.className='msg '+m.role;el.textContent=m.text;st.appendChild(el);});
   st.scrollTop=st.scrollHeight;
 }
-function toggleDock(){const a=document.getElementById('ask');a.classList.toggle('min');document.getElementById('tg').textContent=a.classList.contains('min')?'+':'–';}
+// The dock starts minimised on every load (see class="ask min") — it only opens
+// when Cedric clicks it, and stays as he left it while he moves between tabs.
+function toggleDock(){
+  const a=document.getElementById('ask');
+  const min=a.classList.toggle('min');
+  document.getElementById('tg').textContent=min?'+':'–';
+  if(!min) document.getElementById('q').focus();
+}
 
 // ---- memory-aware agent (server endpoint) -----------------------------------
 async function sendMsg(){

@@ -731,6 +731,7 @@ document.getElementById('nav').addEventListener('click',e=>{
 });
 function setDomain(s){
   current=s; const d=DOMAINS[s];
+  minimiseDock();                              // every tab opens with the dock closed
   document.getElementById('ax').textContent=d.av;
   document.getElementById('an').textContent=d.name;
   renderChips(s); updateMemCount(s);
@@ -777,12 +778,16 @@ function renderStream(){
   msgs.forEach(m=>{const el=document.createElement('div');el.className='msg '+m.role;el.textContent=m.text;st.appendChild(el);});
   st.scrollTop=st.scrollHeight;
 }
-// The dock starts minimised on every load (see class="ask min") — it only opens
-// when Cedric clicks it, and stays as he left it while he moves between tabs.
-function toggleDock(){
-  const a=document.getElementById('ask');
-  const min=a.classList.toggle('min');
+// The dock starts minimised on every load (see class="ask min") and collapses
+// again on each tab switch — it only opens when Cedric clicks it.
+function setDockMin(min){
+  document.getElementById('ask').classList.toggle('min',min);
   document.getElementById('tg').textContent=min?'+':'–';
+}
+function minimiseDock(){ setDockMin(true); }
+function toggleDock(){
+  const min=!document.getElementById('ask').classList.contains('min');
+  setDockMin(min);
   if(!min) document.getElementById('q').focus();
 }
 

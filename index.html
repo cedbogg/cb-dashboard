@@ -327,34 +327,27 @@
     <div class="sec-ey">Coach · your week</div>
     <div class="panel" id="coachread" style="cursor:pointer" onclick="go('perso')"><div class="s">Reading your week…</div></div>
     <div class="grid">
-      <button class="card warn" onclick="go('perso')"><span class="spine"></span>
+      <button class="card" id="hcPerso" onclick="go('perso')"><span class="spine"></span>
         <div class="chead"><span class="eyebrow">Perso</span><span class="sdot"></span></div>
         <div class="hero" id="persoHero">…</div><div class="herosub" id="persoSub">this week</div>
         <div class="lines" id="persoLines"><div class="ln"><span class="tk"></span><span class="t">Loading…</span></div></div></button>
-      <button class="card" onclick="go('fortior')"><span class="spine"></span>
+      <button class="card" id="hcFort" onclick="go('fortior')"><span class="spine"></span>
         <div class="chead"><span class="eyebrow">Fortior</span><span class="sdot"></span></div>
-        <div class="hero">Month 4 / 6</div><div class="herosub">to first acquisition</div>
-        <div class="mfun"><div class="s"><div class="bar fill"><b>9</b></div>Teaser</div><div class="s"><div class="bar fill"><b>3</b></div>NDA</div><div class="s"><div class="bar"><b>1</b></div>HoT</div><div class="s"><div class="bar"><b>0</b></div>Offer</div></div>
-        <div class="lines"><div class="ln alert"><span class="tk"></span><span class="t">2 teasers awaiting reply &gt;2wks</span><span class="v">chase</span></div>
-        <div class="ln"><span class="tk"></span><span class="t">5 new targets this week</span><span class="v">+5</span></div></div></button>
-      <button class="card" onclick="go('finance')"><span class="spine"></span>
+        <div class="hero" id="hFortHero">…</div><div class="herosub" id="hFortSub">to first acquisition</div>
+        <div class="mfun" id="hFortFunnel"><div class="s"><div class="bar"><b>·</b></div>Sourced</div><div class="s"><div class="bar"><b>·</b></div>Teaser</div><div class="s"><div class="bar"><b>·</b></div>Rec&rsquo;d</div></div>
+        <div class="lines" id="hFortLines"><div class="ln"><span class="tk"></span><span class="t">Loading…</span></div></div></button>
+      <button class="card" id="hcFin" onclick="go('finance')"><span class="spine"></span>
         <div class="chead"><span class="eyebrow">Finance</span><span class="sdot"></span></div>
-        <div class="hero">+1.8%</div><div class="herosub">portfolio · QTD</div>
-        <div class="lines"><div class="ln"><span class="tk"></span><span class="t">Pension</span><span class="v">+2.1% QTD</span></div>
-        <div class="ln"><span class="tk"></span><span class="t">Fortior Holdings</span><span class="v">+1.4% MTD</span></div>
-        <div class="ln alert"><span class="tk"></span><span class="t">Budget — Leisure over</span><span class="v">−£380</span></div></div></button>
-      <button class="card warn" onclick="go('health')"><span class="spine"></span>
+        <div class="hero" id="hFinHero">…</div><div class="herosub" id="hFinSub">pension</div>
+        <div class="lines" id="hFinLines"><div class="ln"><span class="tk"></span><span class="t">Loading…</span></div></div></button>
+      <button class="card" id="hcHealth" onclick="go('health')"><span class="spine"></span>
         <div class="chead"><span class="eyebrow">Health</span><span class="sdot"></span></div>
-        <div class="hero">Bloods due</div><div class="herosub">last panel 121 days ago</div>
-        <div class="lines"><div class="ln"><span class="tk"></span><span class="t">Microbiome diversity</span><span class="v">↑</span></div>
-        <div class="ln alert"><span class="tk"></span><span class="t">Vitamin D borderline</span><span class="v">re-test</span></div>
-        <div class="ln"><span class="tk"></span><span class="t">No consult booked</span><span class="v">—</span></div></div></button>
-      <button class="card" onclick="go('fitness')"><span class="spine"></span>
+        <div class="hero" id="hHealthHero">…</div><div class="herosub" id="hHealthSub">bloods + gut</div>
+        <div class="lines" id="hHealthLines"><div class="ln"><span class="tk"></span><span class="t">Loading…</span></div></div></button>
+      <button class="card" id="hcFit" onclick="go('fitness')"><span class="spine"></span>
         <div class="chead"><span class="eyebrow">Fitness</span><span class="sdot"></span></div>
-        <div class="hero">32 km</div><div class="herosub">running · this week</div>
-        <div class="lines"><div class="ln"><span class="tk"></span><span class="t">Long run 18 km Sun</span><span class="v">done</span></div>
-        <div class="ln"><span class="tk"></span><span class="t">Squat 3×5 @ 100kg</span><span class="v">+2.5</span></div>
-        <div class="ln"><span class="tk"></span><span class="t">NYC Marathon</span><span class="v">18wk</span></div></div></button>
+        <div class="hero" id="hFitHero">…</div><div class="herosub" id="hFitSub">running · this week</div>
+        <div class="lines" id="hFitLines"><div class="ln"><span class="tk"></span><span class="t">Loading…</span></div></div></button>
       <div class="card" style="cursor:default">
         <div class="chead"><span class="eyebrow">Status key</span></div>
         <div class="lines" style="border-top:none;padding-top:0">
@@ -1032,6 +1025,9 @@ async function loadHomeWeek(){
     const risk=goals.filter(g=>g.status==='At risk'||g.status==='Off track');
     if(risk.length) lines.push(`<div class="ln alert"><span class="tk"></span><span class="t">${risk.length} goal${risk.length===1?'':'s'} off track</span><span class="v">→</span></div>`);
     box.innerHTML = lines.length? lines.join('') : '<div class="ln"><span class="tk"></span><span class="t">All clear this week</span><span class="v">✓</span></div>';
+    // amber only when something actually needs attention
+    const card=document.getElementById('hcPerso');
+    if(card){ card.classList.toggle('warn', due.length>0||risk.length>0); }
   }
 }
 
@@ -1587,6 +1583,146 @@ async function loadHome(){
       return `<div class="row"><span class="sdot" style="background:${flag?'var(--warn)':'var(--ok)'}"></span><div class="co">${esc(p.project||'')}<div class="s">${esc(p.next_action||p.category||'')}</div></div><span class="age${flag?' old':''}">${due||esc(p.status||'')}</span></div>`;
     }).join('') : '<div class="row"><div class="co">No open priorities logged yet</div></div>';
   }catch(e){}
+  loadHomeCards();  // Fortior / Finance / Fitness / Health rollup cards
+}
+
+// ---- Home cards · live rollups ---------------------------------------------
+// Each card summarises the screen it links to and reads the SAME tables as that
+// screen, so the card and the screen can never drift apart. Re-run on every
+// visit to Home (setDomain calls loadHome), so the numbers follow the data.
+const _hcSet =(id,txt) =>{const e=document.getElementById(id); if(e) e.textContent=txt;};
+const _hcHTML=(id,html)=>{const e=document.getElementById(id); if(e) e.innerHTML=html;};
+const _hcLine=(t,v,alert)=>`<div class="ln${alert?' alert':''}"><span class="tk"></span><span class="t">${esc(t)}</span>${v!=null?`<span class="v">${esc(v)}</span>`:''}</div>`;
+const _hcLines=(id,lines)=>_hcHTML(id, lines.length? lines.join('') : _hcLine('Nothing to flag','✓'));
+const _hcFail =(id,msg)  =>_hcLines(id,[_hcLine(msg,'—')]);
+function _hcState(id,level){ const c=document.getElementById(id); if(c){ c.classList.remove('warn','bad'); if(level) c.classList.add(level); } }
+
+async function loadHomeCards(){
+  let sb; try{ sb=await getClient(); }catch(e){ return; }
+  homeCardFortior(sb); homeCardFinance(sb); homeCardFitness(sb); homeCardHealth(sb);
+}
+
+// Fortior — same rocket_targets rollup as the Fortior funnel, active universe only.
+async function homeCardFortior(sb){
+  const start=new Date(2026,6,1), now=new Date();
+  const idx=(now.getFullYear()-start.getFullYear())*12+(now.getMonth()-start.getMonth());
+  _hcSet('hFortHero', idx>=6? 'Month 6 / 6' : ('Month '+Math.max(1,idx+1)+' / 6'));
+  _hcSet('hFortSub',  idx>=6? 'target date passed' : 'to first acquisition');
+  try{
+    const {data}=await sb.from('rocket_targets').select('status,teaser_status,stage,last_contact,date_first_seen');
+    const r=(data||[]).filter(t=>['Surfaced','Pursuing'].includes(t.status));
+    const reqd=t=>['Requested','Teaser requested','Teaser received','Received'].includes(t.teaser_status);
+    const recd=t=>['Teaser received','Received'].includes(t.teaser_status);
+    const bars=[['Sourced',r.length],['Teaser',r.filter(reqd).length],['Rec’d',r.filter(recd).length]];
+    _hcHTML('hFortFunnel', bars.map(([l,n])=>`<div class="s"><div class="bar${n?' fill':''}"><b>${n}</b></div>${l}</div>`).join(''));
+    const cutoff=Date.now()-14*86400000;
+    const stalled =r.filter(t=>t.teaser_status==='Requested'&&(!t.last_contact||+new Date(t.last_contact)<cutoff)).length;
+    const dialogue=r.filter(t=>['NDA','Info & mgmt call','Heads of terms','Final offer'].includes(t.stage)).length;
+    const fresh   =r.filter(t=>{const d=daysAgo(t.date_first_seen); return d!=null&&d<=7;}).length;
+    const lines=[];
+    if(stalled) lines.push(_hcLine(stalled+' teaser'+(stalled===1?'':'s')+' awaiting reply >2wks','chase',true));
+    lines.push(_hcLine(dialogue+' in dialogue', dialogue?'live':'—'));
+    lines.push(_hcLine(fresh+' new target'+(fresh===1?'':'s')+' this week', fresh?('+'+fresh):'—'));
+    _hcLines('hFortLines',lines);
+    _hcState('hcFort', stalled?'warn':null);
+  }catch(e){ _hcFail('hFortLines','Sourcing log unreachable'); }
+}
+
+// Finance — latest pension snapshot (the monthly workbook agent writes this).
+async function homeCardFinance(sb){
+  try{
+    const {data}=await sb.from('pension')
+      .select('as_of,total_value,mtd_return,qtd_return,ytd_return')
+      .order('as_of',{ascending:false}).limit(1);
+    const p=data&&data[0];
+    if(!p){ _hcSet('hFinHero','—'); _hcSet('hFinSub','pension · no data yet');
+            _hcFail('hFinLines','Nothing synced from the monthly workbook'); return; }
+    const pct=v=> v==null?'—':((v>=0?'+':'')+(+v).toFixed(1)+'%');
+    const head = p.qtd_return!=null?['QTD',p.qtd_return] : p.ytd_return!=null?['YTD',p.ytd_return] : ['MTD',p.mtd_return];
+    _hcSet('hFinHero', pct(head[1]));
+    _hcSet('hFinSub','pension · '+head[0]);
+    const asOf=p.as_of? new Date(p.as_of) : null;
+    const age =asOf? Math.round((Date.now()-asOf)/86400000) : null;
+    const stale=age!=null&&age>45;
+    _hcLines('hFinLines',[
+      _hcLine('Value', p.total_value!=null? ('£'+(Math.round(p.total_value/100)/10)+'k') : '—'),
+      _hcLine('MTD · YTD', pct(p.mtd_return)+' · '+pct(p.ytd_return), (p.mtd_return??0)<0),
+      _hcLine('As of', asOf? asOf.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—', stale)
+    ]);
+    _hcState('hcFin', (stale||(head[1]??0)<0)?'warn':null);
+  }catch(e){ _hcFail('hFinLines','Pension table unreachable'); }
+}
+
+// Fitness — this week's running off Strava (freshest source, same rows the
+// marathon table uses), against the synced plan week; plus last strength log.
+const _strName=k=>{ const r=[...STR_A,...STR_B].find(x=>x[5]===k); return r? r[0] : k; };
+async function homeCardFitness(sb){
+  const today=_startOfDay(new Date());
+  const raceWk=Math.max(0,Math.ceil((_startOfDay(MARA.raceDate)-today)/86400000/7));
+  try{
+    const [wkR,acR,stR]=await Promise.all([
+      sb.from('marathon_weeks').select('week_num,week_title,planned_km,planned_runs,actual_km,actual_runs,compliance,date_start,date_end').order('week_num',{ascending:true}),
+      sb.from('strava_activities').select('local_date,sport_type,distance_m'),
+      sb.from('strength_logs').select('exercise_key,weight,updated_at').order('updated_at',{ascending:false}).limit(1)
+    ]);
+    const wks=wkR.data||[], acts=acR.data||[], RUN=['Run','TrailRun','VirtualRun'];
+    const cur=wks.find(w=>w.date_start&&w.date_end&&today>=_startOfDay(w.date_start)&&today<=_startOfDay(w.date_end));
+    // Window = the plan week we're inside, else Mon–Sun of the current week.
+    let from,to;
+    if(cur){ from=_startOfDay(cur.date_start); to=_startOfDay(cur.date_end); }
+    else { from=new Date(today); from.setDate(from.getDate()-((today.getDay()+6)%7)); to=new Date(from); to.setDate(to.getDate()+6); }
+    const allRuns=acts.filter(a=>a.local_date&&RUN.includes(a.sport_type));
+    const runs=allRuns.filter(a=>{const t=+_startOfDay(a.local_date); return t>=+from&&t<=+to;});
+    const km=Math.round(runs.reduce((s,a)=>s+(a.distance_m||0)/1000,0)*10)/10;
+    // Strava first; fall back to the week row if no activity has landed yet.
+    const shown = runs.length? km : (cur&&cur.actual_km!=null? cur.actual_km : null);
+    _hcSet('hFitHero', shown!=null? shown+' km' : '—');
+    const wlab=cur? ((cur.week_title||'').match(/W\s*\d+/)||['W'+cur.week_num])[0] : null;
+    _hcSet('hFitSub','running · '+(wlab? wlab+' of 15' : 'this week'));
+    const lines=[];
+    if(cur&&cur.planned_km!=null){
+      const doneRuns=runs.length||cur.actual_runs||0;
+      const pc=shown!=null&&cur.planned_km? Math.round(shown/cur.planned_km*100)+'%' : '—';
+      lines.push(_hcLine('Plan '+cur.planned_km+' km · '+doneRuns+'/'+(cur.planned_runs??'—')+' runs', pc,
+        shown!=null && cur.planned_km && shown<cur.planned_km*0.9 && +today>=+to));
+    }
+    const lastRun=allRuns.slice().sort((a,b)=> a.local_date<b.local_date?1:-1)[0];
+    if(lastRun){
+      const d=Math.round((+today-+_startOfDay(lastRun.local_date))/86400000);
+      lines.push(_hcLine('Last run '+(Math.round((lastRun.distance_m||0)/100)/10)+' km', d===0?'today':d+'d ago', d>=5));
+    } else lines.push(_hcLine('No runs logged yet','—',true));
+    const st=(stR.data||[])[0];
+    if(st&&st.weight) lines.push(_hcLine(_strName(st.exercise_key)+' '+st.weight+'kg',
+      new Date(st.updated_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})));
+    lines.push(_hcLine('NYC Marathon', raceWk+'wk'));
+    _hcLines('hFitLines',lines);
+    const lastDone=[...wks].reverse().find(w=>w.compliance&&w.compliance!=='Pending');
+    const idle = !lastRun || Math.round((+today-+_startOfDay(lastRun.local_date))/86400000)>=5;
+    _hcState('hcFit', (idle||(lastDone&&lastDone.compliance==='Fail'))?'warn':null);
+  }catch(e){ _hcFail('hFitLines','Training tables unreachable'); }
+}
+
+// Health — blood cadence off BLOOD_TESTS (still the seed array the Blood tab
+// uses), gut cadence off the live gut_tests table.
+async function homeCardHealth(sb){
+  const lb=BLOOD_TESTS[BLOOD_TESTS.length-1];
+  const bSince=_hDays(lb.date), bDue=BLOOD_CADENCE_DAYS-bSince;
+  const off=BLOOD_MARKERS.map(m=>[m,bloodFlag(m,lb.v[m.key])[0]]).filter(([,f])=>f!=='in range');
+  _hcSet('hHealthHero', bDue<=0? 'Bloods due' : (BLOOD_MARKERS.length-off.length)+'/'+BLOOD_MARKERS.length+' in range');
+  _hcSet('hHealthSub','last panel '+bSince+' days ago');
+  const lines=[ bDue<=0 ? _hcLine('Blood panel overdue', Math.abs(bDue)+'d', true)
+                        : _hcLine('Next blood panel', bDue+'d') ];
+  off.slice(0,2).forEach(([m,f])=>lines.push(_hcLine(m.name+' '+f,'re-test',true)));
+  try{
+    const {data}=await sb.from('gut_tests').select('test_date').order('test_date',{ascending:false}).limit(1);
+    const g=data&&data[0];
+    if(g){
+      const gDue=GUT_CADENCE_DAYS-_hDays(String(g.test_date).slice(0,10));
+      lines.push(_hcLine('Next gut test', gDue<=0? Math.abs(gDue)+'d over' : gDue+'d', gDue<=0));
+    } else lines.push(_hcLine('No gut test logged','—'));
+  }catch(e){ lines.push(_hcLine('Gut tests unreachable','—')); }
+  _hcLines('hHealthLines',lines);
+  _hcState('hcHealth', (bDue<=0||off.length)?'warn':null);
 }
 
 // ---- Health · blood panel --------------------------------------------------

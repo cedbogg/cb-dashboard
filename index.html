@@ -655,10 +655,6 @@
 
     <div id="fit-strength" style="display:none">
       <div class="subd" style="margin-bottom:14px">Reload &amp; Run · 2×/week · meniscus reload + back-safe hinge · built around M. Gillett's progressive-running clearance</div>
-      <div class="sec-ey">The governors · read before every session</div>
-      <div class="panel" id="strGov"></div>
-      <div class="sec-ey">The arc · ~6 weeks, on the running clock</div>
-      <div class="panel" id="strPhases"></div>
       <div class="sec-ey">Session A — Knee + Squat / Push · Tue</div>
       <div class="panel" id="strA"></div>
       <div class="sec-ey">Session B — Hinge + Single-leg / Pull · Fri</div>
@@ -1546,27 +1542,16 @@ function _strRows(list){
 }
 let _strRendered=false;
 function renderStrength(){
-  const gov=`<div style="padding:6px 0"><b style="color:var(--warn)">Knee — the morning-after state decides the dose.</b> <span style="color:var(--ok)">Green</span>: pain ≤2–3/10, settles by next morning, no new swelling → progress. <span style="color:var(--warn)">Amber</span>: puffy/warm/stiff next AM → hold or step back. <span style="color:var(--bad)">Red</span>: locking, catching, giving way → stop, contact Gillett.</div>`+
-    `<div style="padding:6px 0;border-top:1px solid var(--line)"><b style="color:var(--warn)">Back — symptom direction decides the hinge.</b> <span style="color:var(--ok)">Green</span>: no symptoms or centralising → climb the hinge ladder. <span style="color:var(--bad)">Regress</span>: leg symptoms travelling further down (peripheralising) or anything sharp. Neutral spine every hinge; no loaded lumbar flexion.</div>`+
-    `<div style="padding:8px 10px;margin-top:8px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Steroid caveat:</b> the 12 Jun triamcinolone still quiets the joint — it feels better than it structurally is. Run the conservative end of every progression until it washes out.</div>`+
-    `<div style="padding:8px 10px;margin-top:6px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>Load it, don’t rest it:</b> for a meniscus tear, progressive loading <em>is</em> the treatment — quad strength is the biggest protective factor. Load enough to drive adaptation while staying inside the governors.</div>`+
-    `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Daily mini-doses (off days):</b> TrA + pelvic tilt, cat–camel, hip-flexor mobility, clams, band walks, glute bridges, wall-sit / Spanish-squat holds — pain-quieting, not fatiguing. Do most days.</div>`+
-    `<div style="padding:8px 10px;margin-top:6px;background:rgba(74,144,217,.10);border-left:3px solid #4a90d9;border-radius:0 8px 8px 0;font-size:.75rem"><b>Bent-knee calf raise — 4×/week, 3×12–15.</b> Knee ~30°, 3-sec lowering, loaded once bodyweight is easy. Not a mini-dose — this one is a real training stimulus, and two sessions a week won’t cover it, so it has to land on off days too. The soleus absorbs 6–8× bodyweight per stride and is the failure point in the last 5 km. <a href="${_yt('seated bent knee calf raise soleus')}" target="_blank" rel="noopener" style="color:var(--muted)">▶ form</a></div>`;
-  const ph=[['P1 · W1–2','Re-groove & isometrics','Wake the quad and glute, restore pain-free range, no twisting under load. Isometrics first. Hinge Step 1: hip thrust + light RDL, partial range.'],
-    ['P2 · W3–4','Build & single-leg','Bilateral compounds heavier through pain-free range; introduce loaded single-leg (split squat, step-up). Hinge Step 2: full-range RDL, add load; light trap-bar if quiet.'],
-    ['P3 · W5–6+','Load, eccentrics & run-prep','Heavier compounds full range, single-leg under load, eccentric step-downs for impact. Hinge Step 3: progress trap-bar. Then converge to normal A/B.']]
-    .map(p=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="font-family:var(--mono);font-size:.6rem;letter-spacing:1px;color:var(--accent)">${p[0]}</div><div style="font-weight:600;font-size:.9rem;margin:2px 0 3px">${esc(p[1])}</div><div style="font-size:.74rem;color:var(--muted)">${esc(p[2])}</div></div>`).join('');
   const prog=['Range before load — earn pain-free depth, then add weight.',
     'Add load when the morning’s quiet — knee silent next day → nudge one step; else repeat.',
-    'P1→2 gate: wall sit & goblet box squats comfortable, no next-day swelling across a week.',
-    'P2→3 gate: split squats/step-ups clean and running continuously → load single-leg, add eccentric step-downs.',
     'Never stack risk — don’t add load AND depth AND a new exercise in the same week.']
     .map((t,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem"><b style="color:var(--accent)">${i+1}.</b> ${esc(t)}</div>`).join('')+
     `<div style="padding:8px 10px;margin-top:8px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Concurrent-load watch:</b> leg-heavy 2×/week on top of a running return. The run is the priority signal — if long-run quality drops or the knee complains, cut strength leg volume before the run. Upper body sheds first in peak weeks.</div>`+
+    `<div style="padding:8px 10px;margin-top:6px;background:rgba(74,144,217,.10);border-left:3px solid #4a90d9;border-radius:0 8px 8px 0;font-size:.75rem"><b>Bent-knee calf raise — 4×/week, 3×12–15.</b> Knee ~30°, 3-sec lowering, loaded once bodyweight is easy. A real training stimulus, not a mobility dose — two sessions a week won’t cover it, so it has to land on off days too. The soleus absorbs 6–8× bodyweight per stride and is the failure point in the last 5 km. <a href="${_yt('seated bent knee calf raise soleus')}" target="_blank" rel="noopener" style="color:var(--muted)">▶ form</a></div>`+
     `<div style="padding:8px 10px;margin-top:6px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>Protein:</b> 1.8–2.2 g/kg/day, 30–40g within ~2h of each session.</div>`;
   const homeGov=`<div style="padding:8px 10px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>Heavy and low, not high and heavy.</b> 3×3–5, stopping 2–3 reps short of failure. High-rep hypertrophy work is what leaves legs heavy — that’s the trade the coach wants you to make this close to the race.</div>`+
     `<div style="padding:8px 10px;margin-top:6px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>The soleus is the point.</b> It absorbs 6–8× bodyweight per stride and is the failure point in the last 5 km — and it’s the one muscle rarely trained directly, so it responds fast. Bent-knee calf raises want <b>4×/week</b>, which is more often than these two sessions. Do them on off days too.</div>`+
-    `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>The governors still rule.</b> Knee and back criteria on the Strength tab apply unchanged — morning-after state decides the dose, neutral spine every hinge, no loaded lumbar flexion. The steroid still quiets the joint.</div>`+
+    `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Knee and back rules are unchanged.</b> Morning-after state decides the dose — puffy, warm or stiff next AM means hold or step back; locking, catching or giving way means stop. Neutral spine every hinge, no loaded lumbar flexion.</div>`+
     `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Loading caveat:</b> 3×3–5 assumes you can actually get near-heavy with what you own. If the heaviest KB still lets you do 12 clean goblet squats, buy the intensity another way — single-leg, 3-sec eccentrics, or 1½-reps — rather than adding sets.</div>`+
     `<div style="padding:8px 10px;margin-top:6px;background:rgba(122,95,192,.10);border-left:3px solid #7a5fc0;border-radius:0 8px 8px 0;font-size:.75rem"><b>The abs blocks are yours, not the coach’s.</b> He prescribed no core work. They’re deliberately 5 min and anti-movement only — if a session gets compressed, cut those, never the calf raises.</div>`;
   const homeWhen=['Afternoon of a quality-run day, or 24h+ clear of a run. Never the evening before a morning run.',
@@ -1576,7 +1561,7 @@ function renderStrength(){
     'The run is the priority signal — if long-run quality drops or the knee complains, cut strength leg volume before you cut the run.']
     .map((t,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem"><b style="color:var(--accent)">${i+1}.</b> ${esc(t)}</div>`).join('');
   const set=(id,html)=>{ const e=document.getElementById(id); if(e) e.innerHTML=html; };
-  set('strGov',gov); set('strPhases',ph); set('strA',_strRows(STR_A)); set('strB',_strRows(STR_B)); set('strProg',prog);
+  set('strA',_strRows(STR_A)); set('strB',_strRows(STR_B)); set('strProg',prog);
   set('homeGov',homeGov); set('homeA',_strRows(HOME_A)); set('homeB',_strRows(HOME_B)); set('homeWhen',homeWhen);
 }
 async function loadStrength(){

@@ -578,8 +578,8 @@
     <div class="sub">Fitness</div><div class="subd" id="fitsub">NYC Marathon 2026</div>
     <div style="display:flex;gap:8px;margin:2px 0 14px">
       <button id="tab-running" onclick="fitTab('running')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--accent);color:var(--ink);cursor:pointer">Running</button>
-      <button id="tab-strength" onclick="fitTab('strength')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength</button>
-      <button id="tab-home" onclick="fitTab('home')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Home</button>
+      <button id="tab-strength" onclick="fitTab('strength')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength (Gym)</button>
+      <button id="tab-home" onclick="fitTab('home')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength (Home)</button>
     </div>
 
     <div id="fit-running">
@@ -655,22 +655,26 @@
 
     <div id="fit-strength" style="display:none">
       <div class="subd" style="margin-bottom:14px">Reload &amp; Run · 2×/week · meniscus reload + back-safe hinge · built around M. Gillett's progressive-running clearance</div>
-      <div class="sec-ey">Session A — Knee + Squat / Push · Tue</div>
-      <div class="panel" id="strA"></div>
-      <div class="sec-ey">Session B — Hinge + Single-leg / Pull · Fri</div>
-      <div class="panel" id="strB"></div>
+      <div class="subtabs">
+        <button id="sub-gym-a" onclick="strSub('gym','a')" class="subtab sm on">A · Knee + Push</button>
+        <button id="sub-gym-b" onclick="strSub('gym','b')" class="subtab sm">B · Hinge + Pull</button>
+      </div>
+      <div id="gym-a"><div class="sec-ey">Session A — Knee + Squat / Push · Tue</div><div class="panel" id="strA"></div></div>
+      <div id="gym-b" style="display:none"><div class="sec-ey">Session B — Hinge + Single-leg / Pull · Fri</div><div class="panel" id="strB"></div></div>
       <div class="sec-ey">How to progress</div>
       <div class="panel" id="strProg"></div>
     </div>
 
     <div id="fit-home" style="display:none">
       <div class="subd" style="margin-bottom:14px">Kettlebells · dumbbells · band · pull-up machine · ~30 min · race-specific, not a general strength phase</div>
+      <div class="subtabs">
+        <button id="sub-home-a" onclick="strSub('home','a')" class="subtab sm on">A · Knee + Push</button>
+        <button id="sub-home-b" onclick="strSub('home','b')" class="subtab sm">B · Hinge + Pull</button>
+      </div>
+      <div id="home-a"><div class="sec-ey">Home A — Soleus + Knee / Push</div><div class="panel" id="homeA"></div></div>
+      <div id="home-b" style="display:none"><div class="sec-ey">Home B — Soleus + Hinge / Pull</div><div class="panel" id="homeB"></div></div>
       <div class="sec-ey">The trade · read before every session</div>
       <div class="panel" id="homeGov"></div>
-      <div class="sec-ey">Home A — Soleus + Knee / Push</div>
-      <div class="panel" id="homeA"></div>
-      <div class="sec-ey">Home B — Soleus + Hinge / Pull</div>
-      <div class="panel" id="homeB"></div>
       <div class="sec-ey">When to do them</div>
       <div class="panel" id="homeWhen"></div>
     </div>
@@ -1435,6 +1439,14 @@ function fitTab(t){
     if(btn){ btn.style.background=on?'var(--accent)':'var(--panel)'; btn.style.color=on?'var(--ink)':'var(--muted)'; }
   });
   if(t!=='running') loadStrength();
+}
+// A/B session switcher within a strength group ('gym' | 'home').
+function strSub(group,which){
+  ['a','b'].forEach(k=>{
+    const pane=document.getElementById(group+'-'+k), btn=document.getElementById('sub-'+group+'-'+k), on=(k===which);
+    if(pane) pane.style.display=on?'':'none';
+    if(btn) btn.classList.toggle('on',on);
+  });
 }
 
 // ---- Fitness · Strength (Reload & Run) — program hardcoded, weights in Supabase
@@ -2214,7 +2226,7 @@ renderHealth();
 loadGut();
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
+window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

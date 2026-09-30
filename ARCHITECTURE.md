@@ -62,12 +62,18 @@ One self-contained file: HTML + CSS + an ES-module `<script>`. Key pieces:
 - **Header:** greeting is time-of-day aware; date/clock is live (refreshes every 30s).
 - **Agent dock:** per-domain chat calling `/api/agent`; "what I've learned" chips come from
   `agent_memory`.
+- **Daily quote** (`lib/quotes.js`): a fixed local bank, no network, no table. `weekdayIndex()`
+  counts **weekdays** elapsed since Mon 5 Jan 2026 (`wk*5 + min(dayOfWeek,4)`), so the quote
+  advances Mon→Fri only and Sat/Sun repeat Friday's — the dashboard is a weekday habit, and
+  stepping by calendar day would burn ~2 of every 7 quotes unseen. Deterministic, so the same
+  quote shows all day across reloads and devices. Saved-today state is a `localStorage` key
+  (`qsaved`) holding the quote text. Refresh the bank when it wraps (~2.8 years).
 
 ### Screen → data source
 
 | Screen | Panels & sources |
 |---|---|
-| **Home** | "This week" ribbon + Perso card (shared `fetchWeek()` → `/api/calendar`); **Coach · your week** (live habit adherence read); Priorities (`priorities`, live); summary cards (Perso/Fortior live, others still mock). |
+| **Home** | "This week" ribbon + Perso card (shared `fetchWeek()` → `/api/calendar`); **Today** daily quote (offline bank in `lib/quotes.js`, stepped one per *weekday* — see below — with a Save-to-Notion button hitting `/api/save-quote`); **Coach · your week** (live habit adherence read); Priorities (`priorities`, live); summary cards (Perso/Fortior live, others still mock). |
 | **Perso** | This week calendar (`/api/calendar`); **Looking ahead** = school holidays + birthday-gift + bar/bat-mitzvah reminders (tick state in `reminder_acks`); **Habits** tick-to-complete w/ per-cadence reset (`goals_habits` + `habit_checkins`); **Big Goals** with Achieved / Not-this-time (`goals_habits.status`). |
 | **Fortior** | Funnel from the Rocket-Log **teaser column** (`rocket_targets`, active = Surfaced+Pursuing); In-dialogue / Stalled / New-targets; **Things to do** (`fortior_tasks` + Gmail extractor); sprint "month X of 6" computed from 1 Jul 2026 start. |
 | **Finance** | **Pension (Aegon)** tile + blended OCF + allocation table (`pension` table via `/api/pension-update`). Fortior Holdings (IBKR) + personal budget still **mock**. |
@@ -84,6 +90,7 @@ One self-contained file: HTML + CSS + an ES-module `<script>`. Key pieces:
 | `agent.js` | Memory-aware domain agent. Loads `agent_memory`+`agent_messages`, calls Claude, persists the turn, captures one durable memory. Perso context includes **habit adherence + goal hit-rate**. | Supabase session token (owner) |
 | `calendar.js` | Google Calendar secret **iCal** feed(s) in `GCAL_ICS_URL` (comma-sep) + contact **birthdays** via People API. Returns the week's events + a `lookAhead` payload (gift birthdays ≤60d, bar/bat-mitzvah events ≤130d). | Supabase session token (owner) |
 | `fortior-mail.js` | Gmail → Notion Fortior tasks. Searches "Fortior", Claude classifies each **thread** todo/done/skip (reads SENT replies), writes new tasks to Notion + mirrors to `fortior_tasks`, marks handled ones Done, de-dupes by text. | `CRON_SECRET` (cron) **or** owner token (button) |
+| `save-quote.js` | Writes the Home daily quote into the Notion quote file (`NOTION_QUOTES_DB_ID`). Retrieves the id first: a **database** gets a new row (title + `Author`/`Date saved` if those columns exist, de-duped on the quote text); a **page** gets a quote block + grey attribution line appended. | Supabase session token (owner) |
 | `sync-notion.js` | Notion → Supabase upsert for the configured DBs. | `CRON_SECRET` if set |
 | `pension-update.js` | Ingest pension snapshot (total, blended OCF, funds[]) into `pension`. | `Bearer PENSION_INGEST_SECRET` |
 
@@ -135,6 +142,7 @@ Seeded-direct rows (e.g. habits/goals) use `notion_id = NULL` so the Notion sync
 | `OWNER_USER_ID` | stamped on synced/ingested rows; owner auth checks |
 | `ANTHROPIC_API_KEY` | `agent.js`, `fortior-mail.js` |
 | `NOTION_TOKEN`, `NOTION_ROCKET_DB_ID`, `NOTION_TASKS_DB_ID` (+ optional `NOTION_PRIORITIES_DB_ID`, `NOTION_GOALS_DB_ID`, `NOTION_TRAINING_DB_ID`) | `sync-notion.js`, `fortior-mail.js` |
+| `NOTION_QUOTES_DB_ID` | `save-quote.js` — id of the quote file (database **or** page). Must be shared with the integration: open it in Notion → `…` → **Connections** → add. |
 | `GCAL_ICS_URL` | `calendar.js` — one or more Google secret iCal addresses, comma-separated |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | `calendar.js`, `fortior-mail.js` |
 | `PENSION_INGEST_SECRET` | `pension-update.js` |

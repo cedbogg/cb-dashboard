@@ -40,6 +40,19 @@
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:18px}
 
   /* home */
+  /* Home · daily quote */
+  .quotep{display:flex;flex-direction:column;gap:12px}
+  .quotep .qt{font-family:var(--display);font-size:1.12rem;font-weight:400;line-height:1.5;color:var(--text);
+    border-left:2px solid var(--accent);padding-left:16px}
+  .quotep .qf{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-left:18px}
+  .quotep .qa{flex:1;font-family:var(--mono);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--accent)}
+  .quotep .qsave{font-family:var(--mono);font-size:.66rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+    color:var(--muted);background:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;transition:.15s}
+  .quotep .qsave:hover:not(:disabled){color:var(--text);border-color:#33414f}
+  .quotep .qsave:disabled{cursor:default;opacity:.55}
+  .quotep .qsave.done{color:var(--ok);border-color:var(--ok);opacity:1}
+  .quotep .qs{font-family:var(--mono);font-size:.68rem;color:var(--faint);padding-left:18px}
+  .quotep .qs.bad{color:var(--bad)}
   .ribbon{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;margin-bottom:22px}
   .ribbon .ey{font-family:var(--mono);font-size:.66rem;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase}
   .ribbon .items{display:flex;gap:22px;flex-wrap:wrap;flex:1}
@@ -324,6 +337,15 @@
       <div class="items" id="wkitems">
         <div class="ri"><b>Loading…</b><span class="when"></span></div>
       </div></div>
+    <div class="sec-ey">Today</div>
+    <div class="panel quotep">
+      <blockquote class="qt" id="qText">&hellip;</blockquote>
+      <div class="qf">
+        <span class="qa" id="qAuthor">&mdash;</span>
+        <button class="qsave" id="qSave" type="button" onclick="saveQuote(this)">Save to Notion</button>
+      </div>
+      <div class="qs" id="qStatus"></div>
+    </div>
     <div class="sec-ey">Coach · your week</div>
     <div class="panel" id="coachread" style="cursor:pointer" onclick="go('perso')"><div class="s">Reading your week…</div></div>
     <div class="grid">
@@ -700,6 +722,7 @@
 
 <script type="module">
 import { getClient, renderLogin, signOut } from './lib/supabase.js';
+import { QUOTES } from './lib/quotes.js';
 
 // Client-side display metadata only. The domain SYSTEM PROMPTS live server-side
 // in /lib/domains.js (used by /api/agent) so the browser can't tamper with them.
@@ -1631,8 +1654,58 @@ async function loadFinance(){
   }catch(e){}
 }
 
+// ---- Home · daily quote -----------------------------------------------------
+// QUOTES is a fixed bank (lib/quotes.js). The index advances once per WEEKDAY,
+// not per calendar day, because the dashboard is a Mon–Fri habit: stepping by
+// weekday means no quote is ever burned on a Saturday. Sat/Sun show Friday's,
+// so a weekend visit doesn't hand you next Monday's early.
+// Epoch = Mon 5 Jan 2026. Deterministic: same quote all day, no storage needed.
+const _QEPOCH = Date.UTC(2026,0,5);
+const _qel = id => document.getElementById(id);
+function weekdayIndex(d=new Date()){
+  const days = Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()) - _QEPOCH)/86400000);
+  const wk = Math.floor(days/7), dow = ((days%7)+7)%7;   // 0 = Mon … 6 = Sun
+  return wk*5 + Math.min(dow,4);                          // Sat/Sun reuse Friday
+}
+let _quote=null;
+function loadQuote(){
+  if(!QUOTES.length) return;
+  const i=((weekdayIndex()%QUOTES.length)+QUOTES.length)%QUOTES.length;
+  _quote=QUOTES[i];
+  const t=_qel('qText'), a=_qel('qAuthor'); if(!t) return;
+  t.textContent=_quote.q; if(a) a.textContent=_quote.a;
+  // Already saved today? Keep the button in its done state across reloads.
+  const btn=_qel('qSave'), st=_qel('qStatus');
+  if(btn){
+    const saved = localStorage.getItem('qsaved')===_quote.q;
+    btn.disabled=saved; btn.classList.toggle('done',saved);
+    btn.textContent = saved? 'Saved ✓' : 'Save to Notion';
+    if(st){ st.className='qs'; st.textContent = saved? 'in your Notion quote file' : ''; }
+  }
+}
+async function saveQuote(btn){
+  if(!_quote) return;
+  const st=_qel('qStatus');
+  const show=(txt,bad)=>{ if(st){ st.className='qs'+(bad?' bad':''); st.textContent=txt; } };
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…'; show('');
+  try{
+    const sb=await getClient();
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session?.access_token){ show('not signed in — sign out/in then retry',true); btn.disabled=false; btn.textContent=orig; return; }
+    const res=await fetch('/api/save-quote',{method:'POST',
+      headers:{'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json'},
+      body:JSON.stringify({quote:_quote.q,author:_quote.a})});
+    const raw=await res.text(); let data={}; try{ data=JSON.parse(raw); }catch(_){}
+    if(!res.ok){ show(`HTTP ${res.status}: ${String(data.error||raw||'').slice(0,180)}`,true); btn.disabled=false; btn.textContent=orig; return; }
+    localStorage.setItem('qsaved',_quote.q);
+    btn.classList.add('done'); btn.textContent='Saved ✓';
+    show(data.duplicate? 'already in your quote file' : 'saved to your Notion quote file');
+  }catch(e){ show('fetch error: '+String(e.message||e).slice(0,140),true); btn.disabled=false; btn.textContent=orig; }
+}
+
 // ---- Home live data (Priorities rollup + shared week ribbon) -----------------
 async function loadHome(){
+  loadQuote();      // daily quote — local bank, no network
   loadHomeWeek();   // "This week" ribbon + Perso card — same source as the Perso screen
   loadCoachRead();  // proactive weekly read on habits/goals
   let sb; try{ sb=await getClient(); }catch(e){ return; }
@@ -2226,7 +2299,7 @@ renderHealth();
 loadGut();
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
+window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

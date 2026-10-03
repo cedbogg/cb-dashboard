@@ -1445,7 +1445,6 @@ const STR_A=[
   ['Glute bridge — ball squeeze / single-leg','×12','','glute bridge ball squeeze','Final glute wake-up before loading.'],
   ['Knee priority'],
   ['Wall sit (isometric)','4×30–45s','Knee','wall sit exercise','P1 ~60–80°. P2 DB on lap. P3 band-resisted Spanish-squat holds.','a-wallsit'],
-  ['Goblet squat → box','3×10 → 4×6','Knee','goblet box squat tempo','Sit to a box at pain-free depth, 3-sec lower, upright torso.','a-goblet'],
   ['Leg extension — inner range','3×12','Knee','terminal knee extension leg extension','Last ~30° only early; P3 full pain-free range, heavier.','a-legext'],
   ['Strength'],
   ['Back squat','4×6–8','Knee','barbell back squat form','Full pain-free depth, controlled tempo; add load per the knee governor.','a-squat'],
@@ -1506,7 +1505,7 @@ function renderStrength(){
     .map(p=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="font-family:var(--mono);font-size:.6rem;letter-spacing:1px;color:var(--accent)">${p[0]}</div><div style="font-weight:600;font-size:.9rem;margin:2px 0 3px">${esc(p[1])}</div><div style="font-size:.74rem;color:var(--muted)">${esc(p[2])}</div></div>`).join('');
   const prog=['Range before load — earn pain-free depth, then add weight.',
     'Add load when the morning’s quiet — knee silent next day → nudge one step; else repeat.',
-    'P1→2 gate: wall sit & goblet box squats comfortable, no next-day swelling across a week.',
+    'P1→2 gate: wall sit & inner-range leg extension comfortable, no next-day swelling across a week.',
     'P2→3 gate: split squats/step-ups clean and running continuously → load single-leg, add eccentric step-downs.',
     'Never stack risk — don’t add load AND depth AND a new exercise in the same week.']
     .map((t,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem"><b style="color:var(--accent)">${i+1}.</b> ${esc(t)}</div>`).join('')+

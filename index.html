@@ -692,9 +692,18 @@
       <div class="subtabs">
         <button id="sub-home-a" onclick="strSub('home','a')" class="subtab sm on">A · Knee + Push</button>
         <button id="sub-home-b" onclick="strSub('home','b')" class="subtab sm">B · Hinge + Pull</button>
+        <button id="sub-home-c" onclick="strSub('home','c')" class="subtab sm">C · Power</button>
       </div>
       <div id="home-a"><div class="sec-ey">Home A — Soleus + Knee / Push</div><div class="panel" id="homeA"></div></div>
       <div id="home-b" style="display:none"><div class="sec-ey">Home B — Soleus + Hinge / Pull</div><div class="panel" id="homeB"></div></div>
+      <div id="home-c" style="display:none">
+        <div class="sec-ey">Home C — Power · Ash Allen · 8-week block</div>
+        <div class="panel" id="homeC"></div>
+        <div class="sec-ey">The eight weeks</div>
+        <div class="panel" id="homePowerWks"></div>
+        <div class="sec-ey">How to run it</div>
+        <div class="panel" id="homePowerRules"></div>
+      </div>
       <div class="sec-ey">The trade · read before every session</div>
       <div class="panel" id="homeGov"></div>
       <div class="sec-ey">When to do them</div>
@@ -1465,7 +1474,7 @@ function fitTab(t){
 }
 // A/B session switcher within a strength group ('gym' | 'home').
 function strSub(group,which){
-  ['a','b'].forEach(k=>{
+  ['a','b','c'].forEach(k=>{   // gym has no C — the null checks below skip it
     const pane=document.getElementById(group+'-'+k), btn=document.getElementById('sub-'+group+'-'+k), on=(k===which);
     if(pane) pane.style.display=on?'':'none';
     if(btn) btn.classList.toggle('on',on);
@@ -1533,7 +1542,6 @@ const HOME_A=[
   ['Soleus priority (~5 min) · do it first, while fresh'],
   ['Bent-knee calf raise','3×12–15','Knee','seated bent knee calf raise soleus','Seated or back-to-wall, knee ~30°. 3-sec lowering. KB on the knee once bodyweight is easy. The soleus takes 6–8× bodyweight per stride — this is the coach’s 4×/week lift.','h-calfbent'],
   ['Heavy strength · 3×3–5, stop 2–3 reps short of failure (~14 min)'],
-  ['KB goblet squat → box','3×5','Knee','goblet box squat tempo','Heaviest KB, 3-sec lower, pain-free depth only. Knee governor still sets the load.','h-goblet'],
   ['DB/KB split squat','3×5/side','Glute','dumbbell split squat form','Front foot flat, torso tall. Static — not a walking lunge.','h-split'],
   ['KB/DB floor press','3×5','Push','kettlebell floor press form','Floor caps the shoulder range; no bench needed. Swap: feet-elevated push-up 3×6–8 with a 3-sec lower.','h-floorpress'],
   ['Band pull-apart + face pull','2×15','Pull','band pull apart face pull','The only high-rep thing here — postural, not loading.'],
@@ -1541,6 +1549,35 @@ const HOME_A=[
   ['Side plank (McGill)','2×30s/side','Core','mcgill side plank','Obliques/QL/glute-med, spine-sparing, zero knee load.'],
   ['Pallof press (band, door anchor)','2×10/side','Core','pallof press','Anti-rotation — protects the disc.'],
   ['KB suitcase carry','2×40m','Core','suitcase carry kettlebell','Single-side — anti-lateral-flexion. Hallway laps are fine.','h-carry']
+];
+// Ash Allen's power session — one circuit, same order every time, all sets of
+// one exercise before the next. Load is a vest (jumps) plus dumbbells (the rest)
+// combined, as a % of bodyweight; see HOME_POWER_WEEKS for the 8-week ramp.
+const HOME_C=[
+  ['Warm-up'],
+  ['Easy run or bike','10\u201315 min','','easy warm up jog','Build to hard for the last 2 minutes.'],
+  ['Get-ups off the floor','\u00d710','','turkish get up floor','Straight into the burpees.'],
+  ['Burpees','\u00d710','','burpee form','Last thing before set 1.'],
+  ['The session \u00b7 same order every time, all sets of one, then the next'],
+  ['1 \u00b7 Split squat jump','10/leg','Knee','split squat jump form','About one jump a second. Switch legs in the air, land soft. Vest load.','p-vest'],
+  ['2 \u00b7 Squat jump','\u00d710','Knee','squat jump form','One jump every half-second to a second. Full hip extension at the top. Same vest as above.'],
+  ['3 \u00b7 Box step-up','10 right, then 10 left','Knee','box step up exercise','Box about 75% of the way to the bottom of your kneecap. One rep a second.','p-stepup'],
+  ['4 \u00b7 Front lunge','10 right, then 10 left','Glute','front lunge form','A gentle lunge, 40\u201360 cm. This one hits the glutes hardest.','p-lunge'],
+  ['5 \u00b7 Kettlebell swing','\u00d710','Hinge','kettlebell swing two hand form','Two hands. The bell is the load \u2014 one you can swing crisply for 10, held all block.','p-swing'],
+  ['6 \u00b7 Single-leg calf raise','10 right, then 10 left','Knee','single leg standing calf raise','Off a step, full range, no bounce. Same load as the lunges.','p-calf'],
+  ['Cool-down'],
+  ['Easy run or bike','10 min','','easy cool down jog','']
+];
+// [week, sets, load if new, load if strong, rest per set, rest per exercise]
+const HOME_POWER_WEEKS=[
+  [1,6,'Bodyweight','Bodyweight','60 sec','60 sec'],
+  [2,6,'Bodyweight','Bodyweight','45 sec','60 sec'],
+  [3,5,'+5%','+10%','60 sec','60 sec'],
+  [4,6,'+10%','+15%','45 sec','90 sec'],
+  [5,6,'+10%','+20%','40 sec','60 sec'],
+  [6,6,'+15%','+20%','30 sec','60 sec'],
+  [7,7,'+15%','+25%','45 sec','60 sec'],
+  [8,8,'+20%','+30%','45 sec','60 sec']
 ];
 const HOME_B=[
   ['Prep (~5 min)'],
@@ -1587,7 +1624,7 @@ function renderStrength(){
   const homeGov=`<div style="padding:8px 10px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>Heavy and low, not high and heavy.</b> 3×3–5, stopping 2–3 reps short of failure. High-rep hypertrophy work is what leaves legs heavy — that’s the trade the coach wants you to make this close to the race.</div>`+
     `<div style="padding:8px 10px;margin-top:6px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>The soleus is the point.</b> It absorbs 6–8× bodyweight per stride and is the failure point in the last 5 km — and it’s the one muscle rarely trained directly, so it responds fast. Bent-knee calf raises want <b>4×/week</b>, which is more often than these two sessions. Do them on off days too.</div>`+
     `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Knee and back rules are unchanged.</b> Morning-after state decides the dose — puffy, warm or stiff next AM means hold or step back; locking, catching or giving way means stop. Neutral spine every hinge, no loaded lumbar flexion.</div>`+
-    `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Loading caveat:</b> 3×3–5 assumes you can actually get near-heavy with what you own. If the heaviest KB still lets you do 12 clean goblet squats, buy the intensity another way — single-leg, 3-sec eccentrics, or 1½-reps — rather than adding sets.</div>`+
+    `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Loading caveat:</b> 3×3–5 assumes you can actually get near-heavy with what you own. If the heaviest KB still lets you do 12 clean split squats a side, buy the intensity another way — single-leg, 3-sec eccentrics, or 1½-reps — rather than adding sets.</div>`+
     `<div style="padding:8px 10px;margin-top:6px;background:rgba(122,95,192,.10);border-left:3px solid #7a5fc0;border-radius:0 8px 8px 0;font-size:.75rem"><b>The abs blocks are yours, not the coach’s.</b> He prescribed no core work. They’re deliberately 5 min and anti-movement only — if a session gets compressed, cut those, never the calf raises.</div>`;
   const homeWhen=['Afternoon of a quality-run day, or 24h+ clear of a run. Never the evening before a morning run.',
     'These replace Strength A/B on a home day — same split, so the week stays balanced. Don’t do both a gym and a home session in the same slot.',
@@ -1598,6 +1635,26 @@ function renderStrength(){
   const set=(id,html)=>{ const e=document.getElementById(id); if(e) e.innerHTML=html; };
   set('strA',_strRows(STR_A)); set('strB',_strRows(STR_B)); set('strProg',prog);
   set('homeGov',homeGov); set('homeA',_strRows(HOME_A)); set('homeB',_strRows(HOME_B)); set('homeWhen',homeWhen);
+
+  // Power block — the 8-week ramp, then how to run it.
+  const wks='<table><thead><tr><th>Week</th><th>Sets</th><th>Load · new</th><th>Load · strong</th><th>Rest / set</th><th>Rest / exercise</th></tr></thead><tbody>'+
+    HOME_POWER_WEEKS.map(([w,sets,ln,ls,rs,re])=>{
+      const bw=ln==='Bodyweight';
+      const c=v=>`<td style="color:${bw?'#4a90d9':'var(--muted)'}">${esc(v)}</td>`;
+      return `<tr><td>Week ${w}</td><td>${sets}</td>${c(ln)}${c(ls)}<td>${esc(rs)}</td><td>${esc(re)}</td></tr>`;
+    }).join('')+'</tbody></table>';
+  const rules=['Reps stay at 10 all block. Sets, load and rest are what move.',
+    'Load is the vest (jumps) plus dumbbells (everything else) added together, as a % of bodyweight.',
+    'Pick one column and stay in it. New — little or no strength background — tops out at +20%. Strong — a real lifting base — tops out at +30%.',
+    'Single-leg work (3, 4 and 6): all reps right, then all left, then 30 sec rest. Every week.',
+    'Once a week. Twice only if the rest of the week allows, and always on top of your easy running.',
+    'Weeks 1–2 are bodyweight: nothing in your hands or on your back. Learn the movements and find out how sore they make you. Weight goes on in week 3.',
+    'Every set should end with a low burn — no burn means the load is too light.',
+    'Miss a week and drop back: fewer sets for the first two sessions back.']
+    .map((t,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem"><b style="color:var(--accent)">${i+1}.</b> ${esc(t)}</div>`).join('')+
+    `<div style="padding:8px 10px;margin-top:8px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Plyometrics vs the knee.</b> Two of the six are jumps, and the meniscus rules don't change for them: morning-after state sets the dose, and locking or giving way stops the session. Start the block after NYC — jump training doesn't belong in a taper.</div>`+
+    `<div style="padding:8px 10px;margin-top:6px;background:rgba(122,95,192,.10);border-left:3px solid #7a5fc0;border-radius:0 8px 8px 0;font-size:.75rem"><b>Transcribed from the sheet</b> — the per-week \u201cwhy\u201d column and the tail of the rules were cut off in the photo. Re-send a full shot and they go in.</div>`;
+  set('homeC',_strRows(HOME_C)); set('homePowerWks',wks); set('homePowerRules',rules);
 }
 async function loadStrength(){
   if(!_strRendered){ renderStrength(); _strRendered=true; }

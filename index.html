@@ -688,14 +688,14 @@
     </div>
 
     <div id="fit-home" style="display:none">
-      <div class="subd" style="margin-bottom:14px">Kettlebells · dumbbells · band · pull-up machine · ~30 min · race-specific, not a general strength phase</div>
+      <div class="subd" style="margin-bottom:14px">Power tower · dumbbells · kettlebell · 2×/week · ~55 min · built to sit alongside the marathon block</div>
       <div class="subtabs">
-        <button id="sub-home-a" onclick="strSub('home','a')" class="subtab sm on">A · Knee + Push</button>
-        <button id="sub-home-b" onclick="strSub('home','b')" class="subtab sm">B · Hinge + Pull</button>
+        <button id="sub-home-a" onclick="strSub('home','a')" class="subtab sm on">A · Lower + Pull</button>
+        <button id="sub-home-b" onclick="strSub('home','b')" class="subtab sm">B · Press + Single-leg</button>
       </div>
-      <div id="home-a"><div class="sec-ey">Home A — Soleus + Knee / Push</div><div class="panel" id="homeA"></div></div>
-      <div id="home-b" style="display:none"><div class="sec-ey">Home B — Soleus + Hinge / Pull</div><div class="panel" id="homeB"></div></div>
-      <div class="sec-ey">The trade · read before every session</div>
+      <div id="home-a"><div class="sec-ey">Home A — Lower + Pull · early week</div><div class="panel" id="homeA"></div></div>
+      <div id="home-b" style="display:none"><div class="sec-ey">Home B — Press + Single-leg · 72h later</div><div class="panel" id="homeB"></div></div>
+      <div class="sec-ey">The rules · read before every session</div>
       <div class="panel" id="homeGov"></div>
       <div class="sec-ey">When to do them</div>
       <div class="panel" id="homeWhen"></div>
@@ -1523,57 +1523,90 @@ const STR_B=[
   ['Standing calf raise','3×12/side','Knee','single leg standing calf raise','Primary shock absorber for the knee. Single-leg, full range, weighted as able.','b-calf'],
   ['Side plank + clam / band walk','3×12','Core','clamshell band walk glute med','Glute-med — controls the inward knee collapse that stresses a meniscus.']
 ];
+// Home sessions — the strength programme's A–E (lower, upper, add-on, short
+// lower, upper/full) cut to two, keeping only what a power tower, dumbbells and
+// a kettlebell can do, with Ash Allen's power moves folded in. Swaps from the
+// source lift are named in the note so it's clear what changed.
+// Row: [name, dose, tag, youtube search, note, log key, video id, [start weight, step kg]].
+// A video id plays the clip inline; the search link stays as the fallback. The
+// start weight is the first-session recommendation; once a weight is logged the
+// row shows the next step up instead (step 0 = bodyweight, progress by reps).
 const HOME_A=[
   ['Prep (~5 min)'],
-  ['McKenzie press-up','×10','','mckenzie press up prone extension','Primes extension — your back’s preferred direction.'],
-  ['Cat–camel','×10 slow','','cat camel exercise spine','Pain-free spine motion.'],
-  ['Half-kneeling hip-flexor stretch','2×30s/side','','half kneeling hip flexor stretch','Pelvis tucked — feel it in the hip front, not the low back.'],
-  ['Banded clamshell','×12/side','','clamshell with band','Glute-med switch-on.'],
-  ['Banded side-step (monster walk)','×10/way','','banded lateral monster walk','Fires the glutes laterally before loading.'],
-  ['Soleus priority (~5 min) · do it first, while fresh'],
-  ['Bent-knee calf raise','3×12–15','Knee','seated bent knee calf raise soleus','Seated or back-to-wall, knee ~30°. 3-sec lowering. KB on the knee once bodyweight is easy. The soleus takes 6–8× bodyweight per stride — this is the coach’s 4×/week lift.','h-calfbent'],
-  ['Heavy strength · 3×3–5, stop 2–3 reps short of failure (~14 min)'],
-  ['KB goblet squat → box','3×5','Knee','goblet box squat tempo','Heaviest KB, 3-sec lower, pain-free depth only. Knee governor still sets the load.','h-goblet'],
-  ['DB/KB split squat','3×5/side','Glute','dumbbell split squat form','Front foot flat, torso tall. Static — not a walking lunge.','h-split'],
-  ['KB/DB floor press','3×5','Push','kettlebell floor press form','Floor caps the shoulder range; no bench needed. Swap: feet-elevated push-up 3×6–8 with a 3-sec lower.','h-floorpress'],
-  ['Band pull-apart + face pull','2×15','Pull','band pull apart face pull','The only high-rep thing here — postural, not loading.'],
-  ['Abs (~5 min) · anti-movement only'],
-  ['Side plank (McGill)','2×30s/side','Core','mcgill side plank','Obliques/QL/glute-med, spine-sparing, zero knee load.'],
-  ['Pallof press (band, door anchor)','2×10/side','Core','pallof press','Anti-rotation — protects the disc.'],
-  ['KB suitcase carry','2×40m','Core','suitcase carry kettlebell','Single-side — anti-lateral-flexion. Hallway laps are fine.','h-carry']
+  ['McKenzie press-up','×10','','mckenzie press up prone extension','Primes extension — your back’s preferred direction.','','kFZ8-rMItKk'],
+  ['Cat–camel','×10 slow','','cat camel exercise spine','Pain-free spine motion.','','V-zycfsFjq0'],
+  ['Half-kneeling hip-flexor stretch','2×30s/side','','half kneeling hip flexor stretch','Pelvis tucked — feel it in the hip front, not the low back.','','Bfb-9dIWEr4'],
+  ['Clamshell','×15/side','','side lying clamshell','Glute-med switch-on. Bodyweight — slow, pause at the top.','','xfQ4dx6QAdw'],
+  ['Power (~5 min) · Ash Allen · do it fresh'],
+  ['Kettlebell swing','3×10','Hinge','kettlebell swing two hand form','Two hands, crisp, full hip snap. The bell is the load — one you can swing cleanly for 10.','h-swing','bDCeXbMJVNs',['16–20 kg KB',4]],
+  ['Squat jump','3×5','Knee','squat jump form','Full hip extension at the top, land soft and quiet. Full rest between sets — power, not conditioning.','h-sqjump','tZSYZdtbONc',['Bodyweight — no load before NYC',0]],
+  ['Strength · stop 3 reps short (3 RIR)'],
+  ['Chin-up','4×5–8','Pull','chin up form','On the tower. Log the weight you add — 0 = bodyweight. Once all 4 sets reach 8, hold a DB between the feet.','h-chin','qV7vOUcUfD4',['Bodyweight (log 0)',2.5]],
+  ['Goblet squat → box','3×6–8','Knee','goblet box squat tempo','Heaviest KB, 3-sec lower, sit to a box at pain-free depth. The home version of the front squat — the slow lower is what makes a light bell count.','h-goblet','MWHIs0zxkCU',['20–24 kg KB',4]],
+  ['Bulgarian split squat','3×6–8/leg','Knee','bulgarian split squat form','DBs in hand, rear foot on a chair or the tower base. Pain-free depth — the knee governor sets the load.','h-bss','iwV9rTHKrOg',['10–12 kg per hand',2]],
+  ['DB Romanian deadlift','3×6–8','Hinge','dumbbell romanian deadlift form','Replaces trap-bar deadlift and good morning. Soft knees, push the hips back, hamstrings hold tension at length.','h-rdl','hQgFixeXdZo',['16–20 kg per hand',2]],
+  ['Calves + core (~10 min)'],
+  ['Seated calf raise','3×12–15','Knee','seated bent knee calf raise soleus','Knee bent, KB or DB on the knees, 3-sec lowering. The soleus takes more load per stride than any other muscle in your leg.','h-calfbent','71lLP3aglGQ',['20–24 kg on the knees',4]],
+  ['Vertical knee raise','3×10–12','Core','captains chair knee raise','On the tower’s arm pads. Slow, no swinging. Drop to lying leg-lowers if the back grumbles.','h-vkr','9APysM090aI',['Bodyweight',0]],
+  ['Side plank (McGill)','2×30s/side','Core','mcgill side plank','Feet split, hips and shoulders stacked. Resists bending sideways — what keeps your hips level late in a run.','h-sideplank','VAPN4CmUWqk',['Bodyweight',0]]
 ];
 const HOME_B=[
   ['Prep (~5 min)'],
-  ['McKenzie press-up','×10','','mckenzie press up prone extension','Primes extension before loading.'],
-  ['Cat–camel','×10 slow','','cat camel exercise spine','Pain-free spine motion.'],
-  ['Half-kneeling hip-flexor stretch','2×30s/side','','half kneeling hip flexor stretch','Feel it in the hip front, not the low back.'],
-  ['Banded clamshell','×12/side','','clamshell with band','Glute-med switch-on.'],
-  ['Banded side-step (monster walk)','×10/way','','banded lateral monster walk','Fires the glutes laterally.'],
-  ['Soleus priority (~5 min)'],
-  ['Bent-knee calf raise','3×12–15','Knee','seated bent knee calf raise soleus','Same lift as Home A — knee ~30°, 3-sec lowering, loaded once bodyweight is easy.','h-calfbent'],
-  ['Soleus ball / roller release','2 min/side','','soleus calf trigger point ball release','Coach: the most useful single recovery thing right now.'],
-  ['Heavy strength · 3×3–5, stop 2–3 reps short of failure (~14 min)'],
-  ['KB / suitcase deadlift','3×5','Hinge','kettlebell suitcase deadlift form','Neutral spine, braced, drive through the floor. Skip entirely in a recovery week — coach said no deadlifts that week.','h-dl'],
-  ['Step-up (controlled)','3×5/side','Knee','dumbbell step up exercise','Low box, heel drive, no push-off from the trailing leg.','h-stepup'],
-  ['Pull-ups (machine, assisted)','3×5','Pull','pull up form','Heavy and low, same as everything else. Assist as needed; manage grip vs the elbow.','h-pull'],
-  ['Single-leg RDL — light','3×8/side','Knee','single leg romanian deadlift','Coach specified light. This is proprioception, not a strength lift.','h-slrdl'],
-  ['Abs (~5 min)'],
-  ['Hanging knee raise','2×10','Core','hanging knee raise form','Off the pull-up machine — spinal traction plus the strongest ab loading you have at home. Drop to lying leg-lowers if the back grumbles.'],
-  ['Band woodchop (high-to-low)','2×12/side','Core','band woodchop high to low','Anti-rotation through range.'],
-  ['Side plank + clam','2×12','Core','clamshell band walk glute med','Glute-med — controls the inward knee collapse that stresses a meniscus.']
+  ['McKenzie press-up','×10','','mckenzie press up prone extension','Primes extension before loading.','','kFZ8-rMItKk'],
+  ['Cat–camel','×10 slow','','cat camel exercise spine','Pain-free spine motion.','','V-zycfsFjq0'],
+  ['Half-kneeling hip-flexor stretch','2×30s/side','','half kneeling hip flexor stretch','Feel it in the hip front, not the low back.','','Bfb-9dIWEr4'],
+  ['Single-leg glute bridge','×10/side','','single leg glute bridge','Glute wake-up before the single-leg work. Keep the hips level.','','3NXv0Nany-Q'],
+  ['Power (~5 min) · Ash Allen · do it fresh'],
+  ['Split squat jump','3×5/leg','Knee','split squat jump form','About one jump a second, switch legs in the air, land soft. Full rest between sets.','h-ssjump','bbrTM2Djhe0',['Bodyweight — no load before NYC',0]],
+  ['Main · ramp to ONE heavy set @ RPE 7–8, log the top set'],
+  ['Standing DB overhead press','ramp to 1×5','Push','standing dumbbell overhead press form','3–4 sets getting heavier, only the last one counts. Ribs down, glutes tight — no leaning back.','h-ohp','bj53-0DYKFo',['Top set 14–16 kg per hand (ramp 8 → 10 → 12)',2]],
+  ['Strength · stop 3 reps short (3 RIR)'],
+  ['DB floor press','3×8–10','Push','dumbbell floor press form','Replaces the bench press — the floor caps the shoulder range.','h-floorpress','T0Y3OBF1bNI',['16–20 kg per hand',2]],
+  ['Feet-elevated push-up','3×8–12','Push','feet elevated push up','Superset with the row. Hands on the tower’s push-up handles, feet on a chair. Replaces the incline press — same upper chest.','h-pushup','xoX1nSewXgA',['Bodyweight — raise the feet to progress',0]],
+  ['Single-arm DB row','3×8–10/side','Pull','single arm dumbbell row form','Superset with the push-ups. Hand and knee on a chair. Replaces the barbell row.','h-row','OG5S3x7T8QQ',['20–24 kg',2]],
+  ['Step-up','3×8/leg','Knee','dumbbell step up exercise','Stair or sturdy step, about knee-high or a little lower. All reps one leg, then the other. Drive through the heel.','h-stepup','9ZknEYboBOQ',['Bodyweight first session, then 8–10 kg per hand',2]],
+  ['Front lunge','2×8/leg','Glute','front lunge form','Ash Allen. A gentle lunge, 40–60 cm. This one hits the glutes hardest.','h-lunge','zQkoc9my1P0',['Bodyweight, then 6–8 kg per hand',2]],
+  ['DB bicep curl (optional)','2×12–15','Pull','dumbbell bicep curl form','First to go if time is short. Yes, really — you’ve earned it.','h-curl','nBzLCE-dcRQ',['10–12 kg per hand',2]],
+  ['Calves + core (~10 min) · never skip the calves'],
+  ['Single-leg standing calf raise','3×12–15/leg','Knee','single leg standing calf raise','Off a step, DB in the same-side hand. 3 sec up, 3 sec down, full stretch at the bottom.','h-calfsl','vucf2Xk5bp8',['10–14 kg in one hand',2]],
+  ['KB suitcase carry','2×40m/side','Core','kettlebell suitcase carry','One heavy KB in one hand, walk tall. Resists leaning — plus grip. Hallway laps are fine.','h-carry','iq5D5SU2Oq4',['20–24 kg KB',4]],
+  ['Dead bug','2×8/side','Core','dead bug exercise','Back flat to the floor the whole time, slow. Resists arching — spine-safe.','h-deadbug','3eqodmkpkfA',['Bodyweight',0]]
 ];
 function _strRows(list){
   return list.map(r=>{
     if(r.length===1) return `<div style="font-family:var(--mono);font-size:.6rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);padding:12px 0 4px">${esc(r[0])}</div>`;
-    const [n,p,tag,q,note,k]=r;
+    const [n,p,tag,q,note,k,vid,reco]=r;
     const chip = tag?`<span style="font-size:.55rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:${_TAGC[tag]||'var(--muted)'};padding:2px 6px;border-radius:4px">${tag}</span>`:'';
-    const input = k?`<span style="display:inline-flex;align-items:center;gap:5px;margin-left:auto"><input class="strwt" data-key="${k}" type="number" inputmode="decimal" placeholder="kg" onchange="saveStrength(this.dataset.key,this.value,this)" style="width:64px;background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 7px;color:var(--text);font-family:var(--body);font-size:.8rem"><span style="font-size:.6rem;color:var(--faint)">kg</span><span class="strstamp" style="font-size:.58rem;color:var(--ok)"></span></span>`:'';
-    return `<div style="padding:10px 0;border-bottom:1px solid var(--line)">`+
+    const input = k?`<span style="display:inline-flex;align-items:center;gap:5px;margin-left:auto"><input class="strwt" data-key="${k}" type="number" inputmode="decimal" step="0.5" min="0" placeholder="kg" onchange="saveStrength(this.dataset.key,this.value,this)" style="width:64px;background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 7px;color:var(--text);font-family:var(--body);font-size:.8rem"><span style="font-size:.6rem;color:var(--faint)">kg</span><span class="strstamp" style="font-size:.58rem;color:var(--ok)"></span></span>`:'';
+    const btn='font-size:.6rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 7px;text-decoration:none;background:none;cursor:pointer;font-family:inherit';
+    const form = vid
+      ? `<button type="button" onclick="strVid(this,'${vid}')" style="${btn}">▶ form</button><a href="https://www.youtube.com/watch?v=${vid}" target="_blank" rel="noopener" style="${btn}">YouTube ↗</a>`
+      : `<a href="${_yt(q)}" target="_blank" rel="noopener" style="${btn}">▶ form</a>`;
+    const rec = reco? `<div class="strreco" data-start="${esc(reco[0])}" data-step="${+reco[1]||0}" style="font-size:.68rem;color:var(--accent);margin-top:4px">${_recoText(reco[0],+reco[1]||0,'')}</div>` : '';
+    return `<div class="strrow" style="padding:10px 0;border-bottom:1px solid var(--line)">`+
       `<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><span style="font-size:.85rem;font-weight:500">${esc(n)}</span>`+
       `<span style="font-family:var(--mono);font-size:.78rem;color:var(--accent);white-space:nowrap">${esc(p)}</span></div>`+
-      (note?`<div style="font-size:.72rem;color:var(--muted);margin-top:3px">${esc(note)}</div>`:'')+
-      `<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><a href="${_yt(q)}" target="_blank" rel="noopener" style="font-size:.6rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 7px;text-decoration:none">▶ form</a>${chip}${input}</div></div>`;
+      (note?`<div style="font-size:.72rem;color:var(--muted);margin-top:3px">${esc(note)}</div>`:'')+rec+
+      `<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">${form}${chip}${input}</div><div class="strvid"></div></div>`;
   }).join('');
+}
+// Recommendation line: the start weight until something is logged, then the
+// next step up — taken only once every set reaches the top of the rep range.
+function _recoText(start,step,logged){
+  const w=parseFloat(logged);
+  if(!isNaN(w) && step>0) return `Next: ${+(w+step).toFixed(1)} kg — once every set hits the top of the range`;
+  if(!isNaN(w)) return `Bodyweight move — progress by reps, not load`;
+  return `Start: ${esc(start)}`;
+}
+function _strRecoSync(inp){
+  const box=inp.closest('.strrow'); const r=box&&box.querySelector('.strreco'); if(!r) return;
+  r.textContent=''; r.innerHTML=_recoText(r.dataset.start,+r.dataset.step||0,inp.value);
+}
+// Inline form clip — inserted on first tap (so 40 iframes never load up front), removed on the next.
+function strVid(btn,id){
+  const slot=btn.closest('.strrow').querySelector('.strvid');
+  if(slot.firstChild){ slot.innerHTML=''; return; }
+  slot.innerHTML=`<div style="position:relative;padding-top:56.25%;margin-top:8px;border-radius:8px;overflow:hidden;background:#000"><iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&playsinline=1" title="Form video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe></div>`;
 }
 let _strRendered=false;
 function renderStrength(){
@@ -1584,20 +1617,24 @@ function renderStrength(){
     `<div style="padding:8px 10px;margin-top:8px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Concurrent-load watch:</b> leg-heavy 2×/week on top of a running return. The run is the priority signal — if long-run quality drops or the knee complains, cut strength leg volume before the run. Upper body sheds first in peak weeks.</div>`+
     `<div style="padding:8px 10px;margin-top:6px;background:rgba(74,144,217,.10);border-left:3px solid #4a90d9;border-radius:0 8px 8px 0;font-size:.75rem"><b>Bent-knee calf raise — 4×/week, 3×12–15.</b> Knee ~30°, 3-sec lowering, loaded once bodyweight is easy. A real training stimulus, not a mobility dose — two sessions a week won’t cover it, so it has to land on off days too. The soleus absorbs 6–8× bodyweight per stride and is the failure point in the last 5 km. <a href="${_yt('seated bent knee calf raise soleus')}" target="_blank" rel="noopener" style="color:var(--muted)">▶ form</a></div>`+
     `<div style="padding:8px 10px;margin-top:6px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>Protein:</b> 1.8–2.2 g/kg/day, 30–40g within ~2h of each session.</div>`;
-  const homeGov=`<div style="padding:8px 10px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>Heavy and low, not high and heavy.</b> 3×3–5, stopping 2–3 reps short of failure. High-rep hypertrophy work is what leaves legs heavy — that’s the trade the coach wants you to make this close to the race.</div>`+
-    `<div style="padding:8px 10px;margin-top:6px;background:rgba(63,182,139,.08);border-left:3px solid var(--ok);border-radius:0 8px 8px 0;font-size:.75rem"><b>The soleus is the point.</b> It absorbs 6–8× bodyweight per stride and is the failure point in the last 5 km — and it’s the one muscle rarely trained directly, so it responds fast. Bent-knee calf raises want <b>4×/week</b>, which is more often than these two sessions. Do them on off days too.</div>`+
-    `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Knee and back rules are unchanged.</b> Morning-after state decides the dose — puffy, warm or stiff next AM means hold or step back; locking, catching or giving way means stop. Neutral spine every hinge, no loaded lumbar flexion.</div>`+
-    `<div style="padding:8px 10px;margin-top:6px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.75rem"><b>Loading caveat:</b> 3×3–5 assumes you can actually get near-heavy with what you own. If the heaviest KB still lets you do 12 clean goblet squats, buy the intensity another way — single-leg, 3-sec eccentrics, or 1½-reps — rather than adding sets.</div>`+
-    `<div style="padding:8px 10px;margin-top:6px;background:rgba(122,95,192,.10);border-left:3px solid #7a5fc0;border-radius:0 8px 8px 0;font-size:.75rem"><b>The abs blocks are yours, not the coach’s.</b> He prescribed no core work. They’re deliberately 5 min and anti-movement only — if a session gets compressed, cut those, never the calf raises.</div>`;
-  const homeWhen=['Afternoon of a quality-run day, or 24h+ clear of a run. Never the evening before a morning run.',
-    'These replace Strength A/B on a home day — same split, so the week stays balanced. Don’t do both a gym and a home session in the same slot.',
-    'Bent-knee calf raises are the exception: 4×/week, so they live outside these two sessions as well. Add them to the daily mini-doses.',
-    'Recovery week: skip or halve the lower-body work, and drop the deadlift entirely.',
+  const _box=(c,bg,html)=>`<div style="padding:8px 10px;margin-top:6px;background:${bg};border-left:3px solid ${c};border-radius:0 8px 8px 0;font-size:.75rem">${html}</div>`;
+  const homeGov=
+    _box('var(--ok)','rgba(63,182,139,.08)','<b>One heavy set, then stop short.</b> The main lift builds to ONE heavy set at RPE 7–8 — log the peak. Everything else is 3 sets stopping 3 reps short of failure. Low fatigue is the point: the legs have to turn up fresh to the next run.')+
+    _box('var(--warn)','rgba(224,162,60,.08)','<b>Jumps are power, not conditioning — and they answer to the knee.</b> 3×5 with full rest and soft, quiet landings. The meniscus rules still decide: puffy, warm or stiff next morning means drop the jumps that week; locking, catching or giving way means stop the session.')+
+    _box('#4a90d9','rgba(74,144,217,.10)','<b>Calves are the one thing never cut.</b> The soleus is the failure point in the last 5 km. Seated calf raises want ~4×/week, so add them on off days too.')+
+    _box('var(--warn)','rgba(224,162,60,.08)','<b>Back rules unchanged.</b> Neutral spine on every hinge — swing and RDL — and no loaded lumbar flexion.')+
+    _box('#7a5fc0','rgba(122,95,192,.10)','<b>Swaps and gaps.</b> The goblet squat stands in for the front squat, push-ups and floor press for the bench and incline press, the DB row for the barbell row, the RDL for the trap-bar deadlift and good morning. Face pulls are out — they need a cable or a band. Ash Allen’s moves are here at strength dosing, not his 6–8 sets of 10 against a vest.')+
+    _box('var(--accent)','rgba(200,168,107,.08)','<b>Starting weights</b> assume a trained masters lifter in a peak marathon block: the low end of each range, confirmed at 3 reps in reserve on the first session. DB weights are per hand. Log what you actually used — the row then shows the next step, taken only once every set reaches the top of its rep range.');
+  const homeWhen=['A early in the week, B about 72h later. Afternoon of an easy-run day, or 24h+ clear of a run — never the day before the long run or a quality session.',
+    'Final two weeks before NYC: drop the jumps, hold loads at the previous week’s, halve the strength sets. Race week: calves and mobility only.',
+    'If time is short, cut the curls first, then the front lunge. Never the calves.',
+    'Recovery week: halve the lower-body sets and skip the RDL.',
     'The run is the priority signal — if long-run quality drops or the knee complains, cut strength leg volume before you cut the run.']
     .map((t,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem"><b style="color:var(--accent)">${i+1}.</b> ${esc(t)}</div>`).join('');
   const set=(id,html)=>{ const e=document.getElementById(id); if(e) e.innerHTML=html; };
   set('strA',_strRows(STR_A)); set('strB',_strRows(STR_B)); set('strProg',prog);
   set('homeGov',homeGov); set('homeA',_strRows(HOME_A)); set('homeB',_strRows(HOME_B)); set('homeWhen',homeWhen);
+
 }
 async function loadStrength(){
   if(!_strRendered){ renderStrength(); _strRendered=true; }
@@ -1608,18 +1645,21 @@ async function loadStrength(){
     document.querySelectorAll('.strwt').forEach(inp=>{
       const r=map[inp.dataset.key], stamp=inp.parentNode.querySelector('.strstamp');
       if(r&&r.weight){ inp.value=r.weight; if(stamp) stamp.textContent='last · '+new Date(r.updated_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); }
+      _strRecoSync(inp);
     });
   }catch(e){}
 }
 async function saveStrength(key,val,el){
   const stamp=el&&el.parentNode.querySelector('.strstamp');
   // Same lift can appear in more than one session (e.g. bent-knee calf raise in Home A and B) — keep them in step.
-  document.querySelectorAll('.strwt[data-key="'+key+'"]').forEach(i=>{ if(i!==el) i.value=val; });
+  document.querySelectorAll('.strwt[data-key="'+key+'"]').forEach(i=>{ if(i!==el) i.value=val; _strRecoSync(i); });
+  const fail=()=>{ if(stamp){ stamp.textContent='not saved — retry'; stamp.style.color='var(--bad)'; } };
   try{
     const sb=await getClient();
-    if(String(val).trim()===''){ await sb.from('strength_logs').delete().eq('exercise_key',key); if(stamp) stamp.textContent=''; }
-    else { const {error}=await sb.from('strength_logs').upsert({exercise_key:key,weight:String(val),updated_at:new Date().toISOString()},{onConflict:'owner_id,exercise_key'}); if(!error&&stamp) stamp.textContent='saved · '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); }
-  }catch(e){}
+    if(stamp) stamp.style.color='var(--ok)';
+    if(String(val).trim()===''){ const {error}=await sb.from('strength_logs').delete().eq('exercise_key',key); if(error) fail(); else if(stamp) stamp.textContent=''; }
+    else { const {error}=await sb.from('strength_logs').upsert({exercise_key:key,weight:String(val),updated_at:new Date().toISOString()},{onConflict:'owner_id,exercise_key'}); if(error) fail(); else if(stamp) stamp.textContent='saved · '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); }
+  }catch(e){ fail(); }
 }
 
 // ---- Finance · pension (fed by the monthly workbook agent via /api/pension-update)
@@ -2299,7 +2339,7 @@ renderHealth();
 loadGut();
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.toggleWk=toggleWk;
+window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.toggleWk=toggleWk;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

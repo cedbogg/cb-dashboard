@@ -288,6 +288,20 @@
 
   .bnote{font-size:.84rem;color:#C9D3DD}
 
+  /* Fitness · Progress tiles — one lift each: latest, change, trend line */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px}
+  .ptile{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .ptile>summary{list-style:none;cursor:pointer;padding:11px 12px 8px}
+  .ptile>summary::-webkit-details-marker{display:none}
+  .ptile .pn{font-size:.76rem;color:var(--muted);line-height:1.25;min-height:1.9em}
+  .ptile .pv{font-family:var(--mono);font-size:1.25rem;color:var(--text);margin-top:3px}
+  .ptile .pv small{font-size:.62rem;color:var(--faint);margin-left:3px}
+  .ptile .pd{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:1px}
+  .ptile svg{display:block;width:100%;height:auto;margin-top:6px;touch-action:pan-y}
+  .ptile .pcap{font-family:var(--mono);font-size:.58rem;color:var(--faint);margin-top:3px;min-height:1.2em}
+  .ptile table{margin:0 12px 10px;width:calc(100% - 24px)}
+  .ptile td{font-size:.72rem;padding:5px 0}
+
   /* agent dock */
   .ask{position:fixed;right:clamp(12px,3vw,28px);bottom:20px;width:min(380px,92vw);z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55);transition:.2s}
   .ask.min{width:auto}
@@ -602,6 +616,7 @@
       <button id="tab-running" onclick="fitTab('running')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--accent);color:var(--ink);cursor:pointer">Running</button>
       <button id="tab-strength" onclick="fitTab('strength')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength (Gym)</button>
       <button id="tab-home" onclick="fitTab('home')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength (Home)</button>
+      <button id="tab-progress" onclick="fitTab('progress')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Progress</button>
     </div>
 
     <div id="fit-running">
@@ -700,9 +715,17 @@
       <div class="sec-ey">When to do them</div>
       <div class="panel" id="homeWhen"></div>
     </div>
+
+    <div id="fit-progress" style="display:none">
+      <div class="subd" style="margin-bottom:14px">Every weight you save, over time · latest, change since your first entry · hover or tap a line for the date · tap a lift for the full log</div>
+      <div class="sec-ey">Strength (Home)</div>
+      <div class="pgrid" id="progHome"><div class="s">Loading…</div></div>
+      <div class="sec-ey">Strength (Gym)</div>
+      <div class="pgrid" id="progGym"><div class="s">Loading…</div></div>
+    </div>
   </section>
 
-  <div class="foot"><span class="tag">FORTIOR LIVE · memory-aware agent · Phase B</span></div>
+  <div class="foot"><span class="tag">FORTIOR LIVE · memory-aware agent · Phase B</span> <span class="tag" id="buildStamp"></span></div>
 </div>
 
 <!-- AGENT DOCK -->
@@ -1456,12 +1479,13 @@ function marathonChartSVG(wks, curNum){
 function toggleWk(i){ const el=document.getElementById('wd-'+i), ch=document.getElementById('wchev-'+i);
   if(el){ const show=el.style.display==='none'; el.style.display=show?'':'none'; if(ch) ch.textContent=show?'▾':'▸'; } }
 function fitTab(t){
-  ['running','strength','home'].forEach(k=>{
+  ['running','strength','home','progress'].forEach(k=>{
     const pane=document.getElementById('fit-'+k), btn=document.getElementById('tab-'+k), on=(k===t);
     if(pane) pane.style.display=on?'':'none';
     if(btn){ btn.style.background=on?'var(--accent)':'var(--panel)'; btn.style.color=on?'var(--ink)':'var(--muted)'; }
   });
-  if(t!=='running') loadStrength();
+  if(t==='strength'||t==='home') loadStrength();
+  if(t==='progress') loadProgress();
 }
 // A/B session switcher within a strength group ('gym' | 'home').
 function strSub(group,which){
@@ -1661,6 +1685,68 @@ async function saveStrength(key,val,el){
     if(String(val).trim()===''){ const {error}=await sb.from('strength_logs').delete().eq('exercise_key',key); if(error) fail(); else if(stamp) stamp.textContent=''; }
     else { const {error}=await sb.from('strength_logs').upsert({exercise_key:key,weight:String(val),updated_at:new Date().toISOString()},{onConflict:'owner_id,exercise_key'}); if(error) fail(); else if(stamp) stamp.textContent='saved · '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); }
   }catch(e){ fail(); }
+}
+
+// ---- Fitness · Progress — weight over time per lift, from strength_log_history.
+// One stat tile per lift (latest + change + trend line); a single series each, so
+// no legend — the tile names it. The line starts once a lift has two dated saves.
+const _LIFT_LISTS=()=>[HOME_A,HOME_B,STR_A,STR_B];
+const _OLD_LIFTS={'h-split':'Split squat (old home)','h-pull':'Pull-ups, assisted (old home)'};
+function _liftName(k){ for(const L of _LIFT_LISTS()){ const r=L.find(x=>x[5]===k); if(r) return r[0]; } return _OLD_LIFTS[k]||k; }
+function _liftOrder(k){ let i=0; for(const L of _LIFT_LISTS()) for(const r of L){ if(r[5]===k) return i; i++; } return 1e4; }
+const _pDate=d=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const _kg=w=>(+w.toFixed(1))+' kg';
+async function loadProgress(){
+  const home=document.getElementById('progHome'), gym=document.getElementById('progGym');
+  const msg=t=>`<div class="s">${t}</div>`;
+  let sb; try{ sb=await getClient(); }catch(e){ home.innerHTML=gym.innerHTML=msg('Progress needs the live database.'); return; }
+  const {data,error}=await sb.from('strength_log_history').select('exercise_key,weight,logged_on').order('logged_on',{ascending:true});
+  if(error){ home.innerHTML=gym.innerHTML=msg('Couldn’t load your history — '+esc(error.message||'try again')); return; }
+  const by={};
+  (data||[]).forEach(r=>{ const w=parseFloat(r.weight); if(!isNaN(w)) (by[r.exercise_key]||=[]).push({d:r.logged_on,w}); });
+  const keys=Object.keys(by).sort((a,b)=>_liftOrder(a)-_liftOrder(b));
+  const fill=(el,isHome)=>{ const ks=keys.filter(k=>k.startsWith('h-')===isHome);
+    el.innerHTML=ks.length? ks.map(k=>_progTile(k,by[k])).join('') : msg('Nothing logged here yet — lifts appear from your first save.'); };
+  fill(home,true); fill(gym,false);
+}
+function _progTile(k,pts){
+  const W=160,H=48,P=6, last=pts[pts.length-1], first=pts[0];
+  const t=pts.map(p=>+new Date(p.d+'T00:00:00')), ws=pts.map(p=>p.w);
+  const t0=Math.min(...t), t1=Math.max(...t), lo=Math.min(...ws), hi=Math.max(...ws);
+  const X=i=> t1===t0? W/2 : P+(t[i]-t0)/(t1-t0)*(W-2*P);
+  const Y=w=> hi===lo? H/2 : (H-P)-(w-lo)/(hi-lo)*(H-2*P);
+  const xy=pts.map((p,i)=>[+X(i).toFixed(1),+Y(p.w).toFixed(1)]);
+  const line=xy.map((q,i)=>(i?'L':'M')+q[0]+' '+q[1]).join(' ');
+  const area=xy.length>1? `<path d="${line} L${xy[xy.length-1][0]} ${H} L${xy[0][0]} ${H} Z" fill="var(--accent)" opacity=".1"/>` : '';
+  const [ex,ey]=xy[xy.length-1];
+  const d=last.w-first.w;
+  const delta = pts.length<2 ? `first logged ${_pDate(first.d)}`
+    : `<span style="color:${d>0?'var(--ok)':d<0?'var(--bad)':'var(--muted)'}">${d>0?'▲':d<0?'▼':'■'}</span> ${d>0?'+':''}${+d.toFixed(1)} kg since ${_pDate(first.d)}`;
+  const cap = pts.length<2 ? 'the line starts with your next save' : `${pts.length} saves · latest ${_pDate(last.d)}`;
+  const rows=pts.slice().reverse().map(p=>`<tr><td>${_pDate(p.d)}</td><td>${_kg(p.w)}</td></tr>`).join('');
+  return `<details class="ptile"><summary>`+
+    `<div class="pn">${esc(_liftName(k))}</div>`+
+    `<div class="pv">${+last.w.toFixed(1)}<small>kg</small></div><div class="pd">${delta}</div>`+
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(_liftName(k))}: ${pts.map(p=>_pDate(p.d)+' '+_kg(p.w)).join(', ')}" data-pts='${JSON.stringify(xy.map((q,i)=>[q[0],q[1],pts[i].d,pts[i].w]))}' onpointermove="progHover(event,this)" onpointerleave="progHover(null,this)">`+
+      `<line x1="0" y1="${H-.5}" x2="${W}" y2="${H-.5}" stroke="var(--line)" stroke-width="1"/>`+
+      area+(xy.length>1?`<path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`:'')+
+      `<line class="px" x1="0" y1="0" x2="0" y2="${H}" stroke="var(--muted)" stroke-width="1" opacity="0"/>`+
+      `<circle cx="${ex}" cy="${ey}" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>`+
+      `<circle class="pdot" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2" opacity="0"/>`+
+      `<rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/>`+
+    `</svg><div class="pcap" data-def="${esc(cap)}">${esc(cap)}</div></summary>`+
+    `<table><tbody>${rows}</tbody></table></details>`;
+}
+// Crosshair + nearest-point readout. The whole sparkline is the hit target.
+function progHover(ev,svg){
+  const cap=svg.parentNode.querySelector('.pcap'), x=svg.querySelector('.px'), dot=svg.querySelector('.pdot');
+  if(!ev){ x.setAttribute('opacity',0); dot.setAttribute('opacity',0); cap.textContent=cap.dataset.def; return; }
+  const pts=JSON.parse(svg.dataset.pts), b=svg.getBoundingClientRect();
+  const px=(ev.clientX-b.left)/b.width*160;
+  let n=pts[0]; for(const p of pts) if(Math.abs(p[0]-px)<Math.abs(n[0]-px)) n=p;
+  x.setAttribute('x1',n[0]); x.setAttribute('x2',n[0]); x.setAttribute('opacity',.6);
+  dot.setAttribute('cx',n[0]); dot.setAttribute('cy',n[1]); dot.setAttribute('opacity',1);
+  cap.textContent=`${_pDate(n[2])} · ${_kg(n[3])}`;
 }
 
 // ---- Finance · pension (fed by the monthly workbook agent via /api/pension-update)
@@ -2340,7 +2426,7 @@ renderHealth();
 loadGut();
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.toggleWk=toggleWk;
+window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.progHover=progHover; window.toggleWk=toggleWk;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){
@@ -2354,7 +2440,11 @@ function updateHeader(){
     +' · '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});
 }
 updateHeader();
-setInterval(updateHeader, 30000);   // keep the clock (and greeting near boundaries) current
+setInterval(updateHeader, 30000);
+// Build stamp in the footer — compare it with the latest deploy to spot a stale tab.
+fetch('/api/version',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(v=>{
+  const el=document.getElementById('buildStamp'); if(el&&v&&v.sha) el.textContent='build '+v.sha;
+}).catch(()=>{});   // keep the clock (and greeting near boundaries) current
 
 // ---- boot: auth gate, then live wiring -------------------------------------
 (async function boot(){

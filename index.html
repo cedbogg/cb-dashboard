@@ -289,7 +289,7 @@
   .bnote{font-size:.84rem;color:#C9D3DD}
 
   /* Fitness · Progress tiles — one lift each: latest, change, trend line */
-  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px}
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px;align-items:start}
   .ptile{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
   .ptile>summary{list-style:none;cursor:pointer;padding:11px 12px 8px}
   .ptile>summary::-webkit-details-marker{display:none}
@@ -301,6 +301,23 @@
   .ptile .pcap{font-family:var(--mono);font-size:.58rem;color:var(--faint);margin-top:3px;min-height:1.2em}
   .ptile table{margin:0 12px 10px;width:calc(100% - 24px)}
   .ptile td{font-size:.72rem;padding:5px 0}
+  .ptile td button{background:none;border:0;color:var(--faint);cursor:pointer;font-size:.7rem;padding:0 0 0 8px}
+  .padd{display:flex;gap:6px;align-items:center;margin:0 12px 12px;flex-wrap:wrap}
+  .padd input{background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 6px;color:var(--text);font-family:var(--body);font-size:.74rem}
+  .padd input[type=number]{width:62px}
+  .padd button{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--text);font-size:.68rem;padding:4px 9px;cursor:pointer}
+  .padd .pmsg{font-size:.6rem;color:var(--faint);width:100%}
+  .rstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+  .rstat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .rstat .l{font-family:var(--mono);font-size:.56rem;letter-spacing:.8px;text-transform:uppercase;color:var(--faint)}
+  .rstat .v{font-family:var(--mono);font-size:1.15rem;color:var(--text);margin-top:3px}
+  .rstat .v small{font-size:.6rem;color:var(--faint);margin-left:2px}
+  .rstat .d{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:1px}
+  .rchart{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px 8px;margin-bottom:10px}
+  .rchart .t{font-size:.76rem;color:var(--muted)}
+  .rchart svg{display:block;width:100%;height:auto;margin-top:6px;touch-action:pan-y}
+  .rchart .pcap{font-family:var(--mono);font-size:.58rem;color:var(--faint);margin-top:3px;min-height:1.2em}
+  .rkey td{font-size:.74rem}
 
   /* agent dock */
   .ask{position:fixed;right:clamp(12px,3vw,28px);bottom:20px;width:min(380px,92vw);z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55);transition:.2s}
@@ -717,7 +734,11 @@
     </div>
 
     <div id="fit-progress" style="display:none">
-      <div class="subd" style="margin-bottom:14px">Every weight you save, over time · latest, change since your first entry · hover or tap a line for the date · tap a lift for the full log</div>
+      <div class="subd" style="margin-bottom:14px">Running from Strava · every weight you save, over time · hover or tap a chart for the detail · tap a lift to see its log or add a past entry</div>
+      <div class="sec-ey">Running · from Strava</div>
+      <div id="progRun"><div class="s">Loading…</div></div>
+      <div class="sec-ey">Main lifts</div>
+      <div class="pgrid" id="progMain"><div class="s">Loading…</div></div>
       <div class="sec-ey">Strength (Home)</div>
       <div class="pgrid" id="progHome"><div class="s">Loading…</div></div>
       <div class="sec-ey">Strength (Gym)</div>
@@ -1700,16 +1721,24 @@ async function loadProgress(){
   const home=document.getElementById('progHome'), gym=document.getElementById('progGym');
   const msg=t=>`<div class="s">${t}</div>`;
   let sb; try{ sb=await getClient(); }catch(e){ home.innerHTML=gym.innerHTML=msg('Progress needs the live database.'); return; }
+  _progSb=sb;
   const {data,error}=await sb.from('strength_log_history').select('exercise_key,weight,logged_on').order('logged_on',{ascending:true});
   if(error){ home.innerHTML=gym.innerHTML=msg('Couldn’t load your history — '+esc(error.message||'try again')); return; }
   const by={};
   (data||[]).forEach(r=>{ const w=parseFloat(r.weight); if(!isNaN(w)) (by[r.exercise_key]||=[]).push({d:r.logged_on,w}); });
   const keys=Object.keys(by).sort((a,b)=>_liftOrder(a)-_liftOrder(b));
-  const fill=(el,isHome)=>{ const ks=keys.filter(k=>k.startsWith('h-')===isHome);
-    el.innerHTML=ks.length? ks.map(k=>_progTile(k,by[k])).join('') : msg('Nothing logged here yet — lifts appear from your first save.'); };
-  fill(home,true); fill(gym,false);
+  const fill=(el,ks)=>{ el.innerHTML=ks.length? ks.map(k=>_progTile(k,by[k]||[])).join('') : msg('Nothing logged here yet — lifts appear from your first save.'); };
+  fill(document.getElementById('progMain'), _MAIN_LIFTS);
+  fill(home, keys.filter(k=>k.startsWith('h-')));
+  fill(gym, keys.filter(k=>!k.startsWith('h-') && !_MAIN_LIFTS.includes(k)));
+  loadRunProgress(sb);
 }
+// The three barbell lifts get pinned at the top, always shown even before a save.
+const _MAIN_LIFTS=['b-deadlift','a-squat','a-bench'];
+let _progSb=null;
 function _progTile(k,pts){
+  const form=`<div class="padd"><input type="date" max="${new Date().toISOString().slice(0,10)}" aria-label="Date"><input type="number" inputmode="decimal" step="0.5" min="0" placeholder="kg" aria-label="Weight in kg"><button type="button" onclick="progAdd(this,'${k}')">Add past entry</button><span class="pmsg"></span></div>`;
+  if(!pts.length) return `<details class="ptile"><summary><div class="pn">${esc(_liftName(k))}</div><div class="pv">—</div><div class="pd">nothing logged yet</div><div class="pcap"></div></summary>${form}</details>`;
   const W=160,H=48,P=6, last=pts[pts.length-1], first=pts[0];
   const t=pts.map(p=>+new Date(p.d+'T00:00:00')), ws=pts.map(p=>p.w);
   const t0=Math.min(...t), t1=Math.max(...t), lo=Math.min(...ws), hi=Math.max(...ws);
@@ -1723,7 +1752,7 @@ function _progTile(k,pts){
   const delta = pts.length<2 ? `first logged ${_pDate(first.d)}`
     : `<span style="color:${d>0?'var(--ok)':d<0?'var(--bad)':'var(--muted)'}">${d>0?'▲':d<0?'▼':'■'}</span> ${d>0?'+':''}${+d.toFixed(1)} kg since ${_pDate(first.d)}`;
   const cap = pts.length<2 ? 'the line starts with your next save' : `${pts.length} saves · latest ${_pDate(last.d)}`;
-  const rows=pts.slice().reverse().map(p=>`<tr><td>${_pDate(p.d)}</td><td>${_kg(p.w)}</td></tr>`).join('');
+  const rows=pts.slice().reverse().map(p=>`<tr><td>${_pDate(p.d)}</td><td>${_kg(p.w)}<button type="button" title="Remove this entry" aria-label="Remove ${_pDate(p.d)}" onclick="progDel(this,'${k}','${p.d}')">✕</button></td></tr>`).join('');
   return `<details class="ptile"><summary>`+
     `<div class="pn">${esc(_liftName(k))}</div>`+
     `<div class="pv">${+last.w.toFixed(1)}<small>kg</small></div><div class="pd">${delta}</div>`+
@@ -1735,18 +1764,136 @@ function _progTile(k,pts){
       `<circle class="pdot" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2" opacity="0"/>`+
       `<rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/>`+
     `</svg><div class="pcap" data-def="${esc(cap)}">${esc(cap)}</div></summary>`+
-    `<table><tbody>${rows}</tbody></table></details>`;
+    `<table><tbody>${rows}</tbody></table>${form}</details>`;
 }
+// Past entries go straight into the history (one per lift per day, so the same
+// date overwrites). They don't touch strength_logs — the session tabs keep
+// showing the latest weight you actually saved there.
+async function progAdd(btn,k){
+  const f=btn.parentNode, [d,w]=f.querySelectorAll('input'), msg=f.querySelector('.pmsg');
+  const kg=parseFloat(w.value);
+  if(!d.value||isNaN(kg)||kg<0){ msg.textContent='Pick a date and a weight.'; return; }
+  btn.disabled=true; msg.textContent='Saving…';
+  const {error}=await _progSb.from('strength_log_history').upsert(
+    {exercise_key:k,weight:String(kg),logged_on:d.value,logged_at:new Date(d.value+'T12:00:00').toISOString()},
+    {onConflict:'owner_id,exercise_key,logged_on'});
+  btn.disabled=false;
+  if(error){ msg.textContent='Not saved — '+(error.message||'try again'); return; }
+  const open=_progOpenKeys(); await loadProgress(); _progReopen(open);
+}
+async function progDel(btn,k,d){
+  if(!confirm(`Remove the ${_pDate(d)} entry for ${_liftName(k)}?`)) return;
+  const {error}=await _progSb.from('strength_log_history').delete().eq('exercise_key',k).eq('logged_on',d);
+  if(error){ alert('Not removed — '+(error.message||'try again')); return; }
+  const open=_progOpenKeys(); await loadProgress(); _progReopen(open);
+}
+// Keep the tiles you had open across a refresh.
+const _progOpenKeys=()=>[...document.querySelectorAll('#fit-progress details[open] .pn')].map(e=>e.textContent);
+const _progReopen=names=>document.querySelectorAll('#fit-progress details .pn').forEach(e=>{ if(names.includes(e.textContent)) e.closest('details').open=true; });
 // Crosshair + nearest-point readout. The whole sparkline is the hit target.
 function progHover(ev,svg){
   const cap=svg.parentNode.querySelector('.pcap'), x=svg.querySelector('.px'), dot=svg.querySelector('.pdot');
   if(!ev){ x.setAttribute('opacity',0); dot.setAttribute('opacity',0); cap.textContent=cap.dataset.def; return; }
   const pts=JSON.parse(svg.dataset.pts), b=svg.getBoundingClientRect();
-  const px=(ev.clientX-b.left)/b.width*160;
+  const px=(ev.clientX-b.left)/b.width*svg.viewBox.baseVal.width;
   let n=pts[0]; for(const p of pts) if(Math.abs(p[0]-px)<Math.abs(n[0]-px)) n=p;
   x.setAttribute('x1',n[0]); x.setAttribute('x2',n[0]); x.setAttribute('opacity',.6);
   dot.setAttribute('cx',n[0]); dot.setAttribute('cy',n[1]); dot.setAttribute('opacity',1);
-  cap.textContent=`${_pDate(n[2])} · ${_kg(n[3])}`;
+  cap.textContent = svg.dataset.unit==='km' ? `w/c ${_pDate(n[2])} · long run ${(+n[3]).toFixed(1)} km` : `${_pDate(n[2])} · ${_kg(n[3])}`;
+}
+
+// ---- Fitness · Progress · Running (Strava) ---------------------------------
+// Headline tiles, weekly volume (columns), the weekly long run (line), and a
+// key-distances table. Weeks run Monday–Sunday, London calendar dates.
+const _RUN_TYPES=['Run','TrailRun','VirtualRun'];
+const _pace=(s,km)=>{ const p=s/km, m=Math.floor(p/60), r=Math.round(p%60); return (r===60? (m+1)+':00' : m+':'+String(r).padStart(2,'0'))+' /km'; };
+const _dur=s=>{ const h=Math.floor(s/3600), m=Math.round(s%3600/60); return h? `${h}h${String(m).padStart(2,'0')}` : `${m} min`; };
+const _monday=d=>{ const x=new Date(d+'T00:00:00'); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; };
+const _iso=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+async function loadRunProgress(sb){
+  const box=document.getElementById('progRun');
+  const {data,error}=await sb.from('strava_activities').select('local_date,sport_type,distance_m,moving_time_s').order('local_date',{ascending:true});
+  if(error){ box.innerHTML=`<div class="s">Couldn’t load Strava runs — ${esc(error.message||'try again')}</div>`; return; }
+  const runs=(data||[]).filter(a=>_RUN_TYPES.includes(a.sport_type)&&a.distance_m>0&&a.local_date)
+    .map(a=>({d:a.local_date,km:a.distance_m/1000,s:a.moving_time_s||0}));
+  if(!runs.length){ box.innerHTML='<div class="s">No runs synced from Strava yet.</div>'; return; }
+  // weekly buckets, continuous from the first run's week to this week (empty weeks stay as zero)
+  const wk=new Map(); const first=_monday(runs[0].d), now=_monday(_iso(new Date()));
+  for(let x=new Date(first); x<=now; x.setDate(x.getDate()+7)) wk.set(_iso(x),{km:0,n:0,long:0});
+  runs.forEach(r=>{ const b=wk.get(_iso(_monday(r.d))); if(b){ b.km+=r.km; b.n++; b.long=Math.max(b.long,r.km); } });
+  const weeks=[...wk.entries()].slice(-16).map(([d,v])=>({d,...v}));
+  const total=runs.reduce((a,r)=>a+r.km,0), longest=runs.reduce((a,r)=>r.km>a.km?r:a), cur=weeks[weeks.length-1];
+  const stat=(l,v,u,d)=>`<div class="rstat"><div class="l">${l}</div><div class="v">${v}<small>${u}</small></div><div class="d">${d}</div></div>`;
+  box.innerHTML=`<div class="rstats">`+
+      stat('Since '+_pDate(runs[0].d), Math.round(total), 'km', runs.length+' runs')+
+      stat('Longest run', longest.km.toFixed(1), 'km', _pDate(longest.d)+' · '+_dur(longest.s))+
+      stat('This week', cur.km.toFixed(1), 'km', cur.n+' run'+(cur.n===1?'':'s')+' so far')+`</div>`+
+    _runWeekBars(weeks)+_runLongLine(weeks)+_runKeyTable(runs);
+}
+// Weekly km — columns, ≤24px, rounded top, square at the baseline, 2px gaps.
+function _runWeekBars(weeks){
+  const W=320,H=130,L=28,R=6,T=10,B=18, n=weeks.length, cw=(W-L-R)/n, bw=Math.min(cw-2,24);
+  const max=Math.max(10,...weeks.map(w=>w.km)), top=Math.ceil(max/10)*10;
+  const Y=v=>T+(H-T-B)*(1-v/top);
+  const ticks=[0,top/2,top].map(v=>`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-5}" y="${Y(v)+3}" text-anchor="end" font-size="8" fill="var(--faint)" font-family="var(--mono)">${v}</text>`).join('');
+  const bars=weeks.map((w,i)=>{ const x=L+i*cw+(cw-bw)/2, y=Y(w.km), h=Math.max(0,Y(0)-y), r=Math.min(4,h/2,bw/2);
+    const path=h<=0?'':`M${x} ${Y(0)} V${y+r} Q${x} ${y} ${x+r} ${y} H${x+bw-r} Q${x+bw} ${y} ${x+bw} ${y+r} V${Y(0)} Z`;
+    const isCur=i===n-1;
+    return `<path class="rb" d="${path}" fill="var(--accent)" opacity="${isCur?.45:1}"/>`+
+      (i%4===(n-1)%4?`<text x="${x+bw/2}" y="${H-5}" text-anchor="middle" font-size="8" fill="var(--faint)" font-family="var(--mono)">${_pDate(w.d)}</text>`:'');
+  }).join('');
+  const pts=JSON.stringify(weeks.map((w,i)=>[+(L+i*cw+cw/2).toFixed(1),w.d,+w.km.toFixed(1),w.n,i===n-1?1:0]));
+  return `<div class="rchart"><div class="t">Weekly distance · last ${n} weeks</div>`+
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly running km: ${weeks.map(w=>_pDate(w.d)+' '+w.km.toFixed(1)).join(', ')}" data-pts='${pts}' onpointermove="runBarHover(event,this)" onpointerleave="runBarHover(null,this)">${ticks}${bars}<rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/></svg>`+
+    `<div class="pcap" data-def="Faded bar = this week so far">Faded bar = this week so far</div></div>`;
+}
+function runBarHover(ev,svg){
+  const cap=svg.parentNode.querySelector('.pcap'), bars=svg.querySelectorAll('.rb'), pts=JSON.parse(svg.dataset.pts);
+  const reset=()=>bars.forEach((b,i)=>b.setAttribute('opacity', pts[i][4]?.45:1));
+  if(!ev){ reset(); cap.textContent=cap.dataset.def; return; }
+  const b=svg.getBoundingClientRect(), px=(ev.clientX-b.left)/b.width*svg.viewBox.baseVal.width;
+  let k=0; pts.forEach((p,i)=>{ if(Math.abs(p[0]-px)<Math.abs(pts[k][0]-px)) k=i; });
+  bars.forEach((el,i)=>el.setAttribute('opacity', i===k?1:.35));
+  const p=pts[k]; cap.textContent=`w/c ${_pDate(p[1])} · ${p[2]} km · ${p[3]} run${p[3]===1?'':'s'}${p[4]?' so far':''}`;
+}
+// Long run per week — the marathon build in one line.
+function _runLongLine(weeks){
+  // Only weeks with a run are plotted, at their place on the weekly axis — an
+  // unfinished or missed week is a gap, not a drop to zero.
+  const W=320,H=110,L=28,R=30,T=12,B=16, n=weeks.length;
+  const idx=weeks.map((w,i)=>w.long>0?i:-1).filter(i=>i>=0);
+  if(!idx.length) return '';
+  const max=Math.max(10,...weeks.map(w=>w.long)), top=Math.ceil(max/10)*10;
+  const X=i=> n===1? (L+W-R)/2 : L+i*(W-L-R)/(n-1), Y=v=>T+(H-T-B)*(1-v/top);
+  const xy=idx.map(i=>[+X(i).toFixed(1),+Y(weeks[i].long).toFixed(1)]);
+  const line=xy.map((q,k)=>(k && idx[k]-idx[k-1]===1?'L':'M')+q[0]+' '+q[1]).join(' ');
+  const ticks=[0,top/2,top].map(v=>`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-5}" y="${Y(v)+3}" text-anchor="end" font-size="8" fill="var(--faint)" font-family="var(--mono)">${v}</text>`).join('');
+  const lastI=idx[idx.length-1], last=weeks[lastI], [ex,ey]=xy[xy.length-1];
+  const pts=JSON.stringify(xy.map((q,k)=>[q[0],q[1],weeks[idx[k]].d,+weeks[idx[k]].long.toFixed(1)]));
+  return `<div class="rchart"><div class="t">Long run each week</div>`+
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly long run km: ${idx.map(i=>_pDate(weeks[i].d)+' '+weeks[i].long.toFixed(1)).join(', ')}" data-unit="km" data-pts='${pts}' onpointermove="progHover(event,this)" onpointerleave="progHover(null,this)">`+
+      ticks+`<path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`+
+      `<line class="px" x1="0" y1="${T}" x2="0" y2="${H-B}" stroke="var(--muted)" stroke-width="1" opacity="0"/>`+
+      `<circle cx="${ex}" cy="${ey}" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>`+
+      `<text x="${ex+7}" y="${ey+3}" font-size="9" fill="var(--text)" font-family="var(--mono)">${last.long.toFixed(0)}</text>`+
+      `<circle class="pdot" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2" opacity="0"/>`+
+      `<rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/></svg>`+
+    `<div class="pcap" data-def="Latest long run ${last.long.toFixed(1)} km, w/c ${_pDate(last.d)}">Latest long run ${last.long.toFixed(1)} km, w/c ${_pDate(last.d)}</div></div>`;
+}
+// Key distances — how often you've gone that far, the longest, and the fastest
+// whole-run average pace at that length. Strava splits aren't synced, so these
+// are full-run averages, not best efforts inside longer runs.
+function _runKeyTable(runs){
+  const bands=[[5,'5K+'],[10,'10K+'],[21,'Half · 21K+'],[30,'30K+'],[42,'Marathon']];
+  const rows=bands.map(([km,label])=>{
+    const at=runs.filter(r=>r.km>=km);
+    if(!at.length) return `<tr><td>${label}</td><td>—</td><td colspan="2" style="color:var(--faint)">not yet</td></tr>`;
+    const last=at[at.length-1], fast=at.filter(r=>r.s).reduce((a,r)=>r.s/r.km<a.s/a.km?r:a, at.find(r=>r.s)||at[0]);
+    return `<tr><td>${label}</td><td>${at.length}</td><td>${_pDate(last.d)}<div style="font-size:.6rem;color:var(--faint)">${last.km.toFixed(1)} km</div></td>`+
+      `<td>${fast.s?_pace(fast.s,fast.km):'—'}<div style="font-size:.6rem;color:var(--faint)">${_pDate(fast.d)}</div></td></tr>`;
+  }).join('');
+  return `<div class="rchart rkey"><div class="t">Key distances</div><table style="margin-top:6px"><thead><tr><th>Distance</th><th>Runs</th><th>Latest</th><th>Best pace</th></tr></thead><tbody>${rows}</tbody></table>`+
+    `<div class="pcap">Best pace = fastest whole-run average at that length or longer.</div></div>`;
 }
 
 // ---- Finance · pension (fed by the monthly workbook agent via /api/pension-update)
@@ -2426,7 +2573,7 @@ renderHealth();
 loadGut();
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.progHover=progHover; window.toggleWk=toggleWk;
+window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.progHover=progHover; window.runBarHover=runBarHover; window.progAdd=progAdd; window.progDel=progDel; window.toggleWk=toggleWk;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

@@ -319,6 +319,53 @@ drop policy if exists owner_all on strength_logs;
 create policy owner_all on strength_logs for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
 -- ------------------------------------------------------------
+-- 15b. STRENGTH LOG HISTORY  (every weight ever saved to
+--      strength_logs, one row per exercise per day, so progression
+--      survives strength_logs' overwrite-in-place). Filled by a
+--      trigger, so no client has to remember to write it; same-day
+--      edits collapse to the last value.
+-- ------------------------------------------------------------
+create table if not exists strength_log_history (
+  id           bigint generated always as identity primary key,
+  owner_id     uuid not null default auth.uid(),
+  exercise_key text not null,
+  weight       text not null,
+  logged_on    date not null,
+  logged_at    timestamptz not null default now(),
+  unique (owner_id, exercise_key, logged_on)
+);
+create index if not exists strength_log_history_key_idx
+  on strength_log_history (owner_id, exercise_key, logged_on desc);
+alter table strength_log_history enable row level security;
+drop policy if exists owner_all on strength_log_history;
+create policy owner_all on strength_log_history for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+create or replace function record_strength_history() returns trigger
+language plpgsql set search_path = public as $$
+begin
+  if new.weight is null or btrim(new.weight) = '' then return new; end if;
+  if tg_op = 'UPDATE' and new.weight is not distinct from old.weight then return new; end if;
+  insert into strength_log_history (owner_id, exercise_key, weight, logged_on, logged_at)
+  values (new.owner_id, new.exercise_key, new.weight,
+          (new.updated_at at time zone 'Europe/London')::date, new.updated_at)
+  on conflict (owner_id, exercise_key, logged_on)
+  do update set weight = excluded.weight, logged_at = excluded.logged_at;
+  return new;
+end $$;
+
+drop trigger if exists strength_logs_history on strength_logs;
+create trigger strength_logs_history
+  after insert or update on strength_logs
+  for each row execute function record_strength_history();
+
+-- Seed from what's already logged, so history starts at the known weights.
+insert into strength_log_history (owner_id, exercise_key, weight, logged_on, logged_at)
+select owner_id, exercise_key, weight, (updated_at at time zone 'Europe/London')::date, updated_at
+from strength_logs
+where weight is not null and btrim(weight) <> ''
+on conflict (owner_id, exercise_key, logged_on) do nothing;
+
+-- ------------------------------------------------------------
 -- 16. STRAVA ACTIVITIES  (synced from Strava; Fitness screen uses
 --     them for per-day actual km + per-week run/elliptical time).
 -- ------------------------------------------------------------

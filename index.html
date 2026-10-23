@@ -629,10 +629,11 @@
   <!-- FITNESS -->
   <section class="screen" id="fitness">
     <div class="sub">Fitness</div><div class="subd" id="fitsub">NYC Marathon 2026</div>
-    <div style="display:flex;gap:8px;margin:2px 0 14px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px">
       <button id="tab-running" onclick="fitTab('running')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--accent);color:var(--ink);cursor:pointer">Running</button>
       <button id="tab-strength" onclick="fitTab('strength')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength (Gym)</button>
       <button id="tab-home" onclick="fitTab('home')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength (Home)</button>
+      <button id="tab-mobility" onclick="fitTab('mobility')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Mobility</button>
       <button id="tab-progress" onclick="fitTab('progress')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Progress</button>
     </div>
 
@@ -731,6 +732,19 @@
       <div class="panel" id="homeGov"></div>
       <div class="sec-ey">When to do them</div>
       <div class="panel" id="homeWhen"></div>
+    </div>
+
+    <div id="fit-mobility" style="display:none">
+      <div class="subd" style="margin-bottom:14px">Desk hours + marathon mileage · knee-safe (left meniscus) · back-safe (extension-biased) · <span style="color:#c9a227">★ = keep doing it through the taper</span></div>
+      <div class="sec-ey">Taper &amp; race week · NYC Sun 1 Nov</div>
+      <div class="panel" id="mobTaper"></div>
+      <div class="subtabs" style="margin-top:14px">
+        <button id="mob-all" onclick="mobFilter(false)" class="subtab sm on">Everything</button>
+        <button id="mob-taper" onclick="mobFilter(true)" class="subtab sm">★ Taper set only</button>
+      </div>
+      <div id="mobList"></div>
+      <div class="sec-ey">The rules</div>
+      <div class="panel" id="mobRules"></div>
     </div>
 
     <div id="fit-progress" style="display:none">
@@ -1500,13 +1514,14 @@ function marathonChartSVG(wks, curNum){
 function toggleWk(i){ const el=document.getElementById('wd-'+i), ch=document.getElementById('wchev-'+i);
   if(el){ const show=el.style.display==='none'; el.style.display=show?'':'none'; if(ch) ch.textContent=show?'▾':'▸'; } }
 function fitTab(t){
-  ['running','strength','home','progress'].forEach(k=>{
+  ['running','strength','home','mobility','progress'].forEach(k=>{
     const pane=document.getElementById('fit-'+k), btn=document.getElementById('tab-'+k), on=(k===t);
     if(pane) pane.style.display=on?'':'none';
     if(btn){ btn.style.background=on?'var(--accent)':'var(--panel)'; btn.style.color=on?'var(--ink)':'var(--muted)'; }
   });
   if(t==='strength'||t==='home') loadStrength();
   if(t==='progress') loadProgress();
+  if(t==='mobility') renderMobility();
 }
 // A/B session switcher within a strength group ('gym' | 'home').
 function strSub(group,which){
@@ -1706,6 +1721,120 @@ async function saveStrength(key,val,el){
     if(String(val).trim()===''){ const {error}=await sb.from('strength_logs').delete().eq('exercise_key',key); if(error) fail(); else if(stamp) stamp.textContent=''; }
     else { const {error}=await sb.from('strength_logs').upsert({exercise_key:key,weight:String(val),updated_at:new Date().toISOString()},{onConflict:'owner_id,exercise_key'}); if(error) fail(); else if(stamp) stamp.textContent='saved · '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); }
   }catch(e){ fail(); }
+}
+
+// ---- Fitness · Mobility — desk hours + marathon mileage, knee- and back-safe.
+// Static content, no Supabase. ★ (taper) rows are the familiar, low-risk moves to
+// keep doing into race week; the rest pause until after NYC.
+const _MOBC={Spine:'#7a5fc0',Hips:'#c07a2a',Calves:'#4a90d9',Hamstrings:'#2f9e5f',Quads:'#5a7a95',Upper:'#b09020',Neck:'#8a6fb0',Feet:'#3f8f9f',Full:'#6c7a89'};
+// Section: {t: title, when: dose/timing line, rows}. Row: [name, dose, frequency, taper?, area, youtube search, note, video id].
+const MOB=[
+  {t:'Desk reset',when:'Weekdays · every 45–60 min of sitting · 2–3 min · pick 2–3 each break',rows:[
+    ['Standing back extension','×5–10','Every hour you sit',1,'Spine','mckenzie standing back extension','Hands on the low back, lean back gently, return. Undoes the flexion of sitting — extension is your back’s preferred direction.'],
+    ['Chin tuck','×10, 3-s hold','2–3×/day',1,'Neck','chin tuck exercise posture','Glide the head straight back (double chin), eyes level. Counters the screen-forward neck.'],
+    ['Doorway pec stretch','2×30s','Daily',1,'Upper','doorway pec stretch','Elbows at shoulder height, step through until the chest opens. Opens the rounded-shoulder desk posture so the arms swing freely when you run.'],
+    ['Seated thoracic extension over the chair back','×10','Daily',1,'Spine','seated thoracic extension chair','Hands behind the head, arch the upper back over the chair top, ribs down. Mid-back moves, low back stays put.'],
+    ['Standing hip-flexor stretch','2×30s/side','2–3×/day',1,'Hips','standing hip flexor stretch','Split stance, tuck the pelvis, squeeze the back-leg glute. Sitting shortens the hip flexors all day; tight ones tilt the pelvis and load the low back on every stride.'],
+    ['Seated figure-4','30s/side','Daily',1,'Hips','seated figure four stretch chair','Ankle on the opposite knee, tall spine, hinge slightly from the hips — don’t round the back.'],
+    ['Wrist / forearm stretch','2×20s each way','Daily',1,'Upper','wrist flexor extensor stretch','Arm straight, gently pull the hand back, then down. Keyboard tension — and it helps the elbow.'],
+    ['Plantar ball roll under the desk','60s/foot','Daily',1,'Feet','lacrosse ball plantar fascia roll','Tennis or lacrosse ball, shoes off, moderate pressure.'],
+    ['Glute squeezes + calf pumps','×20 each','Hourly',1,'Calves','seated calf raises under desk','Seated. Keeps the glutes switched on and the blood moving — the same drill you’ll use on the flight.']
+  ]},
+  {t:'Daily 10-minute flow',when:'Every day · morning or before bed · ~10 min · not in the first 30 min after waking (discs are most vulnerable then)',rows:[
+    ['Prone press-up (McKenzie)','×10','Daily',1,'Spine','mckenzie press up prone extension','Hips stay down, arms push the chest up, breathe out at the top.','kFZ8-rMItKk'],
+    ['Cat–camel','×10 slow','Daily',1,'Spine','cat camel exercise spine','Pain-free range only — motion, not stretch.','V-zycfsFjq0'],
+    ['Open book (T-spine rotation)','×8/side','Daily',1,'Spine','open book thoracic rotation stretch','Side-lying, knees stacked and bent, rotate the top arm open and follow it with your eyes. Restores the rotation desks steal — your arm swing runs on it.'],
+    ['Half-kneeling hip-flexor stretch','2×30s/side','Daily',1,'Hips','half kneeling hip flexor stretch','Pad under the down knee. Pelvis tucked, glute squeezed; reach the same-side arm overhead to add the lat.','Bfb-9dIWEr4'],
+    ['Knee-to-wall ankle mobilisation','×10/side','Daily',1,'Calves','knee to wall ankle dorsiflexion','Heel down, drive the knee toward the wall over the 2nd toe; aim for ~10 cm toe-to-wall. Stiff ankles push load up into the knee.'],
+    ['Supine hamstring stretch with strap','2×30s/side','Daily',1,'Hamstrings','supine hamstring stretch strap','Lying down so the low back stays neutral — the back-safe alternative to touching your toes. Other leg flat on the floor.'],
+    ['Supine figure-4 (piriformis)','2×30s/side','Daily',1,'Hips','supine piriformis figure four stretch','Knee-friendly swap for pigeon pose, which twists the knee.'],
+    ['90/90 hip switches','×6/side','4×/week',0,'Hips','90 90 hip switch mobility','Hands behind you for support, slow. Stop if the back knee twists or pinches; skip it on a flagged-knee morning. New to you, so it waits until after NYC.']
+  ]},
+  {t:'Pre-run warm-up',when:'Before every run · 5 min · dynamic only — no static holds before running',rows:[
+    ['Leg swings, front–back','×10/leg','Every run',1,'Hips','leg swings front to back runners','Hand on a wall, relaxed swing that grows in range. Keep the pelvis square.'],
+    ['Leg swings, side–side','×10/leg','Every run',1,'Hips','lateral leg swings warm up','Facing the wall, swing across the body and out.'],
+    ['Walking knee hugs','×8/side','Every run',1,'Hips','walking knee hug warm up','Pull the knee to the chest, rise onto the standing toes.'],
+    ['Ankle circles + calf pumps','×10 each way','Every run',1,'Calves','ankle circles calf raises warm up','Wakes the Achilles and soleus before the first kilometre.'],
+    ['Single-leg glute bridge','×10/side','Every run',1,'Hips','single leg glute bridge','Glute switch-on so the knee doesn’t collapse inward early in the run.','3NXv0Nany-Q'],
+    ['World’s greatest stretch (back knee down)','×3/side','Every run',1,'Hips','worlds greatest stretch','Lunge, elbow to instep, rotate the arm to the sky. Back knee down keeps the front knee in a pain-free range.'],
+    ['A-skips','2×20 m','Before quality runs',0,'Full','a skip running drill','Tall posture, quick ground contact. A drill, not a stretch — leave it out of race week.']
+  ]},
+  {t:'Post-run cool-down',when:'After every run · 5–8 min · 30-s holds at 4/10 tension, never into pain',rows:[
+    ['Straight-knee calf stretch (gastrocnemius)','2×30s/side','Every run',1,'Calves','standing gastrocnemius calf stretch wall','Back leg straight, heel down, hips forward toward the wall.'],
+    ['Bent-knee calf stretch (soleus)','2×30s/side','Every run',1,'Calves','soleus stretch bent knee wall','Same position, sink the back knee. The soleus is the most-loaded muscle per stride and the one that goes in the last 5 km.'],
+    ['Side-lying quad stretch','2×30s/side','Every run',1,'Quads','side lying quad stretch','Gentle — stop before the knee feels compressed and use a strap if the heel won’t reach. Never yank the heel to the bum.'],
+    ['Half-kneeling hip-flexor stretch','30s/side','Every run',1,'Hips','half kneeling hip flexor stretch','Same as the daily flow. Runs shorten the hip flexors on top of the desk hours.','Bfb-9dIWEr4'],
+    ['Standing TFL / outer-hip stretch','2×30s/side','3×/week',1,'Hips','standing it band tfl stretch','Cross the back leg behind, push the hip out sideways, lean the trunk away.']
+  ]},
+  {t:'Foam roller + ball',when:'3×/week · evenings · ~8 min · 60–90 s per area · moderate pressure (“good hurt” 5/10 max)',rows:[
+    ['Calves','60–90s/leg','3×/week',1,'Calves','foam roll calves runners','Cross the other leg on top for more pressure. Slow passes, pause on tender spots.'],
+    ['Quads','60–90s/leg','3×/week',1,'Quads','foam roll quads','Hip to just above the kneecap — never over the knee itself.'],
+    ['Glutes + TFL (ball)','60s/side','3×/week',1,'Hips','lacrosse ball glute tfl release','Work the TFL at the front-side of the hip, not the IT band — the band doesn’t release and rolling over the outer knee irritates it.'],
+    ['Thoracic spine','×10 passes','3×/week',1,'Spine','foam roller thoracic extension','Mid-back only, hands behind the head, extend over the roller. Never roll the lower back.']
+  ]},
+  {t:'Weekly longer session',when:'1×/week · rest or knee-spared day · 20–30 min · paused in the taper',rows:[
+    ['Yoga for runners (follow-along)','20–30 min','1×/week',0,'Full','yoga for runners 20 minutes','Skip anything sitting back on the heels (hero, deep child’s pose) or twisting the knee (pigeon) — use supine figure-4 instead. Resume after the post-race week.'],
+    ['Hip CARs (controlled articular rotations)','×3/side','2–3×/week',0,'Hips','hip CARs controlled articular rotations','On all fours or standing, draw the biggest slow circle the hip allows without the pelvis moving. Keeps end-range hip control as you get older.']
+  ]},
+  {t:'Travel + race week',when:'Tue 27 Oct flight → Mon 2 Nov home · all ★',rows:[
+    ['In-flight circulation routine','Every 30–60 min','Both flights',1,'Calves','airplane seat exercises ankle circles','Calf pumps ×20, ankle circles ×10 each way, glute squeezes, walk the aisle hourly. Aisle seat, compression socks, steady water.'],
+    ['Legs up the wall','5–10 min','Evenings Tue–Sat + post-race',1,'Full','legs up the wall pose','Bum near the wall, legs resting up it. Pure recovery — no stretch, just drainage and down-regulation.'],
+    ['Post-race walking','10–20 min, easy','Daily Mon 2 – Wed 4',1,'Full','post marathon recovery walk','Walk, don’t stretch hard. Gentle range only; the muscles are damaged for 48–72 h.']
+  ]}
+];
+// Race-week timeline; the row covering today is highlighted.
+const MOB_TAPER=[
+  ['2026-10-19','2026-10-26','Until Mon 26','Keep the routine, add nothing','Desk reset, the daily flow, pre-run and cool-down every run. Foam roll lighter — moderate pressure. The weekly yoga, 90/90 and A-skips pause.'],
+  ['2026-10-27','2026-10-27','Tue 27','Flight','In-flight routine every 30–60 min. On arrival: the daily flow, then legs up the wall.'],
+  ['2026-10-28','2026-10-29','Wed 28 – Thu 29','NYC shakeouts','Pre-run warm-up + cool-down around the shakeouts, the daily flow. Last light roll on Thu — calves and quads, 60 s, easy.'],
+  ['2026-10-30','2026-10-31','Fri 30 – Sat 31','Expo + full rest','The daily flow only, holds halved, gentle. Legs up the wall in the evening. No foam rolling, no deep static stretching — it can leave the legs flat or sore on race day.'],
+  ['2026-11-01','2026-11-01','Sun 1 · race','Start village','The pre-run warm-up only, in the last 15–20 min before your corral moves: leg swings, knee hugs, ankle circles, glute bridges. No static stretching. Stay warm in throwaway layers.'],
+  ['2026-11-02','2026-11-04','Mon 2 – Wed 4','Recovery','Walk daily, the in-flight routine on the way home, legs up the wall. No roller and no hard stretching for 48–72 h. Back to the full routine from about Thu 5, once soreness is under 3/10.']
+];
+let _mobTaperOnly=false;
+function _mobRows(rows){
+  const btn='font-size:.6rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 7px;text-decoration:none;background:none;cursor:pointer;font-family:inherit';
+  return rows.filter(r=>!_mobTaperOnly||r[3]).map(([n,dose,freq,taper,area,q,note,vid])=>{
+    const chip=`<span style="font-size:.55rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:${_MOBC[area]||'var(--muted)'};padding:2px 6px;border-radius:4px">${esc(area)}</span>`;
+    const tchip=taper?`<span style="font-size:.55rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--ink);background:#c9a227;padding:2px 6px;border-radius:4px">★ Taper</span>`:'';
+    const form=vid
+      ? `<button type="button" onclick="strVid(this,'${vid}')" style="${btn}">▶ form</button><a href="https://www.youtube.com/watch?v=${vid}" target="_blank" rel="noopener" style="${btn}">YouTube ↗</a>`
+      : `<a href="${_yt(q)}" target="_blank" rel="noopener" style="${btn}">▶ YouTube</a>`;
+    const edge=taper?'border-left:3px solid #c9a227;padding-left:9px;background:rgba(201,162,39,.06)':'padding-left:12px';
+    return `<div class="strrow" style="padding:10px 0;border-bottom:1px solid var(--line);${edge}">`+
+      `<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;padding-right:6px"><span style="font-size:.85rem;font-weight:500">${esc(n)}</span>`+
+      `<span style="font-family:var(--mono);font-size:.78rem;color:var(--accent);white-space:nowrap">${esc(dose)}</span></div>`+
+      `<div style="font-family:var(--mono);font-size:.6rem;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">${esc(freq)}</div>`+
+      `<div style="font-size:.72rem;color:var(--muted);margin-top:3px;padding-right:6px">${esc(note)}</div>`+
+      `<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">${form}${chip}${tchip}</div><div class="strvid" style="padding-right:6px"></div></div>`;
+  }).join('');
+}
+function renderMobility(){
+  const set=(id,html)=>{ const e=document.getElementById(id); if(e) e.innerHTML=html; };
+  const today=new Date().toISOString().slice(0,10);
+  set('mobTaper',MOB_TAPER.map(([a,b,d,h,n])=>{
+    const now=today>=a&&today<=b;
+    return `<div class="tl"${now?' style="background:rgba(201,162,39,.08);border-left:3px solid #c9a227;padding-left:9px"':''}><div class="dt">${esc(d)}${now?'<div style="color:#c9a227;margin-top:3px">● now</div>':''}</div>`+
+      `<div class="bd"><div class="h">${esc(h)}</div><div class="n">${esc(n)}</div></div></div>`;
+  }).join('')+
+    `<div style="padding:8px 10px;margin-top:8px;background:rgba(201,162,39,.08);border-left:3px solid #c9a227;border-radius:0 8px 8px 0;font-size:.75rem"><b>Taper rule: nothing new.</b> Keep doing the ★ moves exactly as your body knows them, a little gentler each day. No new stretches, drills or deep-tissue massage in the last 5 days.</div>`);
+  set('mobList',MOB.map(s=>{
+    const rows=_mobRows(s.rows); if(!rows) return '';
+    return `<div class="sec-ey">${esc(s.t)}</div><div class="panel"><div style="font-size:.72rem;color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--line)">${esc(s.when)}</div>${rows}</div>`;
+  }).join(''));
+  set('mobRules',['Mobility is maintenance, not training. Static holds at 4/10 tension, never into pain. Dynamic before a run, static after it or in the evening.',
+    'Knee (left meniscus): no deep loaded knee bending (hero pose, sitting back on the heels, deep squat holds) and no twisting on a bent knee (pigeon, forced 90/90). On a flagged morning keep the hip-flexor and calf stretches and drop the rest of the lower-body work.',
+    'Back: extension-biased. Stretch hamstrings lying down, not by touching your toes, and skip seated forward folds in the first 30 minutes after waking.',
+    'Desk: the best stretch is the next posture. Stand every 45–60 min — set a reminder — and alternate sitting and standing if your desk allows.',
+    'Age: tissues stiffen and recover more slowly with every decade, so 10 minutes every day beats one long session a week. Consistency over intensity.',
+    'Calves and hip flexors are never skipped. They take the most from both the desk and the miles.']
+    .map((t,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem"><b style="color:var(--accent)">${i+1}.</b> ${esc(t)}</div>`).join(''));
+}
+function mobFilter(on){
+  _mobTaperOnly=on;
+  document.getElementById('mob-all').classList.toggle('on',!on);
+  document.getElementById('mob-taper').classList.toggle('on',on);
+  renderMobility();
 }
 
 // ---- Fitness · Progress — weight over time per lift, from strength_log_history.
@@ -2573,7 +2702,7 @@ renderHealth();
 loadGut();
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.progHover=progHover; window.runBarHover=runBarHover; window.progAdd=progAdd; window.progDel=progDel; window.toggleWk=toggleWk;
+window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.progHover=progHover; window.runBarHover=runBarHover; window.progAdd=progAdd; window.progDel=progDel; window.toggleWk=toggleWk; window.mobFilter=mobFilter;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

@@ -735,7 +735,7 @@
     </div>
 
     <div id="fit-mobility" style="display:none">
-      <div class="subd" style="margin-bottom:14px">Desk hours + marathon mileage · knee-safe (left meniscus) · back-safe (extension-biased) · <span style="color:#c9a227">★ = keep doing it through the taper</span></div>
+      <div class="subd" style="margin-bottom:14px">48 · desk hours + marathon mileage · knee-safe (left meniscus) · back-safe (extension-biased) · <span style="color:#c9a227">★ = keep doing it through the taper</span></div>
       <div class="sec-ey">Taper &amp; race week · NYC Sun 1 Nov</div>
       <div class="panel" id="mobTaper"></div>
       <div class="subtabs" style="margin-top:14px">
@@ -1748,6 +1748,7 @@ const MOB=[
     ['Knee-to-wall ankle mobilisation','×10/side','Daily',1,'Calves','knee to wall ankle dorsiflexion','Heel down, drive the knee toward the wall over the 2nd toe; aim for ~10 cm toe-to-wall. Stiff ankles push load up into the knee.'],
     ['Supine hamstring stretch with strap','2×30s/side','Daily',1,'Hamstrings','supine hamstring stretch strap','Lying down so the low back stays neutral — the back-safe alternative to touching your toes. Other leg flat on the floor.'],
     ['Supine figure-4 (piriformis)','2×30s/side','Daily',1,'Hips','supine piriformis figure four stretch','Knee-friendly swap for pigeon pose, which twists the knee.'],
+    ['Single-leg balance','3×30s/leg','Daily',0,'Feet','single leg balance exercise eyes closed','Barefoot, soft knee, near a counter. Progress to eyes closed or a cushion. Balance and ankle reflexes fade from the 40s and they are what catch a stumble at km 35. New to you, so start it after NYC — teeth-brushing is a good slot.'],
     ['90/90 hip switches','×6/side','4×/week',0,'Hips','90 90 hip switch mobility','Hands behind you for support, slow. Stop if the back knee twists or pinches; skip it on a flagged-knee morning. New to you, so it waits until after NYC.']
   ]},
   {t:'Pre-run warm-up',when:'Before every run · 5 min · dynamic only — no static holds before running',rows:[
@@ -1774,7 +1775,7 @@ const MOB=[
   ]},
   {t:'Weekly longer session',when:'1×/week · rest or knee-spared day · 20–30 min · paused in the taper',rows:[
     ['Yoga for runners (follow-along)','20–30 min','1×/week',0,'Full','yoga for runners 20 minutes','Skip anything sitting back on the heels (hero, deep child’s pose) or twisting the knee (pigeon) — use supine figure-4 instead. Resume after the post-race week.'],
-    ['Hip CARs (controlled articular rotations)','×3/side','2–3×/week',0,'Hips','hip CARs controlled articular rotations','On all fours or standing, draw the biggest slow circle the hip allows without the pelvis moving. Keeps end-range hip control as you get older.']
+    ['Hip CARs (controlled articular rotations)','×3/side','2–3×/week',0,'Hips','hip CARs controlled articular rotations','On all fours or standing, draw the biggest slow circle the hip allows without the pelvis moving. Keeps end-range hip control — the range that goes first in your late 40s.']
   ]},
   {t:'Travel + race week',when:'Tue 27 Oct flight → Mon 2 Nov home · all ★',rows:[
     ['In-flight circulation routine','Every 30–60 min','Both flights',1,'Calves','airplane seat exercises ankle circles','Calf pumps ×20, ankle circles ×10 each way, glute squeezes, walk the aisle hourly. Aisle seat, compression socks, steady water.'],
@@ -1826,7 +1827,7 @@ function renderMobility(){
     'Knee (left meniscus): no deep loaded knee bending (hero pose, sitting back on the heels, deep squat holds) and no twisting on a bent knee (pigeon, forced 90/90). On a flagged morning keep the hip-flexor and calf stretches and drop the rest of the lower-body work.',
     'Back: extension-biased. Stretch hamstrings lying down, not by touching your toes, and skip seated forward folds in the first 30 minutes after waking.',
     'Desk: the best stretch is the next posture. Stand every 45–60 min — set a reminder — and alternate sitting and standing if your desk allows.',
-    'Age: tissues stiffen and recover more slowly with every decade, so 10 minutes every day beats one long session a week. Consistency over intensity.',
+    'At 48: tendons (Achilles especially) and connective tissue are stiffer and slower to recover than at 30, and hip extension and upper-back rotation are the ranges lost first. So: 10 minutes every day beats one long weekly session; the hip-flexor, calf and T-spine work are the priority; after NYC lengthen the cool-down holds to 45–60 s, which works better than 30 s past 40; and allow 48 h between hard foam-roll sessions on the same area.',
     'Calves and hip flexors are never skipped. They take the most from both the desk and the miles.']
     .map((t,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem"><b style="color:var(--accent)">${i+1}.</b> ${esc(t)}</div>`).join(''));
 }

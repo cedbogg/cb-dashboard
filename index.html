@@ -698,10 +698,10 @@
           </tbody></table>
         </div>
         <div class="panel">
-          <div class="bnote" style="margin-bottom:10px">Fly Tue, race Sun, fly home Mon. Target 3:45–4:00, locked from October's peak-week data.</div>
+          <div class="bnote" style="margin-bottom:10px">Fly Fri, race Sun, fly home Mon. Target 3:45–4:00, locked from October's peak-week data.</div>
           <div class="lines" style="border-top:none;padding-top:0">
             <div class="ln"><span class="tk"></span><span class="t">Start village: arrive 2.5–3h early, throwaway layers</span></div>
-            <div class="ln"><span class="tk"></span><span class="t">Knee protocol travels — flagged shakeout = full rest Thursday</span></div>
+            <div class="ln"><span class="tk"></span><span class="t">Knee protocol travels — flagged knee after the flight = skip Saturday’s shakeout</span></div>
             <div class="ln"><span class="tk"></span><span class="t">Weather &gt;15°C at gun: add 15–20 sec/km and accept it</span></div>
           </div>
         </div>
@@ -1369,7 +1369,7 @@ const MARA_DAYS=[
   {week:12,day:'Mon',type:'Easy',km:11,note:'MAF ≤137, flat'},{week:12,day:'Tue',type:'Easy',km:14,note:'MAF ≤137 + Strength A'},{week:12,day:'Wed',type:'Threshold',km:16,note:'3 km + 2×20 min RPE7 (3 min jog) + 4 km'},{week:12,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:12,day:'Fri',type:'Easy',km:10,note:'MAF ≤137, flat'},{week:12,day:'Sat',type:'Rest',km:0,note:''},{week:12,day:'Sun',type:'Long',km:29,note:'Peak long run — flat, last 6 km @MP + Strength B'},
   {week:13,day:'Mon',type:'Easy',km:9,note:'MAF ≤137, flat'},{week:13,day:'Tue',type:'Easy',km:11,note:'MAF ≤137 + Strength A minimal'},{week:13,day:'Wed',type:'Threshold',km:12,note:'MP run — 3 km + 6 km @MP + 3 km'},{week:13,day:'Thu',type:'Recovery',km:0,note:'Knee-spared aqua/elliptical Z2 + rehab stability'},{week:13,day:'Fri',type:'Easy',km:6,note:'MAF ≤137, flat'},{week:13,day:'Sat',type:'Rest',km:0,note:''},{week:13,day:'Sun',type:'Long',km:22,note:'Relaxed, mostly MAF ≤137 + Strength B light'},
   {week:14,day:'Mon',type:'Easy',km:7,note:'MAF ≤137, flat'},{week:14,day:'Tue',type:'Easy',km:8,note:'MAF ≤137, no strength from here'},{week:14,day:'Wed',type:'Threshold',km:8,note:'MP tune-up — 2 km + 4 km @MP + 2 km'},{week:14,day:'Thu',type:'Rest',km:0,note:'Rest or 30 min easy spin'},{week:14,day:'Fri',type:'Easy',km:5,note:'MAF ≤137, flat'},{week:14,day:'Sat',type:'Rest',km:0,note:''},{week:14,day:'Sun',type:'Long',km:14,note:'Easy, MAF ≤137'},
-  {week:15,day:'Mon',type:'Rest',km:0,note:'Travel prep'},{week:15,day:'Tue',type:'Easy',km:6,note:'MAF ≤137, flat, then fly to NYC'},{week:15,day:'Wed',type:'Easy',km:5,note:'NYC shakeout + 4×20 s strides'},{week:15,day:'Thu',type:'Easy',km:4,note:'Easy shakeout; full rest if Wed flagged the knee'},{week:15,day:'Fri',type:'Rest',km:0,note:'Expo, feet up'},{week:15,day:'Sat',type:'Rest',km:0,note:'Full rest, carb load, kit prep'},{week:15,day:'Sun',type:'Race',km:42.2,note:'NYC Marathon — target 3:45–4:00, ~5:20–5:41/km; gels at km 6, 14, 21, 28, 34, 39'}
+  {week:15,day:'Mon',type:'Rest',km:0,note:''},{week:15,day:'Tue',type:'Easy',km:6,note:'MAF ≤137, flat'},{week:15,day:'Wed',type:'Easy',km:5,note:'MAF ≤137, flat + 4×20 s strides'},{week:15,day:'Thu',type:'Rest',km:0,note:'Rest, pack — gels in carry-on'},{week:15,day:'Fri',type:'Rest',km:0,note:'Fly to NYC — in-flight routine, 15–20 min walk on arrival'},{week:15,day:'Sat',type:'Easy',km:4,note:'NYC shakeout 20 min + 4×20 s strides (skip if the knee flagged); expo, carb load, kit prep'},{week:15,day:'Sun',type:'Race',km:42.2,note:'NYC Marathon — target 3:45–4:00, ~5:20–5:41/km; gels at km 6, 14, 21, 28, 34, 39'}
 ];
 const MARA_NUTRITION={
   1:"Rebuild fuelling — runs under 70 min need no gels. 30g protein within 45 min post-run/strength. Protein 1.8–2g/kg daily — don't under-eat because volume looks small.",
@@ -1730,65 +1730,64 @@ const _MOBC={Spine:'#7a5fc0',Hips:'#c07a2a',Calves:'#4a90d9',Hamstrings:'#2f9e5f
 // Section: {t: title, when: dose/timing line, rows}. Row: [name, dose, frequency, taper?, area, youtube search, note, video id].
 const MOB=[
   {t:'Desk reset',when:'Weekdays · every 45–60 min of sitting · 2–3 min · pick 2–3 each break',rows:[
-    ['Standing back extension','×5–10','Every hour you sit',1,'Spine','mckenzie standing back extension','Hands on the low back, lean back gently, return. Undoes the flexion of sitting — extension is your back’s preferred direction.'],
-    ['Chin tuck','×10, 3-s hold','2–3×/day',1,'Neck','chin tuck exercise posture','Glide the head straight back (double chin), eyes level. Counters the screen-forward neck.'],
-    ['Doorway pec stretch','2×30s','Daily',1,'Upper','doorway pec stretch','Elbows at shoulder height, step through until the chest opens. Opens the rounded-shoulder desk posture so the arms swing freely when you run.'],
-    ['Seated thoracic extension over the chair back','×10','Daily',1,'Spine','seated thoracic extension chair','Hands behind the head, arch the upper back over the chair top, ribs down. Mid-back moves, low back stays put.'],
-    ['Standing hip-flexor stretch','2×30s/side','2–3×/day',1,'Hips','standing hip flexor stretch','Split stance, tuck the pelvis, squeeze the back-leg glute. Sitting shortens the hip flexors all day; tight ones tilt the pelvis and load the low back on every stride.'],
-    ['Seated figure-4','30s/side','Daily',1,'Hips','seated figure four stretch chair','Ankle on the opposite knee, tall spine, hinge slightly from the hips — don’t round the back.'],
-    ['Wrist / forearm stretch','2×20s each way','Daily',1,'Upper','wrist flexor extensor stretch','Arm straight, gently pull the hand back, then down. Keyboard tension — and it helps the elbow.'],
-    ['Plantar ball roll under the desk','60s/foot','Daily',1,'Feet','lacrosse ball plantar fascia roll','Tennis or lacrosse ball, shoes off, moderate pressure.'],
-    ['Glute squeezes + calf pumps','×20 each','Hourly',1,'Calves','seated calf raises under desk','Seated. Keeps the glutes switched on and the blood moving — the same drill you’ll use on the flight.']
+    ['Standing back extension','×5–10','Every hour you sit',1,'Spine','mckenzie standing back extension','Hands on the low back, lean back gently, return. Undoes the flexion of sitting — extension is your back’s preferred direction.','zN8mpqLqB8o'],
+    ['Chin tuck','×10, 3-s hold','2–3×/day',1,'Neck','chin tuck exercise posture','Glide the head straight back (double chin), eyes level. Counters the screen-forward neck.','ekJzJTnd43s'],
+    ['Doorway pec stretch','2×30s','Daily',1,'Upper','doorway pec stretch','Elbows at shoulder height, step through until the chest opens. Opens the rounded-shoulder desk posture so the arms swing freely when you run.','069o76BafTk'],
+    ['Seated thoracic extension over the chair back','×10','Daily',1,'Spine','seated thoracic extension chair','Hands behind the head, arch the upper back over the chair top, ribs down. Mid-back moves, low back stays put.','kCoTeRB8c-g'],
+    ['Standing hip-flexor stretch','2×30s/side','2–3×/day',1,'Hips','standing hip flexor stretch','Split stance, tuck the pelvis, squeeze the back-leg glute. Sitting shortens the hip flexors all day; tight ones tilt the pelvis and load the low back on every stride.','nIo57TDdBas'],
+    ['Seated figure-4','30s/side','Daily',1,'Hips','seated figure four stretch chair','Ankle on the opposite knee, tall spine, hinge slightly from the hips — don’t round the back.','MNwLaQ-jgHs'],
+    ['Wrist / forearm stretch','2×20s each way','Daily',1,'Upper','wrist flexor extensor stretch','Arm straight, gently pull the hand back, then down. Keyboard tension — and it helps the elbow.','ziIHMzpT0Lg'],
+    ['Plantar ball roll under the desk','60s/foot','Daily',1,'Feet','lacrosse ball plantar fascia roll','Tennis or lacrosse ball, shoes off, moderate pressure.','P3oBz2S511Y'],
+    ['Glute squeezes + calf pumps','×20 each','Hourly',1,'Calves','seated calf raises under desk','Seated. Keeps the glutes switched on and the blood moving — the same drill you’ll use on the flight.','ohvR3shCV90']
   ]},
   {t:'Daily 10-minute flow',when:'Every day · morning or before bed · ~10 min · not in the first 30 min after waking (discs are most vulnerable then)',rows:[
     ['Prone press-up (McKenzie)','×10','Daily',1,'Spine','mckenzie press up prone extension','Hips stay down, arms push the chest up, breathe out at the top.','kFZ8-rMItKk'],
     ['Cat–camel','×10 slow','Daily',1,'Spine','cat camel exercise spine','Pain-free range only — motion, not stretch.','V-zycfsFjq0'],
-    ['Open book (T-spine rotation)','×8/side','Daily',1,'Spine','open book thoracic rotation stretch','Side-lying, knees stacked and bent, rotate the top arm open and follow it with your eyes. Restores the rotation desks steal — your arm swing runs on it.'],
+    ['Open book (T-spine rotation)','×8/side','Daily',1,'Spine','open book thoracic rotation stretch','Side-lying, knees stacked and bent, rotate the top arm open and follow it with your eyes. Restores the rotation desks steal — your arm swing runs on it.','rDviWORCWEw'],
     ['Half-kneeling hip-flexor stretch','2×30s/side','Daily',1,'Hips','half kneeling hip flexor stretch','Pad under the down knee. Pelvis tucked, glute squeezed; reach the same-side arm overhead to add the lat.','Bfb-9dIWEr4'],
-    ['Knee-to-wall ankle mobilisation','×10/side','Daily',1,'Calves','knee to wall ankle dorsiflexion','Heel down, drive the knee toward the wall over the 2nd toe; aim for ~10 cm toe-to-wall. Stiff ankles push load up into the knee.'],
-    ['Supine hamstring stretch with strap','2×30s/side','Daily',1,'Hamstrings','supine hamstring stretch strap','Lying down so the low back stays neutral — the back-safe alternative to touching your toes. Other leg flat on the floor.'],
-    ['Supine figure-4 (piriformis)','2×30s/side','Daily',1,'Hips','supine piriformis figure four stretch','Knee-friendly swap for pigeon pose, which twists the knee.'],
-    ['Single-leg balance','3×30s/leg','Daily',0,'Feet','single leg balance exercise eyes closed','Barefoot, soft knee, near a counter. Progress to eyes closed or a cushion. Balance and ankle reflexes fade from the 40s and they are what catch a stumble at km 35. New to you, so start it after NYC — teeth-brushing is a good slot.'],
-    ['90/90 hip switches','×6/side','4×/week',0,'Hips','90 90 hip switch mobility','Hands behind you for support, slow. Stop if the back knee twists or pinches; skip it on a flagged-knee morning. New to you, so it waits until after NYC.']
+    ['Knee-to-wall ankle mobilisation','×10/side','Daily',1,'Calves','knee to wall ankle dorsiflexion','Heel down, drive the knee toward the wall over the 2nd toe; aim for ~10 cm toe-to-wall. Stiff ankles push load up into the knee.','NqgwyM9hXMI'],
+    ['Supine hamstring stretch with strap','2×30s/side','Daily',1,'Hamstrings','supine hamstring stretch strap','Lying down so the low back stays neutral — the back-safe alternative to touching your toes. Other leg flat on the floor.','Il1L75v6gq0'],
+    ['Supine figure-4 (piriformis)','2×30s/side','Daily',1,'Hips','supine piriformis figure four stretch','Knee-friendly swap for pigeon pose, which twists the knee.','-g0nuyTHMrI'],
+    ['Single-leg balance','3×30s/leg','Daily',0,'Feet','single leg balance exercise eyes closed','Barefoot, soft knee, near a counter. Progress to eyes closed or a cushion. Balance and ankle reflexes fade from the 40s and they are what catch a stumble at km 35. New to you, so start it after NYC — teeth-brushing is a good slot.','PijFGN0S7p4'],
+    ['90/90 hip switches','×6/side','4×/week',0,'Hips','90 90 hip switch mobility','Hands behind you for support, slow. Stop if the back knee twists or pinches; skip it on a flagged-knee morning. New to you, so it waits until after NYC.','HUZimFZJZWU']
   ]},
   {t:'Pre-run warm-up',when:'Before every run · 5 min · dynamic only — no static holds before running',rows:[
-    ['Leg swings, front–back','×10/leg','Every run',1,'Hips','leg swings front to back runners','Hand on a wall, relaxed swing that grows in range. Keep the pelvis square.'],
-    ['Leg swings, side–side','×10/leg','Every run',1,'Hips','lateral leg swings warm up','Facing the wall, swing across the body and out.'],
-    ['Walking knee hugs','×8/side','Every run',1,'Hips','walking knee hug warm up','Pull the knee to the chest, rise onto the standing toes.'],
-    ['Ankle circles + calf pumps','×10 each way','Every run',1,'Calves','ankle circles calf raises warm up','Wakes the Achilles and soleus before the first kilometre.'],
+    ['Leg swings, front–back','×10/leg','Every run',1,'Hips','leg swings front to back runners','Hand on a wall, relaxed swing that grows in range. Keep the pelvis square.','UN9j_8l3keM'],
+    ['Leg swings, side–side','×10/leg','Every run',1,'Hips','lateral leg swings warm up','Facing the wall, swing across the body and out.','naU01OQejzU'],
+    ['Walking knee hugs','×8/side','Every run',1,'Hips','walking knee hug warm up','Pull the knee to the chest, rise onto the standing toes.','GVU4paANHoE'],
+    ['Ankle circles + calf pumps','×10 each way','Every run',1,'Calves','ankle circles calf raises warm up','Wakes the Achilles and soleus before the first kilometre.','NRFk_tc2qsI'],
     ['Single-leg glute bridge','×10/side','Every run',1,'Hips','single leg glute bridge','Glute switch-on so the knee doesn’t collapse inward early in the run.','3NXv0Nany-Q'],
-    ['World’s greatest stretch (back knee down)','×3/side','Every run',1,'Hips','worlds greatest stretch','Lunge, elbow to instep, rotate the arm to the sky. Back knee down keeps the front knee in a pain-free range.'],
-    ['A-skips','2×20 m','Before quality runs',0,'Full','a skip running drill','Tall posture, quick ground contact. A drill, not a stretch — leave it out of race week.']
+    ['World’s greatest stretch (back knee down)','×3/side','Every run',1,'Hips','worlds greatest stretch','Lunge, elbow to instep, rotate the arm to the sky. Back knee down keeps the front knee in a pain-free range.','uIFKmkvgw8w'],
+    ['A-skips','2×20 m','Before quality runs',0,'Full','a skip running drill','Tall posture, quick ground contact. A drill, not a stretch — leave it out of race week.','692E8jdhSA8']
   ]},
   {t:'Post-run cool-down',when:'After every run · 5–8 min · 30-s holds at 4/10 tension, never into pain',rows:[
-    ['Straight-knee calf stretch (gastrocnemius)','2×30s/side','Every run',1,'Calves','standing gastrocnemius calf stretch wall','Back leg straight, heel down, hips forward toward the wall.'],
-    ['Bent-knee calf stretch (soleus)','2×30s/side','Every run',1,'Calves','soleus stretch bent knee wall','Same position, sink the back knee. The soleus is the most-loaded muscle per stride and the one that goes in the last 5 km.'],
-    ['Side-lying quad stretch','2×30s/side','Every run',1,'Quads','side lying quad stretch','Gentle — stop before the knee feels compressed and use a strap if the heel won’t reach. Never yank the heel to the bum.'],
+    ['Straight-knee calf stretch (gastrocnemius)','2×30s/side','Every run',1,'Calves','standing gastrocnemius calf stretch wall','Back leg straight, heel down, hips forward toward the wall.','TXVLJ3WH8Zg'],
+    ['Bent-knee calf stretch (soleus)','2×30s/side','Every run',1,'Calves','soleus stretch bent knee wall','Same position, sink the back knee. The soleus is the most-loaded muscle per stride and the one that goes in the last 5 km.','TXVLJ3WH8Zg'],
+    ['Side-lying quad stretch','2×30s/side','Every run',1,'Quads','side lying quad stretch','Gentle — stop before the knee feels compressed and use a strap if the heel won’t reach. Never yank the heel to the bum.','uRRwljV-Nlk'],
     ['Half-kneeling hip-flexor stretch','30s/side','Every run',1,'Hips','half kneeling hip flexor stretch','Same as the daily flow. Runs shorten the hip flexors on top of the desk hours.','Bfb-9dIWEr4'],
-    ['Standing TFL / outer-hip stretch','2×30s/side','3×/week',1,'Hips','standing it band tfl stretch','Cross the back leg behind, push the hip out sideways, lean the trunk away.']
+    ['Standing TFL / outer-hip stretch','2×30s/side','3×/week',1,'Hips','standing it band tfl stretch','Cross the back leg behind, push the hip out sideways, lean the trunk away.','WmkrgfkZp_A']
   ]},
   {t:'Foam roller + ball',when:'3×/week · evenings · ~8 min · 60–90 s per area · moderate pressure (“good hurt” 5/10 max)',rows:[
-    ['Calves','60–90s/leg','3×/week',1,'Calves','foam roll calves runners','Cross the other leg on top for more pressure. Slow passes, pause on tender spots.'],
-    ['Quads','60–90s/leg','3×/week',1,'Quads','foam roll quads','Hip to just above the kneecap — never over the knee itself.'],
-    ['Glutes + TFL (ball)','60s/side','3×/week',1,'Hips','lacrosse ball glute tfl release','Work the TFL at the front-side of the hip, not the IT band — the band doesn’t release and rolling over the outer knee irritates it.'],
-    ['Thoracic spine','×10 passes','3×/week',1,'Spine','foam roller thoracic extension','Mid-back only, hands behind the head, extend over the roller. Never roll the lower back.']
+    ['Calves','60–90s/leg','3×/week',1,'Calves','foam roll calves runners','Cross the other leg on top for more pressure. Slow passes, pause on tender spots.','MuPVRt6_BV8'],
+    ['Quads','60–90s/leg','3×/week',1,'Quads','foam roll quads','Hip to just above the kneecap — never over the knee itself.','Ukk_LNN_uPc'],
+    ['Glutes + TFL (ball)','60s/side','3×/week',1,'Hips','lacrosse ball glute tfl release','Work the TFL at the front-side of the hip, not the IT band — the band doesn’t release and rolling over the outer knee irritates it.','VBR-dm95ZKw'],
+    ['Thoracic spine','×10 passes','3×/week',1,'Spine','foam roller thoracic extension','Mid-back only, hands behind the head, extend over the roller. Never roll the lower back.','dBdlv1sv144']
   ]},
   {t:'Weekly longer session',when:'1×/week · rest or knee-spared day · 20–30 min · paused in the taper',rows:[
-    ['Yoga for runners (follow-along)','20–30 min','1×/week',0,'Full','yoga for runners 20 minutes','Skip anything sitting back on the heels (hero, deep child’s pose) or twisting the knee (pigeon) — use supine figure-4 instead. Resume after the post-race week.'],
-    ['Hip CARs (controlled articular rotations)','×3/side','2–3×/week',0,'Hips','hip CARs controlled articular rotations','On all fours or standing, draw the biggest slow circle the hip allows without the pelvis moving. Keeps end-range hip control — the range that goes first in your late 40s.']
+    ['Yoga for runners (follow-along)','20–30 min','1×/week',0,'Full','yoga for runners 20 minutes','Skip anything sitting back on the heels (hero, deep child’s pose) or twisting the knee (pigeon) — use supine figure-4 instead. Resume after the post-race week.','plL13JF5BHA'],
+    ['Hip CARs (controlled articular rotations)','×3/side','2–3×/week',0,'Hips','hip CARs controlled articular rotations','On all fours or standing, draw the biggest slow circle the hip allows without the pelvis moving. Keeps end-range hip control — the range that goes first in your late 40s.','-zVPL8WPdaE']
   ]},
-  {t:'Travel + race week',when:'Tue 27 Oct flight → Mon 2 Nov home · all ★',rows:[
-    ['In-flight circulation routine','Every 30–60 min','Both flights',1,'Calves','airplane seat exercises ankle circles','Calf pumps ×20, ankle circles ×10 each way, glute squeezes, walk the aisle hourly. Aisle seat, compression socks, steady water.'],
-    ['Legs up the wall','5–10 min','Evenings Tue–Sat + post-race',1,'Full','legs up the wall pose','Bum near the wall, legs resting up it. Pure recovery — no stretch, just drainage and down-regulation.'],
-    ['Post-race walking','10–20 min, easy','Daily Mon 2 – Wed 4',1,'Full','post marathon recovery walk','Walk, don’t stretch hard. Gentle range only; the muscles are damaged for 48–72 h.']
+  {t:'Travel + race week',when:'Fri 30 Oct flight → Mon 2 Nov home · all ★',rows:[
+    ['In-flight circulation routine','Every 30–60 min','Both flights',1,'Calves','airplane seat exercises ankle circles','Calf pumps ×20, ankle circles ×10 each way, glute squeezes, walk the aisle hourly. Aisle seat, compression socks, steady water.','G05HP0bDcD8'],
+    ['Legs up the wall','5–10 min','Evenings Fri–Sat + post-race',1,'Full','legs up the wall pose','Bum near the wall, legs resting up it. Pure recovery — no stretch, just drainage and down-regulation.','4o4jednxjAc'],
+    ['Post-race walking','10–20 min, easy','Daily Mon 2 – Wed 4',1,'Full','post marathon recovery walk','Walk, don’t stretch hard. Gentle range only; the muscles are damaged for 48–72 h.','TSj4gX37GLo']
   ]}
 ];
 // Race-week timeline; the row covering today is highlighted.
 const MOB_TAPER=[
-  ['2026-10-19','2026-10-26','Until Mon 26','Keep the routine, add nothing','Desk reset, the daily flow, pre-run and cool-down every run. Foam roll lighter — moderate pressure. The weekly yoga, 90/90 and A-skips pause.'],
-  ['2026-10-27','2026-10-27','Tue 27','Flight','In-flight routine every 30–60 min. On arrival: the daily flow, then legs up the wall.'],
-  ['2026-10-28','2026-10-29','Wed 28 – Thu 29','NYC shakeouts','Pre-run warm-up + cool-down around the shakeouts, the daily flow. Last light roll on Thu — calves and quads, 60 s, easy.'],
-  ['2026-10-30','2026-10-31','Fri 30 – Sat 31','Expo + full rest','The daily flow only, holds halved, gentle. Legs up the wall in the evening. No foam rolling, no deep static stretching — it can leave the legs flat or sore on race day.'],
+  ['2026-10-19','2026-10-29','Until Thu 29','Keep the routine, add nothing','Desk reset, the daily flow, pre-run and cool-down every run. Foam roll lighter — moderate pressure; last light roll on Thu, calves and quads, 60 s, easy. The weekly yoga, 90/90 and A-skips pause.'],
+  ['2026-10-30','2026-10-30','Fri 30','Flight','In-flight routine every 30–60 min. On arrival: a 15–20 min walk outside (daylight helps the jet lag), the daily flow at half the holds, then legs up the wall.'],
+  ['2026-10-31','2026-10-31','Sat 31','Shakeout + expo','Pre-run warm-up + cool-down around the shakeout — it loosens the legs after the flight. The daily flow, gentle. Legs up the wall in the evening. No foam rolling, no deep static stretching — it can leave the legs flat or sore on race day.'],
   ['2026-11-01','2026-11-01','Sun 1 · race','Start village','The pre-run warm-up only, in the last 15–20 min before your corral moves: leg swings, knee hugs, ankle circles, glute bridges. No static stretching. Stay warm in throwaway layers.'],
   ['2026-11-02','2026-11-04','Mon 2 – Wed 4','Recovery','Walk daily, the in-flight routine on the way home, legs up the wall. No roller and no hard stretching for 48–72 h. Back to the full routine from about Thu 5, once soreness is under 3/10.']
 ];

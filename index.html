@@ -628,7 +628,7 @@
 
   <!-- FITNESS -->
   <section class="screen" id="fitness">
-    <div class="sub">Fitness</div><div class="subd" id="fitsub">NYC Marathon 2026</div>
+    <div class="sub">Fitness</div><div class="subd" id="fitsub">London Marathon 2027</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px">
       <button id="tab-running" onclick="fitTab('running')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--accent);color:var(--ink);cursor:pointer">Running</button>
       <button id="tab-strength" onclick="fitTab('strength')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength (Gym)</button>
@@ -638,6 +638,35 @@
     </div>
 
     <div id="fit-running">
+      <div class="tiles">
+        <div class="tile"><div class="lab">This week</div><div class="big" id="ldnWk">—</div><div class="chg flat" id="ldnWkSub">—</div></div>
+        <div class="tile"><div class="lab">Weeks to race</div><div class="big" id="ldnWtr">—</div><div class="chg flat">Sun 25 Apr 2027</div></div>
+        <div class="tile"><div class="lab">Next checkpoint</div><div class="big" id="ldnNext" style="font-size:1.05rem">—</div><div class="chg flat" id="ldnNextSub">—</div></div>
+        <div class="tile"><div class="lab">Target</div><div class="big" style="font-size:1.05rem">Set 31 Jan</div><div class="chg flat">5K trial → MP · half 21 Mar confirms</div></div>
+      </div>
+      <div class="sec-ey">London plan · bridge + Pfitzinger 18/55 · <a id="ldnPlanLink" href="https://www.notion.so/40d24172c70b8170a09ac325e3307fa6" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">open in Notion ↗</a></div>
+      <div class="panel">
+        <div style="padding:8px 10px;background:var(--panel-2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:.8rem;margin-bottom:8px"><b style="color:var(--text)">Bridge (9 Nov – 20 Dec):</b> recovery, then strength-led weeks while running rebuilds 30 → ~49 km, all easy + strides and hill sprints. <b style="color:var(--text)">Then the 18-week plan from Mon 21 Dec</b> — aim for the low end of every range; peak 84–95 km in P11 (1–7 Mar).</div>
+        <div style="padding:8px 10px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.8rem;margin-bottom:8px"><b style="color:var(--text)">Cut back</b> (hard sessions → recovery runs) if HRV is suppressed 3 mornings running, sleep is poor several nights, or the knee changes. Easy/GA ≤140 bpm, recovery ≤132 — if you're too tired for the next hard session, GA was too fast.</div>
+        <div style="padding:8px 10px;background:var(--panel-2);border-left:3px solid var(--line);border-radius:0 8px 8px 0;font-size:.8rem"><b style="color:var(--text)">Saturdays off.</b> Fuel 60 g carbs/h with water on every run of 90+ min, CGM on. Never heavy legs within 48 h before a long run or MP run.</div>
+      </div>
+      <div class="sec-ey">Weekly volume · plan vs actual (km)</div>
+      <div class="panel" id="ldnChart" style="overflow-x:auto">—</div>
+      <div class="sec-ey">Week by week <span id="ldnSummary" style="float:right;font-weight:400;text-transform:none;letter-spacing:0"></span></div>
+      <div class="panel" style="overflow-x:auto"><table><thead><tr><th>Week</th><th>Phase</th><th>Plan</th><th>Actual</th><th>Status</th></tr></thead><tbody id="ldnWeeks"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
+      <div class="cols">
+        <div>
+          <div class="sec-ey">Checkpoints</div>
+          <div class="panel"><div class="lines" style="border-top:none;padding-top:0" id="ldnChecks"></div></div>
+        </div>
+        <div>
+          <div class="sec-ey">Programmes</div>
+          <div class="panel" id="progs"><div class="prog"><div class="nm">Loading…</div></div></div>
+        </div>
+      </div>
+
+      <details id="nycArchive" style="margin-top:18px">
+      <summary class="sec-ey" style="cursor:pointer;list-style:revert">NYC Marathon 2026 · plan vs actual (archive) · finished 4:46:25</summary>
       <div class="tiles">
         <div class="tile"><div class="lab">This week</div><div class="big" id="fitWk">—</div><div class="chg flat" id="fitWkSub">—</div></div>
         <div class="tile"><div class="lab">Weeks to race</div><div class="big" id="fitWtr">—</div><div class="chg flat">Sun 1 Nov 2026</div></div>
@@ -669,7 +698,7 @@
       <div class="panel" id="marathonChart" style="overflow-x:auto">—</div>
       <div class="sec-ey">Weekly detail <span id="fitSummary" style="float:right;font-weight:400;text-transform:none;letter-spacing:0"></span></div>
       <div class="panel" style="overflow-x:auto"><table><thead><tr><th>Week</th><th>Phase</th><th>Plan</th><th>Actual</th><th>Status</th></tr></thead><tbody id="marathonWeeks"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
-      <div class="cols">
+      <div>
         <div>
           <div class="sec-ey">Plan</div>
           <div class="panel">
@@ -678,10 +707,6 @@
             <div class="lift"><div class="ln2">Structure</div><div class="pr">5 runs/wk from W5</div></div>
             <div class="lift"><div class="ln2">Weekly threshold</div><div class="pr">long-run-led</div></div>
           </div>
-        </div>
-        <div>
-          <div class="sec-ey">Programmes</div>
-          <div class="panel" id="progs"><div class="prog"><div class="nm">Loading…</div></div></div>
         </div>
       </div>
 
@@ -706,6 +731,7 @@
           </div>
         </div>
       </div>
+      </details>
     </div>
 
     <div id="fit-strength" style="display:none">
@@ -796,7 +822,7 @@ const DOMAINS = {
   health: {av:'HX', name:'Health',    mem:'learning your biomarkers',
     chips:['quarterly bloods cadence','Vit D historically low']},
   fitness:{av:'FT', name:'Coach',     mem:'learning · running + strength',
-    chips:['NYC marathon Nov 2026','Z2 base focus']}
+    chips:['London marathon Apr 2027','strength block → Pfitz 18/55']}
 };
 let current='home';
 const convo={};
@@ -828,7 +854,7 @@ function setDomain(s){
   if(s==='fortior') loadFortior();
   if(s==='home') loadHome();
   if(s==='perso') loadPerso();
-  if(s==='fitness'){ loadFitness(); loadMarathon(); }
+  if(s==='fitness'){ loadFitness(); loadLondon(); loadMarathon(); }
   if(s==='finance') loadFinance();
   if(s==='health') loadGut();
 }
@@ -1395,7 +1421,7 @@ async function refreshStrava(){
   try{
     const sb=await getClient(); const {data:{session}}=await sb.auth.getSession();
     const r=await fetch('/api/strava',{method:'POST',headers:{'Authorization':'Bearer '+(session?.access_token||'')}});
-    if(r.ok) loadMarathon();   // re-render with the freshly-synced actuals
+    if(r.ok){ loadMarathon(); loadLondon(); }   // re-render with the freshly-synced actuals
   }catch(e){}
 }
 async function loadMarathon(){
@@ -1431,7 +1457,6 @@ async function loadMarathon(){
     const inRange=w=> w.date_start&&w.date_end && today>=_startOfDay(w.date_start) && today<=_startOfDay(w.date_end);
     const cur = wks.find(inRange) || [...wks].reverse().find(w=>w.actual_km!=null) || wks[0];
     if(el('marathonChart')) el('marathonChart').innerHTML = marathonChartSVG(wks, cur?cur.week_num:null);
-    if(el('fitsub')){ const wl=cur&&cur.week_title? (cur.week_title.match(/^W\s*\d+/)||[''])[0] : ''; el('fitsub').textContent = 'NYC Marathon 2026 · Sun 1 Nov · '+(wl?wl+' of 15':''); }
     if(cur){
       if(el('fitWk'))    el('fitWk').textContent    = ((cur.actual_km!=null?cur.actual_km:cur.planned_km)??'—')+' km';
       if(el('fitWkSub')) el('fitWkSub').textContent = 'plan '+(cur.planned_km??'—')+'km · '+(cur.actual_runs!=null?cur.actual_runs:0)+'/'+(cur.planned_runs??'—')+' runs';
@@ -1487,13 +1512,13 @@ async function loadMarathon(){
 }
 
 // Plan-vs-actual line chart (planned dashed/muted, actual solid/accent + labels).
-function marathonChartSVG(wks, curNum){
+function marathonChartSVG(wks, curNum, nWeeks=15, lab=n=>'W'+n){
   const W=340,H=140,L=10,R=32,T=10,B=20, pw=W-L-R, ph=H-T-B;
   const ws=wks.filter(w=>w.week_num!=null).sort((a,b)=>a.week_num-b.week_num);
   if(!ws.length) return '—';
   const vals=[]; ws.forEach(w=>{ if(w.planned_km!=null)vals.push(+w.planned_km); if(w.actual_km!=null)vals.push(+w.actual_km); });
   const nmax=Math.max(10,Math.ceil(Math.max(...vals)/10)*10);
-  const x=n=>L+(n-1)/14*pw, y=v=>T+(1-v/nmax)*ph;
+  const x=n=>L+(n-1)/Math.max(1,nWeeks-1)*pw, y=v=>T+(1-v/nmax)*ph;
   const path=pts=>pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
   const plan=ws.filter(w=>w.planned_km!=null).map(w=>[x(w.week_num),y(+w.planned_km)]);
   const act=ws.filter(w=>w.actual_km!=null).map(w=>[x(w.week_num),y(+w.actual_km),w]);
@@ -1502,16 +1527,114 @@ function marathonChartSVG(wks, curNum){
   s+=`<line x1="${L}" y1="${y0}" x2="${W-R}" y2="${y0}" stroke="var(--line)" stroke-width="1"/>`;
   s+=`<line x1="${L}" y1="${ym}" x2="${W-R}" y2="${ym}" stroke="var(--line)" stroke-width="0.5" stroke-dasharray="2 2"/>`;
   s+=`<text x="${W-R+3}" y="${ym+2}" fill="var(--faint)">${nmax}</text><text x="${W-R+3}" y="${y0+2}" fill="var(--faint)">0</text>`;
-  ws.forEach(w=>{ if((w.week_num-1)%3===0||w.week_num===15) s+=`<text x="${x(w.week_num).toFixed(1)}" y="${H-6}" fill="var(--faint)" text-anchor="middle">W${w.week_num}</text>`; });
+  ws.forEach(w=>{ if((w.week_num-1)%3===0||w.week_num===nWeeks) s+=`<text x="${x(w.week_num).toFixed(1)}" y="${H-6}" fill="var(--faint)" text-anchor="middle">${lab(w.week_num)}</text>`; });
   if(curNum) s+=`<line x1="${x(curNum).toFixed(1)}" y1="${T}" x2="${x(curNum).toFixed(1)}" y2="${y0}" stroke="var(--accent)" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.5"/>`;
   s+=`<path d="${path(plan)}" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
   if(act.length) s+=`<path d="${path(act)}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
-  act.forEach(p=>{ s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.4" fill="var(--accent)"><title>W${p[2].week_num} · ${p[2].actual_km} km (plan ${p[2].planned_km})</title></circle>`; });
+  act.forEach(p=>{ s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.4" fill="var(--accent)"><title>${lab(p[2].week_num)} · ${p[2].actual_km} km (plan ${p[2].planned_km})</title></circle>`; });
   const lp=plan[plan.length-1]; if(lp) s+=`<text x="${(lp[0]+3).toFixed(1)}" y="${(lp[1]+2).toFixed(1)}" fill="var(--muted)">Plan</text>`;
   const la=act[act.length-1]; if(la) s+=`<text x="${(la[0]+3).toFixed(1)}" y="${(la[1]-3).toFixed(1)}" fill="var(--accent)">Actual</text>`;
   return s+'</svg>';
 }
 function toggleWk(i){ const el=document.getElementById('wd-'+i), ch=document.getElementById('wchev-'+i);
+  if(el){ const show=el.style.display==='none'; el.style.display=show?'':'none'; if(ch) ch.textContent=show?'▾':'▸'; } }
+
+const LDN_WEEKS=[{"c":"B1","ph":"Recovery (post-NYC wk 2)","rng":"30–37","d":[["Rest",0,"Rest · GP bloods (ferritin, CBC) + escitalopram review"],["Recovery",6,"Rec 6–8"],["Recovery",6,"Rec 6–8 · light strength"],["Rest",0,"Rest"],["Recovery",8,"Rec 8–10"],["Off",0,"Off"],["Recovery",10,"Rec 10–11"]]},{"c":"B2","ph":"Strength ramp","rng":"~35","d":[["Strength",0,"Strength"],["Easy",8,"GA 8 + 8 strides"],["Recovery",6,"Rec 6 · strength"],["Test",9,"Lactate step test #1 (~9 total)"],["Strength",0,"Strength"],["Off",0,"Off"],["Long",12,"LR 12"]]},{"c":"B3","ph":"Strength block","rng":"~41","d":[["Strength",0,"Strength"],["Easy",8,"GA 8 + 6 hill sprints + 8 strides"],["Recovery",6,"Rec 6 · strength"],["Easy",8,"GA 8"],["Recovery",5,"Rec 5 · strength"],["Off",0,"Off"],["Long",14,"LR 14"]]},{"c":"B4","ph":"Strength block","rng":"~44","d":[["Strength",0,"Strength"],["Easy",9,"GA 9 + 6 hill sprints + 8 strides"],["Recovery",6,"Rec 6 · strength"],["Easy",9,"GA 9"],["Recovery",5,"Rec 5 · strength"],["Off",0,"Off"],["Long",15,"LR 15"]]},{"c":"B5","ph":"Strength block","rng":"~48","d":[["Strength",0,"Strength"],["Easy",10,"GA 10 + 6 hill sprints + 8 strides"],["Recovery",6,"Rec 6 · strength"],["Easy",10,"GA 10"],["Recovery",6,"Rec 6 · strength"],["Off",0,"Off"],["Long",16,"LR 16"]]},{"c":"B6","ph":"Strength block + test","rng":"~49","d":[["Strength",0,"Strength"],["Easy",10,"GA 10 + 6 hill sprints + 8 strides"],["Recovery",6,"Rec 6 · strength"],["Easy",8,"GA 8"],["Test",9,"Lactate step test #2 (~9) — sets the 18-week zones"],["Off",0,"Off"],["Long",16,"ML 16"]]},{"c":"P1","ph":"Endurance","rng":"50–57","d":[["Recovery",6,"Rec 6–8"],["Threshold",13,"LT 13–14 with 20–25 min @LT · strength"],["Rest",0,"Rest"],["Easy",13,"GA 13–16"],["Rest",0,"Rest (Christmas)"],["Off",0,"Off"],["Long",18,"ML 18–19"]]},{"c":"P2","ph":"Endurance","rng":"52–61","d":[["Rest",0,"Rest"],["Easy",13,"GA 13–14 + 6 hill sprints + 8 strides · strength"],["Rest",0,"Rest"],["Easy",14,"GA 14–16 · strength"],["Recovery",6,"Rec 6–8"],["Off",0,"Off"],["MP",19,"MP run 19–23 with 13 km @MP (fuel 60 g/h)"]]},{"c":"P3","ph":"Endurance","rng":"62–70","d":[["Rest",0,"Rest"],["Easy",14,"GA 14–16 · strength"],["Recovery",6,"Rec 6–8"],["Threshold",13,"LT 13–14 with 25–30 min @LT · strength"],["Recovery",6,"Rec 6–8"],["Off",0,"Off"],["Long",23,"ML 23–24"]]},{"c":"P4","ph":"Endurance","rng":"63–75","d":[["Rest",0,"Rest"],["Easy",13,"GA 13–14 + 6 hill sprints + 8 strides · strength"],["Recovery",6,"Rec 6–10"],["Easy",14,"GA 14–16 · strength"],["Recovery",6,"Rec 6–8"],["Off",0,"Off"],["Long",24,"LR 24–27"]]},{"c":"P5","ph":"Endurance","rng":"66–77","d":[["Rest",0,"Rest"],["Threshold",14,"LT 14–16 with 30–35 min @LT · strength"],["Recovery",8,"Rec 8–10"],["Easy",14,"GA 14–16 · strength"],["Recovery",6,"Rec 6–8"],["Off",0,"Off"],["MP",24,"MP run 24–27 with 16 km @MP"]]},{"c":"P6","ph":"Recovery week","rng":"49–60","d":[["Rest",0,"Rest"],["Easy",11,"GA 11–13 + 10 strides · strength"],["Recovery",6,"Rec 6–10"],["Easy",11,"GA 11–14 · strength"],["Recovery",6,"Rec 6–8"],["Off",0,"Off"],["Test",15,"5K time trial (~15 with WU/CD) — sets the London goal and MP"]]},{"c":"P7","ph":"LT + Endurance","rng":"76–87","d":[["Rest",0,"Rest"],["Threshold",14,"LT 14–16 with 30–35 min @LT · strength"],["Recovery",6,"Rec 6–8"],["Long",18,"ML 18–19"],["Easy",11,"GA 11–13 + 6 hill sprints + 8 strides"],["Off",0,"Off"],["Long",27,"LR 27–31"]]},{"c":"P8","ph":"LT + Endurance","rng":"82–92","d":[["Recovery",6,"Rec 6–8"],["Recovery",10,"Rec 10–11 + 6 strides · strength"],["Long",19,"ML 19–21"],["Rest",0,"Rest"],["Threshold",16,"LT 16–18 with 35–40 min @LT"],["Off",0,"Off"],["Long",31,"LR 31–34"]]},{"c":"P9","ph":"LT + Endurance","rng":"75–82","d":[["Rest",0,"Rest"],["Recovery",10,"Rec 10–11 · strength"],["Long",21,"ML 21–23"],["Recovery",10,"Rec 10–11"],["Recovery",8,"Rec 8–10 + 6 strides"],["Off",0,"Off"],["MP",26,"MP run 26–27 with 19 km @MP"]]},{"c":"P10","ph":"Recovery week","rng":"61–68","d":[["Rest",0,"Rest"],["Test",10,"Lactate step test #3 (~10)"],["Intervals",13,"VO2max 13–14 with 6 × 600 m @5K pace · strength"],["Recovery",6,"Rec 6–8"],["Easy",11,"GA 11–13 + 6 hill sprints + 8 strides"],["Off",0,"Off"],["Long",21,"ML 21–23"]]},{"c":"P11","ph":"LT + Endurance (peak)","rng":"84–95","d":[["Recovery",6,"Rec 6–10"],["Recovery",10,"Rec 10–11 + 6 strides · strength"],["Threshold",18,"LT 18–19 with 35–45 min @LT"],["Rest",0,"Rest"],["Long",19,"ML 19–21"],["Off",0,"Off"],["Long",31,"LR 31–34"]]},{"c":"P12","ph":"Race prep","rng":"75–84","d":[["Recovery",6,"Rec 6–8"],["Easy",16,"GA 16–18 · strength"],["Intervals",13,"VO2max 13–14 with 5 × 600 m @5K"],["Easy",10,"GA 10"],["Recovery",6,"Rec 6–8 + 6 strides"],["Off",0,"Off"],["Race",24,"Tune-up race 8K–15K (10K preferred) + long WU/CD = 24–27 total"]]},{"c":"P13","ph":"Race prep","rng":"57–62","d":[["Rest",0,"Rest"],["Recovery",10,"Rec 10–11 · strength"],["Intervals",14,"VO2max 14–18 with 5 × 1 km @5K"],["Rest",0,"Rest"],["Easy",8,"GA 8 + 4 strides"],["Off",0,"Off"],["Race",25,"HALF MARATHON tune-up (~25 with WU/CD) — confirms the London goal"]]},{"c":"P14","ph":"Race prep","rng":"78–81","d":[["Rest",0,"Rest"],["Recovery",10,"Rec 10 · strength"],["Easy",13,"GA 13"],["Intervals",13,"VO2max 13–14 with 5 × 600 m @5K"],["Easy",13,"GA 13"],["Off",0,"Off"],["Long",29,"LR 29–31 with last 10 km @MP"]]},{"c":"P15","ph":"Race prep","rng":"79–88","d":[["Recovery",6,"Rec 6–8"],["Recovery",10,"Rec 10–11 + 6 strides · strength"],["Intervals",14,"VO2max 14–16 with 5 × 1 km @5K"],["Rest",0,"Rest"],["Long",18,"ML 18–19"],["Off",0,"Off"],["Long",31,"LR 31–34 — final dress rehearsal (race kit, gels, CGM)"]]},{"c":"P16","ph":"Taper","rng":"47–57","d":[["Recovery",6,"Rec 6–8"],["Easy",11,"GA 11–13 + 6 hill sprints + 10 strides · strength"],["Recovery",8,"Rec 8–10"],["Rest",0,"Rest"],["Recovery",6,"Rec 6–8 + 6 strides"],["Off",0,"Off"],["Race",16,"10K tune-up race (16–18 with WU/CD)"]]},{"c":"P17","ph":"Taper","rng":"50–56","d":[["Rest",0,"Rest"],["Recovery",10,"Rec 10–11 + 8 strides · last strength (light)"],["Intervals",13,"VO2max 13–14 with 5 × 1 km @5K"],["Rest",0,"Rest"],["Recovery",8,"Rec 8–10 + 6 strides"],["Off",0,"Off"],["Long",19,"ML 19–21"]]},{"c":"P18","ph":"Race week","rng":"22–28 + race","d":[["Rest",0,"Rest"],["Recovery",8,"Rec 8–10"],["MP",8,"Dress rehearsal 8–10 with 3 km @MP"],["Rest",0,"Rest · carb load starts"],["Recovery",6,"Rec 6–8 + 6 strides"],["Off",0,"Off"],["Race",42.2,"LONDON MARATHON"]]}];
+
+// ---- Fitness · London Marathon 2027 (bridge + Pfitzinger 18/55) --------------
+// The plan is fixed data (Notion page "London Marathon 2027 — Bridge + Pfitzinger
+// 18/55 Plan" is the system of record; keep the two in step). Actuals are the
+// Strava runs per calendar day. NYC keeps its own Notion weekly log /
+// marathon_weeks rows, untouched, shown in the archive section below.
+// Week i (1-based) runs Mon–Sun from LDN.start + 7·(i−1). Day km = low end of the
+// prescribed range; the week's planned km is the sum of those days.
+const LDN = { start:'2026-11-09', raceDate:'2027-04-25' };
+const LDN_CHECKS=[
+  ['2026-11-19','Lactate step test #1','baseline'],
+  ['2026-12-18','Lactate step test #2','sets the 18-week zones'],
+  ['2026-12-21','18-week plan starts','P1 · 17 weeks to goal'],
+  ['2027-01-31','5K time trial','sets the London goal + MP'],
+  ['2027-02-23','Lactate step test #3','re-sets zones'],
+  ['2027-03-14','Tune-up race 8K–15K','inside a 24–27 km day'],
+  ['2027-03-21','Half marathon','confirms the goal pace'],
+  ['2027-04-11','10K tune-up','2 weeks out'],
+  ['2027-04-25','London Marathon','🏁'],
+];
+Object.assign(DAY_C,{MP:'#d4802a',Test:'#7a8fa6',Off:'#3d4a57'});
+function ldnWeeks(){
+  const s0=_startOfDay(LDN.start);
+  return LDN_WEEKS.map((w,i)=>{
+    const ds=new Date(s0); ds.setDate(ds.getDate()+7*i);
+    const de=new Date(ds); de.setDate(de.getDate()+6);
+    const days=w.d.map((d,k)=>{ const dt=new Date(ds); dt.setDate(dt.getDate()+k); return {day:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][k],type:d[0],km:d[1],note:d[2],date:_iso(dt)}; });
+    const planned=Math.round(days.reduce((a,d)=>a+(d.km||0),0)*10)/10;
+    return {n:i+1,code:w.c,phase:w.ph,rng:w.rng,start:ds,end:de,days,planned,runs:days.filter(d=>d.km>0).length};
+  });
+}
+function ldnCurrent(wks,today){ return wks.find(w=>+today>=+w.start&&+today<=+w.end)||null; }
+async function loadLondon(){
+  const el=id=>document.getElementById(id);
+  const today=_startOfDay(new Date());
+  const wks=ldnWeeks();
+  const cur=ldnCurrent(wks,today);
+  const daysTo=iso=>Math.round((_startOfDay(iso)-today)/86400000);
+  const wtr=daysTo(LDN.raceDate);
+  if(el('ldnWtr')) el('ldnWtr').textContent=Math.max(0,Math.ceil(wtr/7))+' wk';
+  const nx=LDN_CHECKS.find(c=>daysTo(c[0])>=0);
+  if(nx){ const dd=daysTo(nx[0]);
+    if(el('ldnNext')) el('ldnNext').textContent=nx[1];
+    if(el('ldnNextSub')) el('ldnNextSub').textContent=new Date(nx[0]).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · '+(dd===0?'today':dd+'d')+' · '+nx[2]; }
+  if(el('ldnChecks')) el('ldnChecks').innerHTML=LDN_CHECKS.map(c=>{ const past=daysTo(c[0])<0;
+    return `<div class="ln"><span class="tk" style="background:${past?'var(--ok)':'var(--line)'}"></span><span class="t"${past?' style="color:var(--muted)"':''}>${new Date(c[0]).toLocaleDateString('en-GB',{day:'numeric',month:'short'})} · ${esc(c[1])} <span style="color:var(--faint)">— ${esc(c[2])}</span></span></div>`; }).join('');
+  const shownWk=cur||(+today<+wks[0].start?wks[0]:null);
+  if(el('fitsub')) el('fitsub').textContent='London Marathon 2027 · Sun 25 Apr · '+(cur?cur.code+' of '+wks.length:(+today<+wks[0].start?'starts Mon 9 Nov':'done'));
+  // Strava runs by calendar day.
+  const runKm={};
+  try{
+    const sb=await getClient();
+    const {data:acts}=await sb.from('strava_activities').select('local_date,sport_type,distance_m').gte('local_date',LDN.start);
+    const RUN=['Run','TrailRun','VirtualRun'];
+    (acts||[]).forEach(a=>{ if(a.local_date&&RUN.includes(a.sport_type)) runKm[a.local_date]=(runKm[a.local_date]||0)+(a.distance_m||0)/1000; });
+  }catch(e){}
+  wks.forEach(w=>{
+    let km=0,runs=0; w.days.forEach(d=>{ const k=runKm[d.date]; d.act=k!=null?Math.round(k*10)/10:null; if(k){km+=k;runs++;} });
+    w.actual=(+w.start<=+today)?Math.round(km*10)/10:null; w.actRuns=runs;
+    // Volume-based status for finished weeks: within 90–110% of plan passes; the
+    // plan's own error mode is over-delivery, so >120% fails like <75% does.
+    const r=w.planned? w.actual/w.planned : 1;
+    w.status = +w.end>=+today ? (w===cur?'In progress':'Upcoming')
+      : (r>=0.9&&r<=1.1?'Pass':(r>=0.75&&r<=1.2?'Partial':'Fail'));
+  });
+  if(el('ldnWk')) el('ldnWk').textContent=(cur&&cur.actual!=null?cur.actual:0)+' km';
+  if(el('ldnWkSub')) el('ldnWkSub').textContent=shownWk?(shownWk.code+' plan '+shownWk.planned+' km ('+shownWk.rng+') · '+(cur?cur.actRuns:0)+'/'+shownWk.runs+' runs'):'—';
+  const done=wks.filter(w=>['Pass','Partial','Fail'].includes(w.status));
+  const c=l=>done.filter(w=>w.status===l).length;
+  if(el('ldnSummary')) el('ldnSummary').innerHTML=done.length?`${done.length} done · <span style="color:var(--ok)">${c('Pass')} pass</span> · <span style="color:var(--warn)">${c('Partial')} partial</span> · <span style="color:var(--bad)">${c('Fail')} fail</span>`:'';
+  if(el('ldnChart')) el('ldnChart').innerHTML=marathonChartSVG(
+    wks.map(w=>({week_num:w.n,planned_km:w.planned,actual_km:w.actual,code:w.code})), cur?cur.n:null, wks.length, n=>wks[n-1].code);
+  const col={Pass:'var(--ok)',Partial:'var(--warn)',Fail:'var(--bad)','In progress':'var(--accent)',Upcoming:'var(--muted)'};
+  const todayIso=_iso(today);
+  if(el('ldnWeeks')) el('ldnWeeks').innerHTML=wks.map((w,i)=>{
+    const isCur=w===shownWk, open=isCur;
+    const dates=w.start.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+'–'+w.end.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    const rows=w.days.map(d=>{
+      const hot=d.date===todayIso;
+      const chip=`<span style="font-size:.55rem;font-weight:700;text-transform:uppercase;color:#fff;background:${DAY_C[d.type]||'var(--muted)'};padding:1px 6px;border-radius:4px">${esc(d.type)}</span>`;
+      const actCol=d.act==null?'var(--faint)':(!d.km?'var(--ok)':d.act>=d.km*0.9?'var(--ok)':'var(--warn)');
+      return `<div style="display:flex;gap:8px;align-items:baseline;padding:5px 2px;border-bottom:1px solid var(--line)${hot?';background:rgba(200,168,107,.10)':''}">`+
+        `<span style="width:30px;font-family:var(--mono);font-size:.62rem;color:${hot?'var(--accent)':'var(--faint)'}">${d.day}</span>`+
+        `${chip}<span style="font-family:var(--mono);font-size:.72rem;color:var(--muted);width:44px;text-align:right">${d.km?d.km+'km':'—'}</span>`+
+        `<span style="font-family:var(--mono);font-size:.72rem;color:${actCol};width:52px;text-align:right">${d.act==null?'—':'✓ '+d.act}</span>`+
+        `<span style="font-size:.72rem;color:var(--muted);flex:1;min-width:120px">${esc(d.note)}</span></div>`;
+    }).join('');
+    return `<tr onclick="toggleLw(${i})" style="cursor:pointer${isCur?';background:rgba(200,168,107,.08)':''}">`+
+      `<td><span id="lwchev-${i}" style="color:var(--accent);font-size:.6rem">${open?'▾':'▸'}</span> ${esc(w.code)} · ${esc(dates)}${w===cur?' <span style="color:var(--accent);font-size:.58rem">● now</span>':''}</td>`+
+      `<td>${esc(w.phase)}</td><td>${esc(w.rng)}km · ${w.runs}r</td><td>${w.actual!=null?w.actual+'km · '+w.actRuns+'r':'—'}</td>`+
+      `<td style="color:${col[w.status]||'var(--muted)'}">${esc(w.status)}</td></tr>`+
+      `<tr id="lwd-${i}" style="display:${open?'':'none'}"><td colspan="5" style="padding:2px 4px 10px">${rows}</td></tr>`;
+  }).join('');
+}
+function toggleLw(i){ const el=document.getElementById('lwd-'+i), ch=document.getElementById('lwchev-'+i);
   if(el){ const show=el.style.display==='none'; el.style.display=show?'':'none'; if(ch) ch.textContent=show?'▾':'▸'; } }
 function fitTab(t){
   ['running','strength','home','mobility','progress'].forEach(k=>{
@@ -2197,47 +2320,42 @@ async function homeCardFinance(sb){
 const _strName=k=>{ const r=[...STR_A,...STR_B].find(x=>x[5]===k); return r? r[0] : k; };
 async function homeCardFitness(sb){
   const today=_startOfDay(new Date());
-  const raceWk=Math.max(0,Math.ceil((_startOfDay(MARA.raceDate)-today)/86400000/7));
+  const raceWk=Math.max(0,Math.ceil((_startOfDay(LDN.raceDate)-today)/86400000/7));
   try{
-    const [wkR,acR,stR]=await Promise.all([
-      sb.from('marathon_weeks').select('week_num,week_title,planned_km,planned_runs,actual_km,actual_runs,compliance,date_start,date_end').order('week_num',{ascending:true}),
+    const [acR,stR]=await Promise.all([
       sb.from('strava_activities').select('local_date,sport_type,distance_m'),
       sb.from('strength_logs').select('exercise_key,weight,updated_at').order('updated_at',{ascending:false}).limit(1)
     ]);
-    const wks=wkR.data||[], acts=acR.data||[], RUN=['Run','TrailRun','VirtualRun'];
-    const cur=wks.find(w=>w.date_start&&w.date_end&&today>=_startOfDay(w.date_start)&&today<=_startOfDay(w.date_end));
+    const acts=acR.data||[], RUN=['Run','TrailRun','VirtualRun'];
+    const wks=ldnWeeks(), cur=ldnCurrent(wks,today);
     // Window = the plan week we're inside, else Mon–Sun of the current week.
     let from,to;
-    if(cur){ from=_startOfDay(cur.date_start); to=_startOfDay(cur.date_end); }
+    if(cur){ from=cur.start; to=cur.end; }
     else { from=new Date(today); from.setDate(from.getDate()-((today.getDay()+6)%7)); to=new Date(from); to.setDate(to.getDate()+6); }
     const allRuns=acts.filter(a=>a.local_date&&RUN.includes(a.sport_type));
     const runs=allRuns.filter(a=>{const t=+_startOfDay(a.local_date); return t>=+from&&t<=+to;});
     const km=Math.round(runs.reduce((s,a)=>s+(a.distance_m||0)/1000,0)*10)/10;
-    // Strava first; fall back to the week row if no activity has landed yet.
-    const shown = runs.length? km : (cur&&cur.actual_km!=null? cur.actual_km : null);
-    _hcSet('hFitHero', shown!=null? shown+' km' : '—');
-    const wlab=cur? ((cur.week_title||'').match(/W\s*\d+/)||['W'+cur.week_num])[0] : null;
-    _hcSet('hFitSub','running · '+(wlab? wlab+' of 15' : 'this week'));
+    _hcSet('hFitHero', km+' km');
+    _hcSet('hFitSub','running · '+(cur? cur.code+' of '+wks.length : (+today<+wks[0].start?'London plan starts 9 Nov':'this week')));
     const lines=[];
-    if(cur&&cur.planned_km!=null){
-      const doneRuns=runs.length||cur.actual_runs||0;
-      const pc=shown!=null&&cur.planned_km? Math.round(shown/cur.planned_km*100)+'%' : '—';
-      lines.push(_hcLine('Plan '+cur.planned_km+' km · '+doneRuns+'/'+(cur.planned_runs??'—')+' runs', pc,
-        shown!=null && cur.planned_km && shown<cur.planned_km*0.9 && +today>=+to));
+    if(cur){
+      const pc=cur.planned? Math.round(km/cur.planned*100)+'%' : '—';
+      lines.push(_hcLine('Plan '+cur.planned+' km · '+runs.length+'/'+cur.runs+' runs', pc,
+        cur.planned && km<cur.planned*0.9 && +today>=+to));
     }
     const lastRun=allRuns.slice().sort((a,b)=> a.local_date<b.local_date?1:-1)[0];
     if(lastRun){
       const d=Math.round((+today-+_startOfDay(lastRun.local_date))/86400000);
-      lines.push(_hcLine('Last run '+(Math.round((lastRun.distance_m||0)/100)/10)+' km', d===0?'today':d+'d ago', d>=5));
+      lines.push(_hcLine('Last run '+(Math.round((lastRun.distance_m||0)/100)/10)+' km', d===0?'today':d+'d ago', d>=5 && !!cur));
     } else lines.push(_hcLine('No runs logged yet','—',true));
     const st=(stR.data||[])[0];
     if(st&&st.weight) lines.push(_hcLine(_strName(st.exercise_key)+' '+st.weight+'kg',
       new Date(st.updated_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})));
-    lines.push(_hcLine('NYC Marathon', raceWk+'wk'));
+    lines.push(_hcLine('London Marathon', raceWk+'wk'));
     _hcLines('hFitLines',lines);
-    const lastDone=[...wks].reverse().find(w=>w.compliance&&w.compliance!=='Pending');
-    const idle = !lastRun || Math.round((+today-+_startOfDay(lastRun.local_date))/86400000)>=5;
-    _hcState('hcFit', (idle||(lastDone&&lastDone.compliance==='Fail'))?'warn':null);
+    // Idle only counts once the plan is running (the post-NYC rest week is planned).
+    const idle = !!cur && (!lastRun || Math.round((+today-+_startOfDay(lastRun.local_date))/86400000)>=5);
+    _hcState('hcFit', idle?'warn':null);
   }catch(e){ _hcFail('hFitLines','Training tables unreachable'); }
 }
 
@@ -2702,7 +2820,7 @@ renderHealth();
 loadGut();
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.progHover=progHover; window.runBarHover=runBarHover; window.progAdd=progAdd; window.progDel=progDel; window.toggleWk=toggleWk; window.mobFilter=mobFilter;
+window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.progHover=progHover; window.runBarHover=runBarHover; window.progAdd=progAdd; window.progDel=progDel; window.toggleWk=toggleWk; window.toggleLw=toggleLw; window.mobFilter=mobFilter;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){

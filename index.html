@@ -643,6 +643,7 @@
         <div class="tile"><div class="lab">Weeks to race</div><div class="big" id="ldnWtr">—</div><div class="chg flat">Sun 25 Apr 2027</div></div>
         <div class="tile"><div class="lab">Next checkpoint</div><div class="big" id="ldnNext" style="font-size:1.05rem">—</div><div class="chg flat" id="ldnNextSub">—</div></div>
         <div class="tile"><div class="lab">Target</div><div class="big" style="font-size:1.05rem">Set 31 Jan</div><div class="chg flat">5K trial → MP · half 21 Mar confirms</div></div>
+        <div class="tile"><div class="lab">Plan total</div><div class="big" id="ldnTot" style="font-size:1.05rem">—</div><div class="chg flat" id="ldnTotSub">—</div></div>
       </div>
       <div class="sec-ey">London plan · bridge + Pfitzinger 18/55 · <a id="ldnPlanLink" href="https://www.notion.so/40d24172c70b8170a09ac325e3307fa6" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">open in Notion ↗</a></div>
       <div class="panel">
@@ -1458,8 +1459,9 @@ async function loadMarathon(){
     // Compliance summary — completed weeks only (exclude Pending + race week 15).
     const done=wks.filter(w=>w.compliance&&w.compliance!=='Pending'&&w.week_num!==15);
     const c=l=>done.filter(w=>w.compliance===l).length;
+    const sumK=k=>Math.round(wks.reduce((a,w)=>a+(+w[k]||0),0));
     if(el('fitSummary')) el('fitSummary').innerHTML = done.length
-      ? `${done.length} done · <span style="color:var(--ok)">${c('Pass')} pass</span> · <span style="color:var(--warn)">${c('Partial')} partial</span> · <span style="color:var(--bad)">${c('Fail')} fail</span>` : '';
+      ? `${sumK('actual_km')} km run (plan ${sumK('planned_km')}) · ${done.length} done · <span style="color:var(--ok)">${c('Pass')} pass</span> · <span style="color:var(--warn)">${c('Partial')} partial</span> · <span style="color:var(--bad)">${c('Fail')} fail</span>` : '';
     const col={Pass:'var(--ok)',Partial:'var(--warn)',Fail:'var(--bad)',Pending:'var(--muted)'};
     const nurl=id=> id?('https://www.notion.so/'+String(id).replace(/-/g,'')):null;
     const todayDow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
@@ -1601,6 +1603,11 @@ async function loadLondon(){
   });
   if(el('ldnWk')) el('ldnWk').textContent=(cur&&cur.actual!=null?cur.actual:0)+' km';
   if(el('ldnWkSub')) el('ldnWkSub').textContent=shownWk?(shownWk.code+' plan '+shownWk.planned+' km ('+shownWk.rng+') · '+(cur?cur.actRuns:0)+'/'+shownWk.runs+' runs'):'—';
+  const hiOf=w=>{ const m=String(w.rng).match(/(\d+)(?!.*\d)/); const hi=m?+m[1]:w.planned; return /race/.test(w.rng)? hi+42.2 : Math.max(hi,w.planned); };
+  const totLo=Math.round(wks.reduce((a,w)=>a+w.planned,0)), totHi=Math.round(wks.reduce((a,w)=>a+hiOf(w),0));
+  const ran=Math.round(wks.reduce((a,w)=>a+(w.actual||0),0)*10)/10;
+  if(el('ldnTot')) el('ldnTot').textContent=totLo.toLocaleString('en-GB')+'–'+totHi.toLocaleString('en-GB')+' km';
+  if(el('ldnTotSub')) el('ldnTotSub').textContent=ran+' km run · '+Math.round(ran/totLo*100)+'% of the low end';
   const done=wks.filter(w=>['Pass','Partial','Fail'].includes(w.status));
   const c=l=>done.filter(w=>w.status===l).length;
   if(el('ldnSummary')) el('ldnSummary').innerHTML=done.length?`${done.length} done · <span style="color:var(--ok)">${c('Pass')} pass</span> · <span style="color:var(--warn)">${c('Partial')} partial</span> · <span style="color:var(--bad)">${c('Fail')} fail</span>`:'';

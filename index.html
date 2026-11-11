@@ -345,6 +345,43 @@
   .ask-in .send{background:var(--accent);border:none;border-radius:10px;width:38px;height:38px;color:var(--ink);font-size:1rem;cursor:pointer;flex:none}
   .foot{margin-top:22px;font-family:var(--mono);font-size:.64rem;color:var(--faint)}
   .foot .tag{border:1px dashed var(--line);border-radius:6px;padding:4px 9px}
+
+  /* Fitness · race guide — the printable race card */
+  .rcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:18px;color:var(--text)}
+  .rc-h{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}
+  .rc-t{font-family:var(--display);font-size:1.25rem;font-weight:500}
+  .rc-s{font-family:var(--mono);font-size:.68rem;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;margin-top:3px}
+  .rc-g{text-align:right}
+  .rc-gv{font-family:var(--mono);font-size:1.6rem;color:var(--accent);font-weight:600;line-height:1}
+  .rc-b{display:grid;grid-template-columns:1.2fr .8fr;gap:24px}
+  @media(max-width:760px){.rc-b{grid-template-columns:1fr}}
+  .rc-e{font-family:var(--mono);font-size:.62rem;letter-spacing:1.6px;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+  .rc-tb{width:100%;border-collapse:collapse}
+  .rc-tb th{font-family:var(--mono);font-size:.58rem;letter-spacing:.7px;text-transform:uppercase;color:var(--faint);text-align:right;padding:0 0 5px;font-weight:500}
+  .rc-tb th:first-child,.rc-tb td:first-child{text-align:left}
+  .rc-tb td{font-family:var(--mono);font-size:.76rem;padding:4px 0;border-top:1px solid var(--line);text-align:right;color:var(--muted)}
+  .rc-tb td:first-child{color:var(--text)}
+  .rc-r{margin:0;padding-left:18px;columns:2;column-gap:24px}
+  .rc-r li{font-size:.78rem;color:#C9D3DD;margin-bottom:5px;break-inside:avoid}
+  @media(max-width:760px){.rc-r{columns:1}}
+
+  /* rgPrint() reparents #raceCard to <body>, so everything else is simply hidden. */
+  @media print{
+    body.printing{background:#fff;color:#000;padding:0;background-image:none}
+    body.printing > *{display:none!important}
+    body.printing > #raceCard{display:block!important;margin:0;padding:0;border:none;background:#fff;color:#000;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body.printing #raceCard .rc-t,body.printing #raceCard .rc-tb td:first-child{color:#000}
+    body.printing #raceCard .rc-s,body.printing #raceCard .rc-tb th{color:#666}
+    body.printing #raceCard .rc-tb td{color:#222;border-top:1px solid #ccc}
+    body.printing #raceCard .rc-e,body.printing #raceCard .rc-gv{color:#8a6d2f}
+    body.printing #raceCard .rc-h{border-bottom:1px solid #999}
+    body.printing #raceCard .rc-r li{color:#222}
+    body.printing #raceCard .rc-b{break-inside:avoid}
+    @page{margin:12mm}
+  }
+
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -631,6 +668,7 @@
     <div class="sub">Fitness</div><div class="subd" id="fitsub">London Marathon 2027</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px">
       <button id="tab-running" onclick="fitTab('running')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--accent);color:var(--ink);cursor:pointer">Running</button>
+      <button id="tab-raceguide" onclick="fitTab('raceguide')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Race guide</button>
       <button id="tab-strength" onclick="fitTab('strength')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength (Gym)</button>
       <button id="tab-home" onclick="fitTab('home')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Strength (Home)</button>
       <button id="tab-mobility" onclick="fitTab('mobility')" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer">Mobility</button>
@@ -733,6 +771,63 @@
         </div>
       </div>
       </details>
+    </div>
+
+    <div id="fit-raceguide" style="display:none">
+      <div class="subd" style="margin-bottom:14px">Sun 25 Apr 2027 · Blackheath → The Mall · 42.195 km · set the goal, read the course, print the card</div>
+
+      <div class="panel" id="rgCtl">
+        <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end">
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="sec-ey" style="margin:0">Goal finish</span>
+            <input id="rgGoal" value="4:15:00" style="font-family:var(--mono);font-size:.9rem;width:112px;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px"></label>
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="sec-ey" style="margin:0">Strategy</span>
+            <select id="rgModel" style="font-family:var(--mono);font-size:.78rem;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px">
+              <option value="smart" selected>Course-smart</option><option value="neg">Negative split</option><option value="even">Even</option></select></label>
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="sec-ey" style="margin:0">Start time</span>
+            <input id="rgStart" value="10:00" style="font-family:var(--mono);font-size:.9rem;width:84px;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px"></label>
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="sec-ey" style="margin:0">Gun temperature</span>
+            <select id="rgTemp" style="font-family:var(--mono);font-size:.78rem;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px">
+              <option value="0" selected>≤10 °C — no change</option><option value="3">12 °C — +3 s/km</option><option value="8">15 °C — +8 s/km</option>
+              <option value="15">18 °C — +15 s/km</option><option value="25">21 °C — +25 s/km</option><option value="40">24 °C+ — +40 s/km</option></select></label>
+          <button onclick="rgPrint()" style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;padding:9px 15px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--ink);cursor:pointer">Print the card</button>
+        </div>
+        <div id="rgWarn" style="display:none;margin-top:12px;padding:8px 10px;background:rgba(224,162,60,.08);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:.8rem"></div>
+      </div>
+
+      <div class="tiles auto" id="rgTiles"></div>
+
+      <div class="sec-ey">The course, in nine pieces</div>
+      <div class="panel" style="overflow-x:auto" id="rgSegs">—</div>
+
+      <div class="sec-ey">Elevation · indicative</div>
+      <div class="panel" style="overflow-x:auto" id="rgProfile">—</div>
+
+      <div class="cols p">
+        <div>
+          <div class="sec-ey">Every kilometre</div>
+          <div class="panel" style="overflow-x:auto;max-height:560px;overflow-y:auto" id="rgSplits">—</div>
+        </div>
+        <div>
+          <div class="sec-ey">Fuel &amp; fluid · 60 g carbs/h</div>
+          <div class="panel" id="rgFuel">—</div>
+          <div class="sec-ey">Course stations</div>
+          <div class="panel" style="overflow-x:auto" id="rgStations">—</div>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div>
+          <div class="sec-ey">Race morning</div>
+          <div class="panel" id="rgMorning">—</div>
+        </div>
+        <div>
+          <div class="sec-ey">The six rules</div>
+          <div class="panel"><div class="lines" style="border-top:none;padding-top:0" id="rgRules"></div></div>
+        </div>
+      </div>
+
+      <div class="sec-ey">Race card · what prints</div>
+      <div id="raceCard" class="rcard">—</div>
     </div>
 
     <div id="fit-strength" style="display:none">
@@ -1638,7 +1733,7 @@ async function loadLondon(){
 function toggleLw(i){ const el=document.getElementById('lwd-'+i), ch=document.getElementById('lwchev-'+i);
   if(el){ const show=el.style.display==='none'; el.style.display=show?'':'none'; if(ch) ch.textContent=show?'▾':'▸'; } }
 function fitTab(t){
-  ['running','strength','home','mobility','progress'].forEach(k=>{
+  ['running','raceguide','strength','home','mobility','progress'].forEach(k=>{
     const pane=document.getElementById('fit-'+k), btn=document.getElementById('tab-'+k), on=(k===t);
     if(pane) pane.style.display=on?'':'none';
     if(btn){ btn.style.background=on?'var(--accent)':'var(--panel)'; btn.style.color=on?'var(--ink)':'var(--muted)'; }
@@ -1646,6 +1741,7 @@ function fitTab(t){
   if(t==='strength'||t==='home') loadStrength();
   if(t==='progress') loadProgress();
   if(t==='mobility') renderMobility();
+  if(t==='raceguide') rgInit();
 }
 // A/B session switcher within a strength group ('gym' | 'home').
 function strSub(group,which){
@@ -1654,6 +1750,213 @@ function strSub(group,which){
     if(pane) pane.style.display=on?'':'none';
     if(btn) btn.classList.toggle('on',on);
   });
+}
+
+
+// ---- Fitness · Race guide · London Marathon 2027 ----------------------------
+// Self-contained: no Supabase, no network. Goal time + strategy + gun temperature
+// drive one set of numbers that every panel below — and the printed card — share.
+// Course facts follow London Marathon Events' published 2026 course and station
+// list; re-check them against the 2027 Event Guide when it lands.
+const RG_RACE=new Date(2027,3,25), RG_D=42.195;
+const _e=id=>document.getElementById(id);
+
+// a→b in km, f = pace factor before normalisation (1 = goal pace).
+const RG_SEGS=[
+  {a:0,    b:4.8,  mi:'0–3',       n:'Blackheath → Woolwich',  f:1.045, g:'Net downhill ~40 m',
+   s:'All three start lines run downhill into a wall of people and merge just before mile 3. The hill will hand you 10–15 s/km whether you ask for it or not — so run this at goal +10 and arrive at Woolwich having spent nothing.'},
+  {a:4.8,  b:10.5, mi:'3–6.5',     n:'Woolwich → Cutty Sark',  f:1.01,  g:'Flat',
+   s:'Royal Artillery Barracks, then the first real landmark. The road pinches hard at the Cutty Sark and the noise is enormous — this is the single most reliable place in the race to accidentally run 20 s/km too fast. Settle onto goal pace here and stop thinking.'},
+  {a:10.5, b:17.5, mi:'6.5–11',    n:'Greenwich → Surrey Quays',f:1.0,  g:'Flat, twisty',
+   s:'Deptford and Rotherhithe: narrow, turning, no view, thin crowd. The dullest seven kilometres of the day and that is exactly what you want. Goal pace, even effort, no heroes.'},
+  {a:17.5, b:21.1, mi:'11–13.1',   n:'Tower Bridge → halfway', f:1.0,   g:'Flat, uneven surface',
+   s:'Mile 12 over Tower Bridge is the loudest ninety seconds in British running and it makes people sprint. Do not. The surface is uneven, the camber is real. Halfway falls just past the bridge — check the clock, then let it go.'},
+  {a:21.1, b:27,   mi:'13.1–17',   n:'Isle of Dogs, outbound', f:1.01,  g:'Flat, twisty',
+   s:'You turn right, away from the finish, while runners four miles ahead of you stream past the other way. Mentally the hardest turn on the course. One kilometre at a time, nothing further ahead than that.'},
+  {a:27,   b:32,   mi:'17–20',     n:'Canary Wharf',           f:1.01,  g:'Flat, GPS dead',
+   s:'The towers kill your watch — splits will read nonsense for twenty minutes. Run the mile markers and your breathing, not the screen. The race is decided in here, and it is won by whoever refuses to panic.'},
+  {a:32,   b:37,   mi:'20–23',     n:'Limehouse → Tower',      f:1.0,   g:'Flat',
+   s:'Back onto the outbound road, now with the crowd on your side. This is the wall zone. Goal pace is a good day; goal +3 s/km is a fine day. Anything faster here you will pay for on the Embankment.'},
+  {a:37,   b:40,   mi:'23–25',     n:'Embankment',             f:0.985, g:'Flat; Blackfriars underpass',
+   s:'Blackfriars underpass is dark, damp and swallows the GPS; it comes just as the crowd becomes a single unbroken noise. Whatever you have left, it starts being spent here — not before.'},
+  {a:40,   b:42.195,mi:'25–26.2',  n:'Big Ben → The Mall',     f:0.965, g:'Short rise to Birdcage Walk',
+   s:'Big Ben at mile 25, right into Birdcage Walk and the only climb that matters all day — it is tiny and it will feel enormous. Buckingham Palace, right turn, 385 yards of The Mall. Empty it.'}
+];
+
+const RG_MODELS={
+  smart:{n:'Course-smart',d:'Downhill start held back, Canary Wharf protected, Embankment onwards spent',f:km=>{const s=RG_SEGS.find(x=>km>x.a-1e-9&&km<=x.b+1e-9)||RG_SEGS[RG_SEGS.length-1];return s.f;}},
+  neg:{n:'Negative split',d:'1.5% down on the first half, 1.5% up on the second',f:km=>km<=21.1?1.015:0.985},
+  even:{n:'Even',d:'The same pace for all 42.195 km — simplest to execute, hardest on a downhill start',f:()=>1}
+};
+
+// Official 2026 pattern: BUXTON water, Lucozade Sport, Lucozade gels, refill points.
+const RG_ST=[[3,'Water'],[5,'Refill'],[6,'Water'],[7,'Lucozade'],[9,'Water'],[10,'Refill'],[12,'Water'],
+  [13,'Gel'],[14,'Water'],[14,'Refill'],[15,'Lucozade'],[16,'Water'],[17,'Refill'],[18,'Water'],[19,'Gel'],
+  [20,'Water'],[20,'Refill'],[21,'Lucozade'],[22,'Water'],[23,'Lucozade'],[24,'Water']];
+
+const RG_RULES=[
+  'The first 5 km are downhill and crowded. Losing 30–60 s there is the plan, not a problem.',
+  'Cutty Sark and Tower Bridge are noise, not pace. Both are traps. Run through them on the same effort.',
+  'Your watch lies in Canary Wharf. From mile 17 to 20 the mile markers are the only truth.',
+  '60 g of carbs an hour from the first gel to the last. Miss one and you do not get it back.',
+  'If it is above 15 °C at the gun, the goal changes at the gun — add the seconds and accept them.',
+  'Nothing new. Not the kit, not the gel, not the shoes, not the breakfast.'
+];
+
+const _rgP=s=>{const p=String(s).trim().split(':').map(Number); if(p.some(isNaN)) return 0;
+  return p.length===3?p[0]*3600+p[1]*60+p[2]:p.length===2?p[0]*60+p[1]:p[0];};
+const _rgT=x=>{x=Math.round(x);const h=Math.floor(x/3600),m=Math.floor(x%3600/60),s=x%60;
+  return h?h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'):m+':'+String(s).padStart(2,'0');};
+const _rgPace=x=>{x=Math.round(x);return Math.floor(x/60)+':'+String(x%60).padStart(2,'0');};
+const _rgHM=s=>{const p=String(s).trim().split(':').map(Number);
+  return (p[0]||0)*3600+(p[1]||0)*60;};                       // hh:mm → seconds since midnight
+const _rgClock=(start,sec)=>{const t=((start+sec)%86400+86400)%86400;   // wraps, never negative
+  return String(Math.floor(t/3600)).padStart(2,'0')+':'+String(Math.floor(t%3600/60)).padStart(2,'0');};
+
+// Per-km factors normalised so the splits add up to exactly the goal time.
+function rgSplits(goal,modelKey,addPerKm){
+  const model=RG_MODELS[modelKey]||RG_MODELS.smart, base=goal/RG_D, legs=[];
+  for(let k=1;k<=43;k++){ const b=Math.min(k,RG_D), a=k-1; if(a>=RG_D) break; legs.push({a,b,d:b-a}); }
+  let raw=0; legs.forEach(l=>{ l.f=model.f((l.a+l.b)/2); raw+=l.d*base*l.f; });
+  const scale=goal/raw; let cum=0;
+  legs.forEach(l=>{ l.pace=base*l.f*scale+addPerKm; l.t=l.pace*l.d; cum+=l.t; l.cum=cum; });
+  return legs;
+}
+
+function rgRender(){
+  const goalRaw=_rgP(_e('rgGoal')?_e('rgGoal').value:'4:15:00')||15300;
+  const add=+(_e('rgTemp')?_e('rgTemp').value:0);
+  const mk=_e('rgModel')?_e('rgModel').value:'smart';
+  const start=_rgHM(_e('rgStart')?_e('rgStart').value:'10:00');
+  const legs=rgSplits(goalRaw,mk,add), total=legs[legs.length-1].cum;
+  try{localStorage.setItem('rg',JSON.stringify({g:_e('rgGoal').value,m:mk,s:_e('rgStart').value,t:_e('rgTemp').value}));}catch(e){}
+
+  const w=_e('rgWarn');
+  if(w){ if(add>0){ w.style.display=''; w.innerHTML='<b style="color:var(--text)">Heat adjustment live.</b> Goal '+_rgT(goalRaw)+' becomes <b style="color:var(--text)">'+_rgT(total)+'</b> — +'+add+' s/km on every split below. Make this call at the start, not at 30 km.'; } else w.style.display='none'; }
+
+  const days=Math.ceil((RG_RACE-new Date())/864e5);
+  if(_e('rgTiles')) _e('rgTiles').innerHTML=[
+    ['Target','<span style="font-size:1.15rem">'+_rgT(total)+'</span>',RG_MODELS[mk].n],
+    ['Average pace',_rgPace(total/RG_D)+'<span style="font-size:.8rem;color:var(--muted)">/km</span>',_rgPace(total/RG_D*1.609344)+'/mile'],
+    ['Halfway','<span style="font-size:1.15rem">'+_rgT(rgAt(legs,21.0975))+'</span>','on the clock '+_rgClock(start,rgAt(legs,21.0975))],
+    ['Finish clock','<span style="font-size:1.15rem">'+_rgClock(start,total)+'</span>','gun '+_e('rgStart').value],
+    ['Days to go',days>0?days:'—',days>0?'Sun 25 Apr 2027':'raced']
+  ].map(t=>'<div class="tile"><div class="lab">'+t[0]+'</div><div class="big">'+t[1]+'</div><div class="chg flat">'+t[2]+'</div></div>').join('');
+
+  // Segments
+  if(_e('rgSegs')) _e('rgSegs').innerHTML='<table><thead><tr><th style="text-align:left">Segment</th><th>km</th><th>mile</th><th>Pace</th><th>Through</th><th style="text-align:left;padding-left:16px">The instruction</th></tr></thead><tbody>'+
+    RG_SEGS.map(s=>{ const inSeg=legs.filter(l=>(l.a+l.b)/2>s.a&&(l.a+l.b)/2<=s.b);
+      const d=inSeg.reduce((x,l)=>x+l.d,0), t=inSeg.reduce((x,l)=>x+l.t,0);
+      const nw='white-space:nowrap;padding-left:14px';
+      return '<tr><td style="text-align:left;color:var(--text);min-width:150px">'+s.n+'<div style="color:var(--faint);font-size:.68rem">'+s.g+'</div></td><td style="'+nw+'">'+s.a+'–'+s.b+'</td><td style="'+nw+'">'+s.mi+'</td><td style="'+nw+';color:var(--accent)">'+(d?_rgPace(t/d):'—')+'</td><td style="'+nw+'">'+_rgT(s.b>=RG_D?total:rgAt(legs,s.b))+'</td><td style="text-align:left;padding-left:16px;font-family:var(--body);color:#C9D3DD;font-size:.8rem;line-height:1.45;min-width:320px">'+s.s+'</td></tr>'; }).join('')+'</tbody></table>';
+
+  if(_e('rgProfile')) _e('rgProfile').innerHTML=rgProfileSVG();
+
+  // Per-km splits
+  const stKm={}; RG_ST.forEach(([mi,k])=>{ const km=Math.round(mi*1.609344); (stKm[km]=stKm[km]||[]).push(k); });
+  const gels=rgGels(total);
+  const gelKm={}; gels.forEach(g=>gelKm[g.km]=1);
+  if(_e('rgSplits')) _e('rgSplits').innerHTML='<table><thead><tr><th style="text-align:left">km</th><th>Split</th><th>Elapsed</th><th>Clock</th><th style="text-align:left;padding-left:14px">On course</th></tr></thead><tbody>'+
+    legs.map((l,i)=>{ const km=Math.round(l.b*10)/10, m=Math.round(l.b);
+      const tags=[]; if(gelKm[m]) tags.push('<span style="color:var(--accent)">gel</span>');
+      if(stKm[m]) tags.push('<span style="color:var(--muted)">'+stKm[m].join(' · ')+'</span>');
+      const hl=(m===21||i===legs.length-1)?'background:rgba(200,168,107,.06)':'';
+      return '<tr style="'+hl+'"><td style="text-align:left;color:var(--text)">'+(i===legs.length-1?'42.2':km)+'</td><td>'+_rgPace(l.pace)+'</td><td style="color:var(--text)">'+_rgT(l.cum)+'</td><td>'+_rgClock(start,l.cum)+'</td><td style="text-align:left;padding-left:14px;font-size:.72rem">'+(tags.join(' · ')||'')+'</td></tr>'; }).join('')+'</tbody></table>';
+
+  // Fuel
+  if(_e('rgFuel')) _e('rgFuel').innerHTML=
+    '<div class="bnote" style="margin-bottom:12px">'+gels.length+' gels at ~25 g each over '+_rgT(total)+' = '+Math.round(gels.length*25/(total/3600))+' g/h. Carry your own — the course gel is at miles 13 and 19 only, and race day is not the day to meet a new brand. Water at every station between gels; CGM on.</div>'+
+    '<div class="lines" style="border-top:none;padding-top:0">'+gels.map(g=>'<div class="ln"><span class="tk" style="background:var(--accent)"></span><span class="t"><b style="font-family:var(--mono);font-size:.76rem">'+_rgT(g.t)+'</b> · km '+g.km+' · '+g.note+'</span></div>').join('')+'</div>';
+
+  if(_e('rgStations')) _e('rgStations').innerHTML='<table><thead><tr><th style="text-align:left">Mile</th><th>km</th><th style="text-align:left;padding-left:14px">Station</th><th>Elapsed</th></tr></thead><tbody>'+
+    RG_ST.map(([mi,k])=>{ const km=mi*1.609344; return '<tr><td style="text-align:left">'+mi+'</td><td>'+km.toFixed(1)+'</td><td style="text-align:left;padding-left:14px;color:'+(k==='Gel'?'var(--accent)':'var(--muted)')+'">'+k+'</td><td>'+_rgT(rgAt(legs,km))+'</td></tr>'; }).join('')+
+    '</tbody></table><div style="font-size:.7rem;color:var(--faint);margin-top:10px">2026 station list. Confirm against the 2027 Event Guide.</div>';
+
+  // Race morning, counted back from the gun
+  const steps=[[-240,'Wake. Coffee, and the breakfast you have eaten before every long run this block.'],
+    [-180,'Breakfast done — porridge and the usual. Nothing new, nothing extra.'],
+    [-150,'Leave. Trains to Blackheath and Greenwich are rammed; the one you planned is the late one.'],
+    [-95,'At the start area. Bag drop first, before the queue triples.'],
+    [-60,'Bag on the lorry. Throwaway layer stays on.'],
+    [-40,'Toilet queue. It is longer than it looks — join it now.'],
+    [-25,'Into the pen. Last toilet is behind you; the layer comes off at the last minute.'],
+    [-15,'Gel. Sip, do not drink.'],[0,'Gun. The first kilometre is downhill and you are going to run it too fast. Do not.']];
+  if(_e('rgMorning')) _e('rgMorning').innerHTML='<div class="lines" style="border-top:none;padding-top:0">'+
+    steps.map(s=>'<div class="ln"><span class="tk" style="background:'+(s[0]===0?'var(--accent)':'var(--faint)')+'"></span><span class="t"><b style="font-family:var(--mono);font-size:.76rem;color:var(--text)">'+_rgClock(start,s[0]*60)+'</b> &nbsp;'+s[1]+'</span></div>').join('')+'</div>';
+
+  if(_e('rgRules')) _e('rgRules').innerHTML=RG_RULES.map(r=>'<div class="ln"><span class="tk" style="background:var(--accent)"></span><span class="t">'+r+'</span></div>').join('');
+
+  rgCard(legs,total,start,gels,mk,goalRaw,add);
+}
+
+// Elapsed time at an arbitrary distance, linear inside the kilometre.
+function rgAt(legs,km){ if(km<=0) return 0; const l=legs.find(x=>km<=x.b+1e-9)||legs[legs.length-1];
+  const prev=l.cum-l.t; return prev+(km-l.a)*l.pace; }
+
+// Enough 25 g gels to average 60 g/h, spread evenly from 00:25 to 12 min out.
+function rgGels(total){
+  const n=Math.max(1,Math.round(60*(total/3600)/25)), first=1500, last=Math.max(first,total-720);
+  const step=n>1?(last-first)/(n-1):0;
+  return Array.from({length:n},(_,i)=>{ const t=Math.round((first+step*i)/60)*60;
+    return {t,km:Math.round(rgKmAt(total,t)),note:i===0?'first one — before you want it':
+      i===n-1?'last one, and the one you will not want':'water at the next station'}; });
+}
+// Distance reached at an elapsed time, good enough for a gel marker.
+function rgKmAt(total,t){ return t/total*RG_D; }
+
+function rgProfileSVG(){
+  const pts=[41,38,28,18,12,8,10,12,9,7,6,8,7,6,8,7,6,7,8,9,8,7,6,7,8,7,6,7,8,7,6,7,6,7,6,7,8,7,6,8,10,14,12];
+  const W=980,H=150,P=26,lo=0,hi=46, x=i=>P+i/(pts.length-1)*(W-P*2), y=v=>H-P-(v-lo)/(hi-lo)*(H-P*2);
+  const line=pts.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');
+  const marks=[[0,'Start'],[10,'Cutty Sark'],[19,'Tower Bridge'],[30,'Canary Wharf'],[38,'Embankment'],[42,'The Mall']];
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="min-width:620px;display:block" role="img" aria-label="London Marathon elevation profile">'+
+    '<path d="'+line+' L'+x(pts.length-1).toFixed(1)+' '+(H-P)+' L'+x(0).toFixed(1)+' '+(H-P)+' Z" fill="rgba(200,168,107,.10)"/>'+
+    '<path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round"/>'+
+    '<line x1="'+P+'" y1="'+(H-P)+'" x2="'+(W-P)+'" y2="'+(H-P)+'" stroke="var(--line)"/>'+
+    marks.map(m=>'<g><line x1="'+x(m[0]).toFixed(1)+'" y1="'+(P-8)+'" x2="'+x(m[0]).toFixed(1)+'" y2="'+(H-P)+'" stroke="var(--line)" stroke-dasharray="2 4"/>'+
+      '<text x="'+x(m[0]).toFixed(1)+'" y="'+(P-12)+'" fill="var(--faint)" font-size="9" font-family="IBM Plex Mono,monospace" text-anchor="'+(m[0]>36?'end':m[0]<4?'start':'middle')+'">'+m[1]+'</text></g>').join('')+
+    '<text x="'+P+'" y="'+(H-8)+'" fill="var(--faint)" font-size="9" font-family="IBM Plex Mono,monospace">0 km</text>'+
+    '<text x="'+(W-P)+'" y="'+(H-8)+'" fill="var(--faint)" font-size="9" font-family="IBM Plex Mono,monospace" text-anchor="end">42.2 km</text>'+
+    '</svg><div style="font-size:.7rem;color:var(--faint);margin-top:8px">Flat, and net downhill: ~40 m of the drop is gone by 5 km. The only rise that matters is Birdcage Walk at 41 km.</div>';
+}
+
+// The printed card: 5K bands, gels, rules. One page.
+function rgCard(legs,total,start,gels,mk,goal,add){
+  const bands=[5,10,15,20,21.0975,25,30,35,40,42.195];
+  const lab=k=>k===21.0975?'HALF':k===42.195?'FINISH':k+'K';
+  const rows=bands.map(k=>{const t=k>=RG_D?total:rgAt(legs,k);
+    return '<tr><td>'+lab(k)+'</td><td>'+_rgT(t)+'</td><td>'+_rgClock(start,t)+'</td><td>'+_rgPace(t/k)+'</td></tr>';}).join('');
+  const c=_e('raceCard'); if(!c) return;
+  c.innerHTML='<div class="rc-h"><div><div class="rc-t">London Marathon</div><div class="rc-s">Sunday 25 April 2027 · Blackheath → The Mall</div></div>'+
+      '<div class="rc-g"><div class="rc-gv">'+_rgT(total)+'</div><div class="rc-s">'+_rgPace(total/RG_D)+'/km · '+RG_MODELS[mk].n+(add?' · +'+add+' s/km heat':'')+'</div></div></div>'+
+    '<div class="rc-b"><div><div class="rc-e">Splits</div><table class="rc-tb"><thead><tr><th>At</th><th>Elapsed</th><th>Clock</th><th>Avg/km</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div><div class="rc-e">Gels · 60 g/h</div><table class="rc-tb"><tbody>'+gels.map(g=>'<tr><td>'+_rgT(g.t)+'</td><td>km '+g.km+'</td></tr>').join('')+'</tbody></table>'+
+    '<div class="rc-e" style="margin-top:12px">Segments</div><table class="rc-tb"><tbody>'+RG_SEGS.map(s=>{
+      const ins=legs.filter(l=>(l.a+l.b)/2>s.a&&(l.a+l.b)/2<=s.b), d=ins.reduce((x,l)=>x+l.d,0), t=ins.reduce((x,l)=>x+l.t,0);
+      return '<tr><td style="text-align:left">'+s.n+'</td><td>'+(d?_rgPace(t/d):'—')+'</td></tr>';}).join('')+'</tbody></table></div></div>'+
+    '<div class="rc-e" style="margin-top:14px">The six rules</div><ol class="rc-r">'+RG_RULES.map(r=>'<li>'+r+'</li>').join('')+'</ol>';
+}
+
+// Hoist the card to <body> for the duration of the print so the print rules can
+// hide every sibling outright — visibility:hidden alone still prints blank pages.
+function rgPrint(){
+  const c=_e('raceCard'); if(!c) return;
+  const mark=document.createComment('raceCard'); c.parentNode.insertBefore(mark,c);
+  document.body.appendChild(c); document.body.classList.add('printing');
+  let done=false;
+  const restore=()=>{ if(done) return; done=true; document.body.classList.remove('printing');
+    if(mark.parentNode) mark.parentNode.insertBefore(c,mark); mark.remove();
+    window.removeEventListener('afterprint',restore); };
+  window.addEventListener('afterprint',restore);
+  try{ window.print(); } finally { setTimeout(restore,0); }
+}
+
+function rgInit(){
+  try{ const s=JSON.parse(localStorage.getItem('rg')||'null');
+    if(s){ if(_e('rgGoal'))s.g&&(_e('rgGoal').value=s.g); if(_e('rgModel'))s.m&&(_e('rgModel').value=s.m);
+           if(_e('rgStart'))s.s&&(_e('rgStart').value=s.s); if(_e('rgTemp'))s.t&&(_e('rgTemp').value=s.t); } }catch(e){}
+  ['rgGoal','rgModel','rgStart','rgTemp'].forEach(id=>{ const n=_e(id); if(n&&!n._rg){ n._rg=1; n.addEventListener('change',rgRender); n.addEventListener('input',rgRender); } });
+  rgRender();
 }
 
 // ---- Fitness · Strength (Reload & Run) — program hardcoded, weights in Supabase
@@ -2775,7 +3078,7 @@ renderHealth();
 loadGut();
 
 // ---- expose handlers used by inline onclick / onkeydown ---------------------
-window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.progHover=progHover; window.runBarHover=runBarHover; window.progAdd=progAdd; window.progDel=progDel; window.toggleWk=toggleWk; window.toggleLw=toggleLw;
+window.go=go; window.saveQuote=saveQuote; window.toggleDock=toggleDock; window.sendMsg=sendMsg; window.ackReminder=ackReminder; window.toggleHabit=toggleHabit; window.resolveGoal=resolveGoal; window.scanFortiorMail=scanFortiorMail; window.fitTab=fitTab; window.strSub=strSub; window.hlTab=hlTab; window.gutView=gutView; window.schedPhase=schedPhase; window.saveStrength=saveStrength; window.strVid=strVid; window.progHover=progHover; window.runBarHover=runBarHover; window.progAdd=progAdd; window.progDel=progDel; window.rgPrint=rgPrint; window.rgInit=rgInit; window.toggleWk=toggleWk; window.toggleLw=toggleLw;
 
 // ---- header: time-of-day greeting + live date/clock ------------------------
 function updateHeader(){
